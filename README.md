@@ -1,8 +1,14 @@
 # 经典超声波束合成：导论与完整学习计划
 
-**文档版本：v1.0**  
+**文档版本：v1.1**  
 **建立日期：2026-09-26**  
 **用途：作为后续“经典超声波束合成算法串讲”的固定总纲与课程锚点，防止长上下文中学习主线、算法边界和讲解标准发生漂移。**
+
+> **公式渲染说明**：本文档统一使用 GitHub Markdown 支持的 `$...# 经典超声波束合成：导论与完整学习计划
+
+**文档版本：v1.1**  
+**建立日期：2026-09-26**  
+（行内公式）与 `$...$`（块级公式），以保证 GitHub 网页端的数学公式显示。
 
 ---
 
@@ -30,37 +36,37 @@
 
 ## 1.1 波束合成最核心的问题
 
-设阵列有 \(M\) 个接收阵元。
+设阵列有 $M$ 个接收阵元。
 
 对于空间中的候选成像点
 
-\[
+$
 \mathbf r=(x,z)
-\]
+$
 
-第 \(m\) 个阵元记录的 RF 信号为
+第 $m$ 个阵元记录的 RF 信号为
 
-\[
+$
 x_m(t).
-\]
+$
 
-根据发射路径和接收路径的几何传播距离，可以计算假设散射体位于 \(\mathbf r\) 时，该阵元应该对应的传播时间
+根据发射路径和接收路径的几何传播距离，可以计算假设散射体位于 $\mathbf r$ 时，该阵元应该对应的传播时间
 
-\[
+$
 \tau_m(\mathbf r).
-\]
+$
 
-于是，从第 \(m\) 个通道取出相应的延时样本：
+于是，从第 $m$ 个通道取出相应的延时样本：
 
-\[
+$
 s_m(\mathbf r)=x_m\left(\tau_m(\mathbf r)\right).
-\]
+$
 
-如果使用的是 IQ 数据，则 \(s_m\) 通常是复数；其相位不能在没有明确理由时被丢弃。
+如果使用的是 IQ 数据，则 $s_m$ 通常是复数；其相位不能在没有明确理由时被丢弃。
 
 把所有通道写成向量：
 
-\[
+$
 \mathbf s(\mathbf r)
 =
 \begin{bmatrix}
@@ -69,15 +75,15 @@ s_2(\mathbf r) \\
 \vdots \\
 s_M(\mathbf r)
 \end{bmatrix}.
-\]
+$
 
 从这一刻开始，绝大多数经典 beamforming 方法都可以抽象成：
 
-\[
+$
 \mathbf s(\mathbf r)
 \longrightarrow
 y(\mathbf r).
-\]
+$
 
 换句话说：
 
@@ -91,24 +97,24 @@ y(\mathbf r).
 
 最基本的 Delay-and-Sum（DAS）可以写成
 
-\[
+$
 y_{\mathrm{DAS}}(\mathbf r)
 =
 \sum_{m=1}^{M}
 w_m(\mathbf r)s_m(\mathbf r).
-\]
+$
 
 其中：
 
-- \(\tau_m(\mathbf r)\)：聚焦延时；
-- \(w_m(\mathbf r)\)：apodization / aperture 权重；
-- \(s_m(\mathbf r)\)：延时后的通道数据。
+- $\tau_m(\mathbf r)$：聚焦延时；
+- $w_m(\mathbf r)$：apodization / aperture 权重；
+- $s_m(\mathbf r)$：延时后的通道数据。
 
 最简单情况下：
 
-\[
+$
 w_m=\frac{1}{M},
-\]
+$
 
 本质就是：
 
@@ -138,11 +144,11 @@ DAS 隐含的核心物理判断是：
 
 ## 3.1 固定线性组合：DAS / conventional beamforming
 
-\[
+$
 y=\mathbf w^H\mathbf s
-\]
+$
 
-其中 \(\mathbf w\) 是预先设计好的。
+其中 $\mathbf w$ 是预先设计好的。
 
 典型内容：
 
@@ -174,7 +180,7 @@ Coherence Factor（CF）进一步问：
 
 典型 CF 形式：
 
-\[
+$
 CF(\mathbf r)
 =
 \frac{
@@ -182,15 +188,15 @@ CF(\mathbf r)
 }{
 M\sum_{m=1}^{M}|s_m(\mathbf r)|^2
 }.
-\]
+$
 
 然后：
 
-\[
+$
 y_{\mathrm{CF}}
 =
 CF\cdot y_{\mathrm{DAS}}.
-\]
+$
 
 因此可以把 CF 暂时理解为：
 
@@ -198,13 +204,13 @@ CF\cdot y_{\mathrm{DAS}}.
 
 这是一条重要路线：
 
-\[
+$
 DAS
 \rightarrow
 coherence estimation
 \rightarrow
 pixel weighting.
-\]
+$
 
 后续 GCF、PCF、SCF 等大量方法都可以放入这一家族，而不是全部作为独立“基座算法”学习。
 
@@ -220,29 +226,29 @@ MV 的问题变成：
 
 经典形式为
 
-\[
+$
 y_{\mathrm{MV}}
 =
 \mathbf w_{\mathrm{MV}}^H\mathbf s,
-\]
+$
 
 权重通过约束优化得到：
 
-\[
+$
 \min_{\mathbf w}
 \quad
 \mathbf w^H\mathbf R\mathbf w
-\]
+$
 
 subject to
 
-\[
+$
 \mathbf w^H\mathbf a=1.
-\]
+$
 
 解为：
 
-\[
+$
 \mathbf w_{\mathrm{MV}}
 =
 \frac{
@@ -250,12 +256,12 @@ subject to
 }{
 \mathbf a^H\mathbf R^{-1}\mathbf a
 }.
-\]
+$
 
 其中：
 
-- \(\mathbf R\)：阵列数据 covariance matrix；
-- \(\mathbf a\)：期望方向的 steering vector。
+- $\mathbf R$：阵列数据 covariance matrix；
+- $\mathbf a$：期望方向的 steering vector。
 
 其核心思想可以概括成：
 
@@ -263,9 +269,9 @@ subject to
 
 这里第一次引入了一个非常重要的新信息：
 
-\[
+$
 \boxed{\text{阵元之间的二阶统计关系}}
-\]
+$
 
 因此：
 
@@ -280,25 +286,25 @@ MV 的理论祖先来自阵列信号处理中的 Capon / minimum variance 思想
 
 DAS 计算的是：
 
-\[
+$
 s_1+s_2+\cdots+s_M.
-\]
+$
 
 DMAS 则显式构造通道对：
 
-\[
+$
 s_is_j.
-\]
+$
 
 基本结构为：
 
-\[
+$
 y_{\mathrm{DMAS}}
 =
 \sum_{i=1}^{M-1}
 \sum_{j=i+1}^{M}
 g(s_i,s_j),
-\]
+$
 
 其中实际实现通常需要考虑乘积的符号、动态范围和开方等处理。
 
@@ -315,9 +321,9 @@ g(s_i,s_j),
 
 因此 DMAS 属于：
 
-\[
+$
 \boxed{\text{nonlinear inter-channel interaction}}
-\]
+$
 
 而不是普通 apodization 的一种。
 
@@ -329,9 +335,9 @@ Short-Lag Spatial Coherence（SLSC）进一步走了一步。
 
 传统 B-mode 最终关心：
 
-\[
+$
 \text{echo amplitude}.
-\]
+$
 
 SLSC 则直接计算不同阵元间、不同空间 lag 下的 normalized spatial coherence，并对短 lag 区域积分。
 
@@ -341,15 +347,15 @@ SLSC 则直接计算不同阵元间、不同空间 lag 下的 normalized spatial
 
 这是一种概念上的重要转折：
 
-\[
+$
 \text{coherence as a weight}
-\]
+$
 
 变成：
 
-\[
+$
 \text{coherence as the image quantity itself}.
-\]
+$
 
 因此学习 SLSC 的价值不只在于会实现一个算法，而在于真正理解：
 
@@ -369,11 +375,11 @@ SLSC 则直接计算不同阵元间、不同空间 lag 下的 normalized spatial
 
 但常规 apodization 存在经典 trade-off：
 
-\[
+$
 \text{lower sidelobe}
 \Longleftrightarrow
 \text{broader main lobe}.
-\]
+$
 
 Null Subtraction Imaging（NSI）换了一个思路：
 
@@ -397,9 +403,9 @@ NSI 使用多组特殊 receive apodization：
 
 可以归入：
 
-\[
+$
 \boxed{\text{multiple spatial responses + nonlinear image combination}}
-\]
+$
 
 这一独立路线。
 
@@ -524,9 +530,9 @@ DAS → CF → MV → DMAS → SLSC → NSI
 
 先掌握：
 
-\[
+$
 \boxed{CF}
-\]
+$
 
 再理解其余方法究竟修改了哪种 coherence estimator。
 
@@ -541,9 +547,9 @@ DAS → CF → MV → DMAS → SLSC → NSI
 
 先掌握：
 
-\[
+$
 \boxed{MVDR\ optimization + covariance estimation}
-\]
+$
 
 否则容易只会套公式。
 
@@ -601,31 +607,31 @@ DAS → CF → MV → DMAS → SLSC → NSI
 
 完全可以：
 
-\[
+$
 \text{Plane Wave acquisition}
 +
 \text{DAS}
-\]
+$
 
 也可以：
 
-\[
+$
 \text{Plane Wave acquisition}
 +
 \text{MV}
-\]
+$
 
 还可以进一步：
 
-\[
+$
 \text{multi-angle acquisition}
 +
 \text{coherent compounding}.
-\]
+$
 
 所以后续必须一直区分：
 
-\[
+$
 \boxed{\text{Acquisition}}
 \neq
 \boxed{\text{Delay model}}
@@ -635,7 +641,7 @@ DAS → CF → MV → DMAS → SLSC → NSI
 \boxed{\text{Compounding}}
 \neq
 \boxed{\text{Display/post-processing}}
-\]
+$
 
 这是防止概念混乱的重要原则。
 
@@ -685,15 +691,15 @@ DAS → CF → MV → DMAS → SLSC → NSI
 
 为什么：
 
-\[
+$
 \text{delay}
-\]
+$
 
 能够变成：
 
-\[
+$
 \text{spatial focusing}?
-\]
+$
 
 ### 完成标准
 
@@ -731,23 +737,23 @@ point target
 
 ### 必须理解的公式
 
-\[
+$
 \tau_m(\mathbf r)
 =
 \tau_{\mathrm{TX}}(\mathbf r)
 +
 \tau_{\mathrm{RX},m}(\mathbf r).
-\]
+$
 
 以及
 
-\[
+$
 y_{\mathrm{DAS}}(\mathbf r)
 =
 \sum_m
 w_m(\mathbf r)
 x_m\left(\tau_m(\mathbf r)\right).
-\]
+$
 
 ### 必须形成的直觉
 
@@ -755,9 +761,9 @@ DAS 的核心不是“加”。
 
 而是：
 
-\[
+$
 \boxed{\text{利用传播模型把空间位置转换成通道相位一致性}}
-\]
+$
 
 再进行 coherent integration。
 
@@ -817,11 +823,11 @@ DAS 的核心不是“加”。
 
 例如真实：
 
-\[
+$
 c_{\mathrm{true}}
 \neq
 c_{\mathrm{beamformer}}.
-\]
+$
 
 观察：
 
@@ -876,15 +882,15 @@ c_{\mathrm{beamformer}}.
 
 ## 核心问题
 
-\[
+$
 \text{high amplitude}
-\]
+$
 
 是否一定意味着：
 
-\[
+$
 \text{correctly focused target}?
-\]
+$
 
 答案是不一定。
 
@@ -905,7 +911,7 @@ c_{\mathrm{beamformer}}.
 
 真正理解：
 
-\[
+$
 CF
 =
 \frac{
@@ -913,7 +919,7 @@ CF
 }{
 M\sum_m |s_m|^2
 }
-\]
+$
 
 的分子和分母分别意味着什么。
 
@@ -937,28 +943,28 @@ M\sum_m |s_m|^2
 
 理解：
 
-\[
+$
 \mathbf w_{\mathrm{fixed}}
-\]
+$
 
 为什么不知道当前数据中的干扰在哪里。
 
 ## Part B：从 constrained optimization 推导 MV
 
-\[
+$
 \min_{\mathbf w}
 \mathbf w^H\mathbf R\mathbf w
-\]
+$
 
 subject to
 
-\[
+$
 \mathbf w^H\mathbf a=1.
-\]
+$
 
 然后推导：
 
-\[
+$
 \mathbf w_{\mathrm{MV}}
 =
 \frac{
@@ -966,15 +972,15 @@ subject to
 }{
 \mathbf a^H\mathbf R^{-1}\mathbf a
 }.
-\]
+$
 
 ## Part C：理解 covariance matrix
 
 重点不是矩阵运算本身，而是理解：
 
-\[
+$
 R_{ij}
-\]
+$
 
 表示什么。
 
@@ -1014,15 +1020,15 @@ R_{ij}
 
 从 DAS：
 
-\[
+$
 \sum_i s_i
-\]
+$
 
 走向：
 
-\[
+$
 \sum_{i<j}s_is_j.
-\]
+$
 
 ## 必须理解
 
@@ -1037,27 +1043,27 @@ DMAS 的乘法会改变频谱。
 
 若窄带 RF 近似：
 
-\[
+$
 s_i(t)\sim \cos(\omega_0t+\phi_i),
-\]
+$
 
 则：
 
-\[
+$
 s_i(t)s_j(t)
-\]
+$
 
 会产生：
 
-\[
+$
 \cos(\phi_i-\phi_j)
-\]
+$
 
 以及接近：
 
-\[
+$
 2\omega_0
-\]
+$
 
 的分量。
 
@@ -1100,21 +1106,21 @@ s_i(t)s_j(t)
 
 CF：
 
-\[
+$
 \text{coherence}
 \rightarrow
 \text{weight}
 \rightarrow
 \text{amplitude image}
-\]
+$
 
 SLSC：
 
-\[
+$
 \text{coherence}
 \rightarrow
 \text{image directly}.
-\]
+$
 
 ### 重点讨论
 
@@ -1135,19 +1141,19 @@ SLSC：
 
 理解：
 
-\[
+$
 \text{aperture weighting}
 \leftrightarrow
 \text{spatial response}.
-\]
+$
 
 ## Part B：zero-mean apodization
 
 为什么：
 
-\[
+$
 \sum_m w_m=0
-\]
+$
 
 可以让 broadside / focal direction 出现 null。
 
@@ -1155,11 +1161,11 @@ SLSC：
 
 研究：
 
-\[
+$
 w_m^{(+)}
 =
 w_m^{(0)}+\epsilon
-\]
+$
 
 等构造如何改变 null 附近的 beam pattern。
 
@@ -1232,9 +1238,9 @@ w_m^{(0)}+\epsilon
 
 比较谁依赖：
 
-\[
+$
 \text{precise phase alignment}.
-\]
+$
 
 实际上几乎所有高性能 beamforming 方法都不能完全绕开正确传播模型，只是对误差的响应不同。
 
@@ -1276,9 +1282,9 @@ w_m^{(0)}+\epsilon
 
 推荐概念结构：
 
-\[
+$
 [\text{channel},\text{sample}]
-\]
+$
 
 即：
 
@@ -1290,9 +1296,9 @@ RF[channel, sample]
 
 例如 plane-wave angles：
 
-\[
+$
 [\text{tx},\text{channel},\text{sample}].
-\]
+$
 
 ### IQ
 
@@ -1615,39 +1621,39 @@ DOI:
 
 ### DAS
 
-\[
+$
 \boxed{\text{fixed channel weighting}}
-\]
+$
 
 ### CF
 
-\[
+$
 \boxed{\text{pixel confidence weighting}}
-\]
+$
 
 ### MV
 
-\[
+$
 \boxed{\text{data-adaptive channel weighting}}
-\]
+$
 
 ### DMAS
 
-\[
+$
 \boxed{\text{nonlinear inter-channel interaction}}
-\]
+$
 
 ### SLSC
 
-\[
+$
 \boxed{\text{coherence becomes image contrast}}
-\]
+$
 
 ### NSI
 
-\[
+$
 \boxed{\text{multiple beam patterns + nonlinear combination}}
-\]
+$
 
 ## Q3. 它额外利用了什么信息？
 
@@ -1682,11 +1688,11 @@ DOI:
 
 任何高性能方法都应该继续问：
 
-\[
+$
 \text{Gain}
 \quad \text{vs} \quad
 \text{Cost / Assumption / Failure Mode}.
-\]
+$
 
 例如：
 
@@ -1745,15 +1751,15 @@ complex IQ
 
 明确：
 
-\[
+$
 \tau_{\mathrm{TX}}
-\]
+$
 
 和：
 
-\[
+$
 \tau_{\mathrm{RX}}
-\]
+$
 
 各自的定义。
 
@@ -1779,15 +1785,15 @@ complex IQ
 
 必须区分：
 
-\[
+$
 20\log_{10}|x|
-\]
+$
 
 与：
 
-\[
+$
 10\log_{10}P.
-\]
+$
 
 ---
 
@@ -1874,15 +1880,15 @@ NSI
 
 因为本课程首先服务于：
 
-\[
+$
 \boxed{\text{理解}}
-\]
+$
 
 而不是：
 
-\[
+$
 \boxed{\text{历史编年}}
-\]
+$
 
 历史关系会在每章中单独说明。
 
@@ -1956,9 +1962,9 @@ NSI
 
 始终以：
 
-\[
+$
 \mathbf s(\mathbf r)\rightarrow y(\mathbf r)
-\]
+$
 
 作为统一抽象。
 
