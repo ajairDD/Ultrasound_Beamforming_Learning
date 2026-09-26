@@ -1,0 +1,14 @@
+# Raw ultrasound datasets are large and should stay local.
+# Keep metadata/documentation in Git; do not accidentally commit binary acquisitions.
+
+*.uff
+*.h5
+*.hdf5
+
+# Optional MATLAB/raw data formats often used for ultrasound datasets
+*.mat
+*.bin
+*.dat
+
+# Keep documentation files tracked
+!README.md
