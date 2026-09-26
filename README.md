@@ -5,6 +5,65 @@
 **用途：作为后续“经典超声波束合成算法串讲”的固定总纲与课程锚点，防止长上下文中学习主线、算法边界和讲解标准发生漂移。**
 
 > **公式渲染说明**：本文档已按 GitHub Markdown 的数学公式语法重新整理，行内公式与块级公式均使用 GitHub 可识别的数学环境。
+
+## Start Here：如何使用这个项目
+
+这个仓库既面向正在系统学习超声波束合成的人，也面向希望直接运行算法代码的人。
+
+### 只想先理解算法，不安装任何第三方工具
+
+从这里开始：
+
+1. [第一讲：从一个点散射子真正理解 DAS](./chapters/01_DAS/)
+2. 进入 [MATLAB / 01_DAS](./matlab/01_DAS/)
+3. 在 MATLAB 中运行：
+
+```matlab
+demo_synthetic_point_target
+```
+
+这个示例**不需要 USTB、不需要下载数据，也不依赖第三方 toolbox**，会直接生成一个线阵 + 点散射体的简化 channel data，并演示 Delay-and-Sum。
+
+### 已经下载 UFF 数据，但还没有安装 USTB
+
+可以先运行：
+
+```matlab
+filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+inspect_uff_hdf5
+```
+
+它使用 MATLAB 自带 HDF5 接口查看 UFF 文件结构。  
+数据清单、下载地址和 MD5 见 [data/README.md](./data/README.md)。
+
+### 准备用真实 channel data 做完整 beamforming
+
+推荐安装 [USTB](https://github.com/ultrasoundtoolbox/ustb)，然后运行：
+
+```matlab
+inspect_uff_metadata_ustb
+plot_raw_channel_overview_ustb
+```
+
+USTB 在本项目中主要负责**可靠读取 UFF 的 probe / sequence / channel_data 语义对象**；核心算法学习和后续 MATLAB 实现不会把 USTB 当作黑盒 beamformer。
+
+### 当前项目结构
+
+```text
+Ultrasound_Beamforming_Learning/
+├── README.md                 # 导论与完整学习计划
+├── chapters/
+│   └── 01_DAS/               # 第一讲：DAS 理论
+├── matlab/
+│   ├── README.md
+│   └── 01_DAS/               # 第一讲 MATLAB 实践
+└── data/
+    ├── README.md              # 数据来源、下载地址、MD5、用途
+    └── .gitignore             # 原始大文件保留在本地
+```
+
+后续章节会随着实际学习进度逐步加入，不提前创建大量空目录。
+
 ---
 
 # 0. 本文档要解决什么问题
