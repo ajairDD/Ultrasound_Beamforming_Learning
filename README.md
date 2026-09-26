@@ -62,8 +62,7 @@ $$
 把所有通道写成向量：
 
 $$
-\mathbf s(\mathbf r)
-=
+\mathbf s(\mathbf r)=
 \begin{bmatrix}
 s_1(\mathbf r) \\
 s_2(\mathbf r) \\
@@ -93,8 +92,7 @@ $$
 最基本的 Delay-and-Sum（DAS）可以写成
 
 $$
-y_{\mathrm{DAS}}(\mathbf r)
-=
+y_{\mathrm{DAS}}(\mathbf r)=
 \sum_{m=1}^{M}
 w_m(\mathbf r)s_m(\mathbf r).
 $$
@@ -176,8 +174,7 @@ Coherence Factor（CF）进一步问：
 典型 CF 形式：
 
 $$
-CF(\mathbf r)
-=
+CF(\mathbf r)=
 \frac{
 \left|\sum_{m=1}^{M}s_m(\mathbf r)\right|^2
 }{
@@ -188,8 +185,7 @@ $$
 然后：
 
 $$
-y_{\mathrm{CF}}
-=
+y_{\mathrm{CF}}=
 CF\cdot y_{\mathrm{DAS}}.
 $$
 
@@ -222,8 +218,7 @@ MV 的问题变成：
 经典形式为
 
 $$
-y_{\mathrm{MV}}
-=
+y_{\mathrm{MV}}=
 \mathbf w_{\mathrm{MV}}^H\mathbf s,
 $$
 
@@ -244,8 +239,7 @@ $$
 解为：
 
 $$
-\mathbf w_{\mathrm{MV}}
-=
+\mathbf w_{\mathrm{MV}}=
 \frac{
 \mathbf R^{-1}\mathbf a
 }{
@@ -294,8 +288,7 @@ $$
 基本结构为：
 
 $$
-y_{\mathrm{DMAS}}
-=
+y_{\mathrm{DMAS}}=
 \sum_{i=1}^{M-1}
 \sum_{j=i+1}^{M}
 g(s_i,s_j),
@@ -733,8 +726,7 @@ point target
 ### 必须理解的公式
 
 $$
-\tau_m(\mathbf r)
-=
+\tau_m(\mathbf r)=
 \tau_{\mathrm{TX}}(\mathbf r)
 +
 \tau_{\mathrm{RX},m}(\mathbf r).
@@ -743,8 +735,7 @@ $$
 以及
 
 $$
-y_{\mathrm{DAS}}(\mathbf r)
-=
+y_{\mathrm{DAS}}(\mathbf r)=
 \sum_m
 w_m(\mathbf r)
 x_m\left(\tau_m(\mathbf r)\right).
@@ -907,8 +898,7 @@ $$
 真正理解：
 
 $$
-CF
-=
+CF=
 \frac{
 |\sum_m s_m|^2
 }{
@@ -960,8 +950,7 @@ $$
 然后推导：
 
 $$
-\mathbf w_{\mathrm{MV}}
-=
+\mathbf w_{\mathrm{MV}}=
 \frac{
 \mathbf R^{-1}\mathbf a
 }{
@@ -1157,8 +1146,7 @@ $$
 研究：
 
 $$
-w_m^{(+)}
-=
+w_m^{(+)}=
 w_m^{(0)}+\epsilon
 $$
 
