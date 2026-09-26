@@ -122,8 +122,8 @@ end
 % Use abs() rather than hilbert() so this demo does not require
 % Signal Processing Toolbox. This is an RF sample-magnitude response,
 % not a full envelope-detected B-mode image.
-das_mag = abs(das);
-das_mag = das_mag / (max(das_mag) + eps);
+reference_peak = max(abs(das)) + eps;
+das_mag = abs(das) / reference_peak;
 das_db = 20 * log10(das_mag + eps);
 das_db(das_db < -60) = -60;
 
@@ -159,8 +159,7 @@ for ix = 1:numel(x_scan)
     das_wrong(ix) = sum(focused_samples);
 end
 
-das_wrong_mag = abs(das_wrong);
-das_wrong_mag = das_wrong_mag / (max(das_mag) + eps);
+das_wrong_mag = abs(das_wrong) / reference_peak;
 das_wrong_db = 20 * log10(das_wrong_mag + eps);
 das_wrong_db(das_wrong_db < -60) = -60;
 
