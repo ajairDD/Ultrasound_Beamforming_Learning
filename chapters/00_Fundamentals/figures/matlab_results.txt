@@ -1,0 +1,98 @@
+MATLAB 9.11.0.1769968 (R2021b)
+
+--- demo_synthetic_point_target ---
+Synthetic DAS demo finished.
+Array: 64 elements, pitch = 0.300 mm
+Target: x = 2.00 mm, z = 30.00 mm
+fs = 40.0 MHz, fc = 5.0 MHz
+Exported demo_synthetic_point_target_01.png
+Exported demo_synthetic_point_target_02.png
+Exported demo_synthetic_point_target_03.png
+Exported demo_synthetic_point_target_04.png
+
+--- demo_delay_alignment ---
+=== Delay-alignment demo ===
+Correct focus residual delay: max |epsilon| = 0.000 ns
+Wrong focus residual delay:   max |epsilon| = 427.016 ns
+At fc = 5.0 MHz, 25 ns corresponds to 45.0 degrees of phase.
+Exported demo_delay_alignment_01.png
+Exported demo_delay_alignment_02.png
+Exported demo_delay_alignment_03.png
+Exported demo_delay_alignment_04.png
+
+--- demo_aperture_psf_apodization ---
+=== Aperture size experiment ===
+fc = 5.00 MHz, lambda = 0.308 mm, target depth = 30.0 mm
+
+Active elements | Aperture D (mm) | F-number | -6 dB amplitude width (mm)
+--------------------------------------------------------------------------
+            16 |           4.500 |    6.667 |                     2.325
+            32 |           9.300 |    3.226 |                     1.173
+            64 |          18.900 |    1.587 |                     0.598
+
+=== Apodization experiment, 64 active elements ===
+Window   | -6 dB amplitude width (mm) | estimated peak sidelobe (dB)
+-------------------------------------------------------------------
+Uniform  |                      0.598 |                       -20.83
+Hann     |                      1.003 |                       -34.64
+Hamming  |                      0.913 |                       -35.53
+
+Important:
+These numbers belong to this simplified pulse, geometry and sampling model.
+Do not treat them as universal textbook constants.
+Exported demo_aperture_psf_apodization_01.png
+Exported demo_aperture_psf_apodization_02.png
+Exported demo_aperture_psf_apodization_03.png
+
+--- demo_axial_lateral_2d_psf ---
+=== Axial PSF experiment ===
+Pulse       | sigma_t (ns) | approx frac BW_6dB | -6 dB axial width (mm)
+-----------------------------------------------------------------------
+Short pulse |        70.00 |              1.071 |                  0.130
+Long pulse  |       170.00 |              0.441 |                  0.309
+
+=== Lateral PSF experiment ===
+Active elements | Aperture D (mm) | F-number | -6 dB lateral width (mm)
+--------------------------------------------------------------------------
+            16 |           4.500 |    6.667 |                     2.311
+            32 |           9.300 |    3.226 |                     1.172
+            64 |          18.900 |    1.587 |                     0.597
+
+Key idea:
+Axial resolution is controlled mainly by pulse length / bandwidth,
+whereas lateral resolution is controlled mainly by aperture / focusing.
+Exported demo_axial_lateral_2d_psf_01.png
+Exported demo_axial_lateral_2d_psf_02.png
+Exported demo_axial_lateral_2d_psf_03.png
+
+--- demo_das_failure_modes ---
+=== DAS failure-mode teaching demo ===
+
+[A] Two-target resolution
+Close separation = 0.400 mm
+Wide  separation = 1.200 mm
+
+[B] Strong / weak target
+Weak target amplitude = 0.030 = -30.46 dB relative amplitude
+
+[C] Independent noise
+M = 64 coherent channels
+Ideal normalized-DAS SNR gain for independent noise ~= 10log10(M) = 18.06 dB
+
+[D] Sound-speed mismatch
+True c = 1540 m/s, beamforming c = 1500 m/s
+Correct-model axial peak = 29.990 mm
+Wrong-model axial peak   = 29.210 mm
+
+[E] Phase-aberration-like delay error
+RMS channel delay error ~= 24.89 ns
+Peak response change = -2.56 dB relative to ideal
+
+Interpretation:
+DAS is a strong baseline, but finite aperture, dynamic range and
+propagation-model errors limit what fixed coherent summation can do.
+Exported demo_das_failure_modes_01.png
+Exported demo_das_failure_modes_02.png
+Exported demo_das_failure_modes_03.png
+Exported demo_das_failure_modes_04.png
+Exported demo_das_failure_modes_05.png

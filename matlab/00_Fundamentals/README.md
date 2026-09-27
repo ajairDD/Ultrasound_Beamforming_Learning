@@ -98,3 +98,8 @@ point target
 - Signal Processing Toolbox。
 
 如果某个 MATLAB 版本对脚本末尾 local function 支持有限，请使用较新的 MATLAB 版本运行。
+
+
+## 重新生成讲义配图
+
+在本目录运行 `export_tutorial_figures`，将依次运行五个实验并导出 19 张 PNG。建议使用独立 MATLAB 会话，原始脚本会清理工作区并关闭图窗。输出与复现记录见 [配图说明](../../chapters/00_Fundamentals/figures/README.md)。

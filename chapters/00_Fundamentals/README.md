@@ -24,6 +24,30 @@
 
 ---
 
+### 第一次阅读，先抓住三个问题
+
+1. **回波什么时候到？** 用发射路径与接收路径预测每个通道的到达时间。
+2. **怎样判断这里有目标？** 按预测时刻取样，看通道能否同相叠加。
+3. **为什么图像仍不完美？** 有限孔径、脉冲长度和传播模型误差都会限制结果。
+
+建议第一次先读第 1–10 节并运行前两个实验，再读第 11–18 节理解分辨率，最后用第 19–25 节认识 DAS 的边界。只需要基本的距离、时间、正弦波和 MATLAB 数组知识。
+
+### 术语与符号速查
+
+| 本章用语 | 可以先这样理解 | 符号 / 单位 |
+|---|---|---|
+| element / channel | 阵元 / 该阵元记录的一条时间序列；本章一一对应 | $m=1,\ldots,M$ |
+| lateral / axial | 沿探头横向 / 向组织内部的深度方向 | $x,z$，m |
+| Tx / Rx | 发射传播 / 接收传播 | $\tau_{\mathrm{TX}},\tau_{\mathrm{RX},m}$，s |
+| focus / candidate pixel | 当前正在检验的候选成像位置 | $\mathbf r=(x,z)$ |
+| aperture / apodization | 参与接收的阵元范围 / 各阵元权重 | $D$，m；$w_m$ |
+| RF / IQ | 实数射频波形 / 正交解调后的复数信号 | 保留符号或复数相位 |
+| PSF | 一个点目标成像后的空间响应 | 本章主要看归一化幅值 |
+
+为避免重名，下文用 $x_m$ 表示阵元横坐标，用 $v_m(t)$ 表示第 $m$ 个通道的时间信号。代码中的 `channel_rf(:,m)` 就是一条离散的 $v_m(t)$。
+
+> **本章模型边界：** 均匀声速、理想点阵元、正入射平面波和指定的高斯调制回波；不模拟完整发射声场、阵元指向性、衰减或多次散射。配图用于理解机制，不能直接当作真实探头的性能指标。
+
 ## 0.1 这一章最终要建立什么能力
 
 学完以后，不要求你背很多公式，但应该能够从 channel data 的角度解释：
@@ -93,6 +117,10 @@ flowchart TB
 
 这就是 beamforming 必须存在的第一个原因。
 
+![平面波发射与点散射体回波接收的概念示意](figures/plane_wave_concept.png)
+
+**图 1｜先分清两段传播。** 左图的平行波前向深处传播；右图表示同一个散射体向不同阵元返回回波，接收路径长短不同。此图为 AI 生成的概念插画，不按比例绘制；定量结果以公式与 MATLAB 图为准。
+
 ---
 
 ### 1.1 先把“造数据”和“做成像”分开
@@ -144,27 +172,19 @@ element_x = ((0:n_elements-1) - (n_elements-1)/2) * pitch;
 
 所以阵元中心从约：
 
-$$
--9.45\ \mathrm{mm}
-$$
+$$ -9.45\ \mathrm{mm} $$
 
 排到：
 
-$$
-+9.45\ \mathrm{mm}.
-$$
+$$ +9.45\ \mathrm{mm}. $$
 
 按阵元中心间距定义，有效几何跨度约：
 
-$$
-D=(64-1)\times0.30=18.9\ \mathrm{mm}.
-$$
+$$ D=(64-1)\times0.30=18.9\ \mathrm{mm}. $$
 
 点目标设置为：
 
-$$
-(x_0,z_0)=(2\ \mathrm{mm},30\ \mathrm{mm}).
-$$
+$$ (x_0,z_0)=(2\ \mathrm{mm},30\ \mathrm{mm}). $$
 
 故意不放在 $x=0$，是为了让 raw channel trajectory 不呈完全左右对称，从而更容易看出“离目标更近的阵元先收到回波”。
 
@@ -238,47 +258,23 @@ z_focus
 
 一个典型教学参数可以是：
 
-$$
-c=1540\ \mathrm{m/s},
-$$
+$$ c=1540\ \mathrm{m/s}, $$
 
-$$
-f_c=5\ \mathrm{MHz},
-$$
+$$ f_c=5\ \mathrm{MHz}, $$
 
-$$
-f_s=40\ \mathrm{MHz}.
-$$
+$$ f_s=40\ \mathrm{MHz}. $$
 
 波长：
 
-$$
-\lambda
-=
-\frac{c}{f_c}
-=
-0.308\ \mathrm{mm}.
-$$
+$$ \lambda = \frac{c}{f_c} = 0.308\ \mathrm{mm}. $$
 
 载波周期：
 
-$$
-T_c
-=
-\frac1{f_c}
-=
-0.2\ \mu s.
-$$
+$$ T_c = \frac1{f_c} = 0.2\ \mu\mathrm{s}. $$
 
 采样周期：
 
-$$
-T_s
-=
-\frac1{f_s}
-=
-25\ ns.
-$$
+$$ T_s = \frac1{f_s} = 25\ \mathrm{ns}. $$
 
 因此一个 5 MHz 周期大约包含 8 个采样点。
 
@@ -301,53 +297,31 @@ pitch
 
 设候选成像点：
 
-$$
-\mathbf r=(x,z),
-$$
+$$ \mathbf r=(x,z), $$
 
 第 $m$ 个阵元位置：
 
-$$
-\mathbf r_m=(x_m,0).
-$$
+$$ \mathbf r_m=(x_m,0). $$
 
 总传播时间通常写成：
 
-$$
-\boxed{
-\tau_m(\mathbf r)
-=
-\tau_{\mathrm{TX}}(\mathbf r)
-+
-\tau_{\mathrm{RX},m}(\mathbf r)
-}
-$$
+$$ \boxed{ \tau_m(\mathbf r) = \tau_{\mathrm{TX}}(\mathbf r) + \tau_{\mathrm{RX},m}(\mathbf r) } $$
 
 接收传播时间在均匀声速模型下为：
 
-$$
-\tau_{\mathrm{RX},m}(\mathbf r)
-=
-\frac{\|\mathbf r-\mathbf r_m\|}{c}.
-$$
+$$ \tau_{\mathrm{RX},m}(\mathbf r) = \frac{\|\mathbf r-\mathbf r_m\|}{c}. $$
 
 Tx 部分取决于 acquisition。
 
 例如 broadside plane wave 的理想化模型中：
 
-$$
-\tau_{\mathrm{TX}}(x,z)
-=
-\frac{z}{c}.
-$$
+$$ \tau_{\mathrm{TX}}(x,z) = \frac{z}{c}. $$
 
 但 Focused Imaging、steered Plane Wave、Diverging Wave、STA 的 Tx 几何并不相同。
 
 因此从一开始就要建立：
 
-$$
-\boxed{\text{Acquisition} \neq \text{Beamformer}}
-$$
+$$ \boxed{\text{Acquisition} \neq \text{Beamformer}} $$
 
 完全可以存在：
 
@@ -368,29 +342,17 @@ Focused Imaging + DMAS
 
 对于 broadside plane-wave 示例，第 $m$ 个通道的真实到达时间为：
 
-$$
-\tau_m^{\mathrm{true}}
-=
-\frac{z_0}{c}
-+
-\frac{\sqrt{(x_0-x_m)^2+z_0^2}}{c}.
-$$
+$$ \tau_m^{\mathrm{true}} = \frac{z_0}{c} + \frac{\sqrt{(x_0-x_m)^2+z_0^2}}{c}. $$
 
 因为存在：
 
-$$
-\sqrt{(x_0-x_m)^2+z_0^2},
-$$
+$$ \sqrt{(x_0-x_m)^2+z_0^2}, $$
 
 所以 $\tau_m$ 随阵元位置 $x_m$ 变化是一条曲线。
 
 近轴条件下：
 
-$$
-\sqrt{z_0^2+(x_m-x_0)^2}
-\approx
-z_0+\frac{(x_m-x_0)^2}{2z_0},
-$$
+$$ \sqrt{z_0^2+(x_m-x_0)^2} \approx z_0+\frac{(x_m-x_0)^2}{2z_0}, $$
 
 因此轨迹看起来近似抛物线。
 
@@ -408,55 +370,39 @@ ______/                  \______
 
 这条曲线不是显示伪影，它就是点目标的传播几何在 channel domain 中留下的痕迹。
 
+![MATLAB 原始通道 RF 的到达时间轨迹](figures/demo_delay_alignment_01.png)
+
+**图 2｜一列是一条通道，一行是同一个绝对时刻。** 横轴是阵元位置，纵轴是时间，颜色表示带正负号的 RF 幅值。靠近 $x_0=2$ mm 的阵元先收到回波。本图由 `demo_delay_alignment.m` 生成，导出时只放大到 38–41 µs，未改变数据。注意 MATLAB 图的时间向上增加，和上面的字符示意方向不同，要以轴刻度为准。
+
 ---
 
 ## 5. Delay 的真正作用：把传播轨迹“拉直”
 
 Beamformer 对每个候选像素 $(x_f,z_f)$ 预测一套传播时间：
 
-$$
-\hat\tau_m(x_f,z_f).
-$$
+$$ \hat\tau_m(x_f,z_f). $$
 
 定义 residual delay：
 
-$$
-\boxed{
-\epsilon_m
-=
-\tau_m^{\mathrm{true}}
--
-\hat\tau_m
-}
-$$
+$$ \boxed{ \epsilon_m = \tau_m^{\mathrm{true}} - \hat\tau_m } $$
 
 如果候选点恰好是真实点：
 
-$$
-(x_f,z_f)=(x_0,z_0),
-$$
+$$ (x_f,z_f)=(x_0,z_0), $$
 
 则：
 
-$$
-\epsilon_m\approx0
-$$
+$$ \epsilon_m\approx0 $$
 
 对所有阵元成立。
 
 如果定义相对时间 $\Delta t$，并重新取样：
 
-$$
-\tilde x_m(\Delta t)
-=
-x_m\!\left(\Delta t+\hat\tau_m\right),
-$$
+$$ \tilde v_m(\Delta t) = v_m\!\left(\Delta t+\hat\tau_m\right), $$
 
 那么正确 focus 下，各个 channel 的 pulse 都会集中到：
 
-$$
-\Delta t\approx0.
-$$
+$$ \Delta t\approx0. $$
 
 ~~~text
 Before focusing                 After correct focusing
@@ -469,33 +415,27 @@ ch 4            /\              ch 4        /\
                                           Δt = 0
 ~~~
 
-这就是“Delay 把 channel trajectory 拉直”的准确含义。
+这就是“Delay 把 channel trajectory 拉直”的准确含义。这里移动的是**取样时间坐标**，并没有把真实声波或目标移动到另一处。
+
+![正确聚焦后的通道 RF](figures/demo_delay_alignment_02.png)
+
+![错误横向聚焦后的通道 RF](figures/demo_delay_alignment_03.png)
+
+**图 3｜同一份数据，两种位置假设。** 上图候选点为真实位置 $(2,30)$ mm，脉冲中心在相对时间 0 附近排齐；下图候选点为 $(0,30)$ mm，仍有随阵元变化的残余延时。先看条带是否水平，再看相对时间 0 这一行能否同相相加。线性插值会引入小幅幅值差异，正确对齐并不要求每个像素颜色完全相同。
 
 ---
 
 ## 6. Delay error 为什么会变成 phase error
 
-对于窄带信号，时间误差可以转成相位误差：
+对于窄带信号，时间误差对应载波相位误差。这里用 $\Delta\phi_m$ 表示真实到达时间相对预测时间的相位差：
 
-$$
-\boxed{
-\Delta\phi_m
-=
-2\pi f_c\epsilon_m
-}
-$$
+$$ \boxed{ \Delta\phi_m = 2\pi f_c\epsilon_m } $$
+
+按本章 $\epsilon_m=\tau_m^{\mathrm{true}}-\hat\tau_m$ 的定义，若复数脉冲采用 $e^{j2\pi f_c(t-\tau_m^{\mathrm{true}})}$，在预测时刻取样得到的相位为 $-2\pi f_c\epsilon_m$。正负号随比较方向而变，误差大小和相消机制不变。
 
 以 5 MHz 为例，25 ns 相当于：
 
-$$
-\Delta\phi
-=
-2\pi
-(5\times10^6)
-(25\times10^{-9})
-=
-45^\circ.
-$$
+$$ \Delta\phi = 2\pi (5\times10^6) (25\times10^{-9}) = 45^\circ. $$
 
 而 25 ns 恰好是 40 MHz sampling frequency 的一个采样周期。
 
@@ -511,24 +451,19 @@ $$
 
 实际 ADC 数据是离散序列：
 
-$$
-x_m[n].
-$$
+$$ v_m[n]. $$
 
-理论 delay 对应的 sample location：
+设第一个样本记录在 $t_0$，MATLAB 中第 $n$ 个样本对应 $t_n=t_0+(n-1)/f_s$。理论 delay 对应的连续采样位置为：
 
-$$
-u_m
-=
-\tau_m f_s
-$$
+$$ u_m = (\tau_m-t_0)f_s+1. $$
 
 通常不是整数。
 
 如果只做：
 
 ~~~matlab
-n = round(tau * fs);
+u = (tau - t0) * fs + 1;  % MATLAB 的连续采样位置，索引从 1 开始
+n = round(u);             % 最近邻；还需要检查是否超出记录范围
 ~~~
 
 最大量化误差大约是半个 sample。
@@ -541,9 +476,15 @@ n = round(tau * fs);
 - linear interpolation；
 - spline / higher-order；
 - fractional-delay filter；
-- 或 complex IQ / frequency-domain phase rotation。
+- 或在明确解调约定后，对基带 IQ 做包络延时与载波相位补偿。
 
-第 0 章 synthetic demo 使用线性插值，是为了让物理意义和实现都清楚。
+第 0 章 synthetic demo 使用线性插值，是为了让物理意义和实现都清楚。例如 $u_m=100.25$ 时，在第 100、101 个样本之间按 0.75、0.25 加权，而不是直接取第 100 个样本。
+
+~~~matlab
+focused_samples(m) = interp1(t, channel_rf(:,m), tau_total, 'linear', 0);
+~~~
+
+`t` 与 `tau_total` 都以秒为单位；最后的 `0` 表示记录范围外返回零。若大量候选点取到零，应先检查时间范围、起始时间和传播模型。插值减少取整误差，但不会凭空恢复采集时已经丢失的带宽。
 
 ---
 
@@ -551,21 +492,11 @@ n = round(tau * fs);
 
 对当前候选像素，在各阵元预测 delay 处取样：
 
-$$
-s_m(\mathbf r)
-=
-x_m\!\left(\tau_m(\mathbf r)\right).
-$$
+$$ s_m(\mathbf r) = v_m\!\left(\tau_m(\mathbf r)\right). $$
 
 收集为：
 
-$$
-\boxed{
-\mathbf s(\mathbf r)
-=
-[s_1(\mathbf r),s_2(\mathbf r),\ldots,s_M(\mathbf r)]^T
-}
-$$
+$$ \boxed{ \mathbf s(\mathbf r) = [s_1(\mathbf r),s_2(\mathbf r),\ldots,s_M(\mathbf r)]^T } $$
 
 这是这一章最重要的中间变量。
 
@@ -573,14 +504,11 @@ $$
 
 > **当前 candidate pixel 经过传播模型对齐后，在整个 aperture 上形成的一组 channel observation。**
 
+**先相加，再取幅值。** 对齐后仍要保留 RF 的正负号或复数信号的相位；若先逐通道 `abs`，相消信息就丢失了，结果不再是这里的相干 DAS。
+
 DAS 只做：
 
-$$
-y_{\mathrm{DAS}}
-=
-\sum_{m=1}^{M}
-w_m s_m.
-$$
+$$ y_{\mathrm{DAS}} = \sum_{m=1}^{M} w_m s_m. $$
 
 后面的算法几乎全部从 $\mathbf s(\mathbf r)$ 开始分家：
 
@@ -596,63 +524,39 @@ $$
 
 若正确聚焦后：
 
-$$
-s_m\approx A,
-$$
+$$ s_m\approx A, $$
 
 则：
 
-$$
-\sum_{m=1}^{M}s_m
-\approx
-MA.
-$$
+$$ \sum_{m=1}^{M}s_m \approx MA. $$
 
 如果用 normalized DAS：
 
-$$
-y
-=
-\frac1M\sum_m s_m,
-$$
+$$ y = \frac1M\sum_m s_m, $$
 
 则目标幅值大致保持为 $A$。
 
 对于 complex IQ，可以写成：
 
-$$
-s_m
-=
-A_m e^{j\phi_m}.
-$$
+$$ s_m = A_m e^{j\phi_m}. $$
 
 正确 focus：
 
-$$
-\phi_1\approx\phi_2\approx\cdots\approx\phi_M.
-$$
+$$ \phi_1\approx\phi_2\approx\cdots\approx\phi_M. $$
 
-相位矢量方向接近一致，求和较大。
+相位矢量方向接近一致，求和较大。例如四个单位信号同相时，$1+1+1+1=4$；相位分别为 0°、90°、180°、270° 时，$1+j-1-j=0$。
+
+**代码中的“复数”不一定是基带 IQ。** 后三个实验的 `channel_iq` 使用高斯包络乘以 `exp(1j*2*pi*fc*dt)`，仍显式保留载频，是教学用复数 RF 脉冲。真实解调 IQ 需要结合解调频率和时间参考处理相位，不能只把 RF 插值代码原样套上去。前两个实验中的 `abs(das)` 也只是 RF 取样响应的绝对值，不是完整的 B-mode 包络检测。
 
 错误 focus：
 
-$$
-\phi_m
-$$
+$$ \phi_m $$
 
 分散，向量部分抵消。
 
 因此 DAS 的空间选择性，本质上来自：
 
-$$
-\boxed{
-\text{position hypothesis}
-\rightarrow
-\text{predicted delay}
-\rightarrow
-\text{phase consistency}
-}
-$$
+$$ \boxed{ \text{position hypothesis} \rightarrow \text{predicted delay} \rightarrow \text{phase consistency} } $$
 
 ---
 
@@ -671,15 +575,11 @@ __________/      \__________
 
 这个点目标空间响应就是：
 
-$$
-\boxed{\text{Point Spread Function, PSF}}
-$$
+$$ \boxed{\text{Point Spread Function, PSF}} $$
 
 二维情况下：
 
-$$
-PSF(x,z).
-$$
+$$ PSF(x,z). $$
 
 PSF 是后续比较 beamformer 最重要的基础工具之一。
 
@@ -709,17 +609,13 @@ lateral resolution 提升
 
 经典尺度关系：
 
-$$
-\boxed{
-\Delta x
-\sim
-\frac{\lambda z}{D}
-=
-\lambda F\#
-}
-$$
+$$ \boxed{ \Delta x \sim \frac{\lambda z}{D} = \lambda F\# } $$
 
 这里是尺度关系，不是一个对所有 acquisition、window 和 PSF 定义都精确成立的固定系数公式。
+
+![16、32、64 阵元孔径的横向 PSF 对比](figures/demo_aperture_psf_apodization_01.png)
+
+**图 4｜先比较中心主瓣的宽度。** 目标深度和脉冲保持不变，仅增加参与接收的阵元数。每条曲线分别归一化到自己的峰值，因此这张图比较的是形状和宽度，不能用来比较绝对增益。
 
 ---
 
@@ -727,19 +623,11 @@ $$
 
 定义：
 
-$$
-F\#
-=
-\frac{z}{D}.
-$$
+$$ F\# = \frac{z}{D}. $$
 
 如果希望不同深度维持大致相近的 lateral-resolution 尺度，可以让：
 
-$$
-D(z)
-\approx
-\frac{z}{F\#}.
-$$
+$$ D(z) \approx \frac{z}{F\#}. $$
 
 于是：
 
@@ -765,9 +653,7 @@ $$
 
 Uniform weighting：
 
-$$
-w_m=\text{constant}
-$$
+$$ w_m=\text{constant} $$
 
 相当于一个边界比较硬的矩形 aperture。
 
@@ -785,13 +671,7 @@ Hann
 
 结果通常是：
 
-$$
-\boxed{
-\text{sidelobe}\downarrow
-\quad\text{但}\quad
-\text{main lobe width}\uparrow
-}
-$$
+$$ \boxed{ \text{sidelobe}\downarrow \quad\text{但}\quad \text{main lobe width}\uparrow } $$
 
 直觉上可以理解为：
 
@@ -799,31 +679,25 @@ $$
 
 这就是固定 apodization 最经典的 trade-off。
 
+![Uniform、Hann、Hamming 窗的横向 PSF 对比](figures/demo_aperture_psf_apodization_02.png)
+
+**图 5｜同时看中心和两侧。** Hann / Hamming 的主瓣更宽，而各自第一极小值以外的峰值旁瓣更低，但并不是所有离轴位置都更低。不要只看哪条曲线“更窄”就判定哪种窗更好：分开相邻目标和发现强目标旁的弱目标，是不同任务。这些曲线来自有限带宽与离散插值实验，不能直接套用理想单频窗函数的旁瓣常数。
+
 ---
 
 ## 14. FWHM、-6 dB amplitude width 与 -3 dB half-power
 
 如果归一化的是 amplitude：
 
-$$
-A_N(x)
-=
-\frac{|y(x)|}{\max |y|},
-$$
+$$ A_N(x) = \frac{|y(x)|}{\max |y|}, $$
 
 半幅：
 
-$$
-A_N=0.5
-$$
+$$ A_N=0.5 $$
 
 对应：
 
-$$
-20\log_{10}(0.5)
-=
--6.02\ \mathrm{dB}.
-$$
+$$ 20\log_{10}(0.5) = -6.02\ \mathrm{dB}. $$
 
 所以第 0 章脚本里测的 FWHM 更准确地说是：
 
@@ -835,7 +709,7 @@ $$
 
 混为一谈。
 
-看论文时要确认作者的 width 定义。
+看论文时要确认作者的 width 定义。功率减半对应幅值 $1/\sqrt{2}\approx0.707$，而非 0.5；FWHM 必须说明对幅值还是功率测量。
 
 ---
 
@@ -857,11 +731,7 @@ $$
 
 尺度：
 
-$$
-\Delta x
-\sim
-\lambda F\#.
-$$
+$$ \Delta x \sim \lambda F\#. $$
 
 ### Axial
 
@@ -869,21 +739,11 @@ $$
 
 如果 pulse 大约有 $N_c$ 个周期：
 
-$$
-\mathrm{SPL}
-\approx
-N_c\lambda,
-$$
+$$ \mathrm{SPL} \approx N_c\lambda, $$
 
 经典 pulse-echo 尺度关系：
 
-$$
-\boxed{
-\Delta z_{\mathrm{axial}}
-\sim
-\frac{\mathrm{SPL}}{2}
-}
-$$
+$$ \boxed{ \Delta z_{\mathrm{axial}} \sim \frac{\mathrm{SPL}}{2} } $$
 
 更短的 pulse：
 
@@ -896,19 +756,11 @@ shorter temporal pulse
 
 因此：
 
-$$
-\boxed{
-\text{Axial resolution mainly pulse/bandwidth-limited}
-}
-$$
+$$ \boxed{ \text{Axial resolution mainly pulse/bandwidth-limited} } $$
 
 而：
 
-$$
-\boxed{
-\text{Lateral resolution mainly aperture/focusing-limited}
-}
-$$
+$$ \boxed{ \text{Lateral resolution mainly aperture/focusing-limited} } $$
 
 ---
 
@@ -916,17 +768,13 @@ $$
 
 Center frequency：
 
-$$
-f_c
-$$
+$$ f_c $$
 
 表示频谱中心。
 
 Bandwidth：
 
-$$
-BW
-$$
+$$ BW $$
 
 表示频谱展开范围。
 
@@ -934,21 +782,17 @@ $$
 
 粗略尺度：
 
-$$
-\Delta t
-\sim
-\frac1{BW},
-$$
+$$ \Delta t \sim \frac1{BW}, $$
 
 所以：
 
-$$
-\Delta z_{\mathrm{axial}}
-\sim
-\frac{c}{2BW}.
-$$
+$$ \Delta z_{\mathrm{axial}} \sim \frac{c}{2BW}. $$
 
 具体系数取决于 pulse shape、bandwidth 定义和 width 指标，不能机械套固定常数。
+
+![相同中心频率下短脉冲与长脉冲的轴向 PSF](figures/demo_axial_lateral_2d_psf_01.png)
+
+**图 6｜中心频率相同，轴向宽度仍不同。** 这里只改变高斯包络的时间宽度，短脉冲对应更宽频带和更窄轴向响应。横轴虽然在图上横着画，变量仍是深度 $z$，因此它是轴向剖面，不是 lateral PSF。
 
 ---
 
@@ -956,9 +800,7 @@ $$
 
 真实点目标响应是：
 
-$$
-PSF(x,z).
-$$
+$$ PSF(x,z). $$
 
 它同时包含：
 
@@ -986,6 +828,10 @@ $$
 ~~~
 
 对于 3-D 系统还要再考虑 elevation resolution。
+
+![点目标的二维 PSF](figures/demo_axial_lateral_2d_psf_03.png)
+
+**图 7｜点目标变成有宽度的亮斑。** 白圈标出真实目标，色条为相对峰值的幅值 dB，显示下限为 −50 dB。横轴为 $x$、纵轴为深度 $z$；脚本使用 `axis xy`，深度向上增加，与临床常见“深度向下”的显示习惯不同。亮斑的横向、轴向宽度应分别测量，显示下限以下也不等于信号为零。
 
 ---
 
@@ -1031,15 +877,11 @@ _______/  \/  \_______
 
 这不是 DAS “算错”，而是：
 
-$$
-\boxed{
-\text{finite aperture}
-\Rightarrow
-\text{finite PSF}
-\Rightarrow
-\text{finite resolution}
-}
-$$
+$$ \boxed{ \text{finite aperture} \Rightarrow \text{finite PSF} \Rightarrow \text{finite resolution} } $$
+
+![两点间距 0.40 mm 与 1.20 mm 的响应比较](figures/demo_das_failure_modes_01.png)
+
+**图 8｜间距改变，两个峰的可分辨程度也改变。** 本例两个散射体幅值相同且使用相同脉冲相位；真实两目标的相对相位和强弱也会影响峰谷形状。单点 FWHM 是有用指标，但不是通用的“两点一定可分辨”阈值。
 
 因此任何声称“提高 resolution”的 beamformer，都应该在相同 acquisition / grid / display 条件下与 DAS PSF 公平比较。
 
@@ -1055,11 +897,7 @@ $$
 
 如果：
 
-$$
-A_{\mathrm{strong,response}}
->
-A_{\mathrm{weak,target}},
-$$
+$$ A_{\mathrm{strong,response}} > A_{\mathrm{weak,target}}, $$
 
 弱目标就可能被掩盖。
 
@@ -1081,41 +919,21 @@ $$
 
 设 normalized DAS：
 
-$$
-y
-=
-\frac1M
-\sum_{m=1}^{M}
-(A+n_m),
-$$
+$$ y = \frac1M \sum_{m=1}^{M} (A+n_m), $$
 
 其中 $n_m$ 为彼此独立、零均值、等方差噪声。
 
 正确聚焦信号：
 
-$$
-\frac1M\sum_m A
-=
-A.
-$$
+$$ \frac1M\sum_m A = A. $$
 
 噪声标准差：
 
-$$
-\sigma_{\mathrm{out}}
-=
-\frac{\sigma}{\sqrt M}.
-$$
+$$ \sigma_{\mathrm{out}} = \frac{\sigma}{\sqrt M}. $$
 
 理想功率 SNR 增益：
 
-$$
-\boxed{
-G_{\mathrm{SNR}}
-\approx
-10\log_{10}M\ \mathrm{dB}
-}
-$$
+$$ \boxed{ G_{\mathrm{SNR}} \approx 10\log_{10}M\ \mathrm{dB} } $$
 
 $M=64$ 时约为 18.1 dB。
 
@@ -1130,15 +948,7 @@ $M=64$ 时约为 18.1 dB。
 
 所以必须区分：
 
-$$
-\boxed{
-\text{independent noise}
-\neq
-\text{clutter}
-\neq
-\text{reverberation}
-}
-$$
+$$ \boxed{ \text{independent noise} \neq \text{clutter} \neq \text{reverberation} } $$
 
 ---
 
@@ -1146,19 +956,11 @@ $$
 
 如果：
 
-$$
-c_{\mathrm{BF}}
-\neq
-c_{\mathrm{true}},
-$$
+$$ c_{\mathrm{BF}} \neq c_{\mathrm{true}}, $$
 
 那么：
 
-$$
-\hat\tau_m
-\neq
-\tau_m^{\mathrm{true}}.
-$$
+$$ \hat\tau_m \neq \tau_m^{\mathrm{true}}. $$
 
 可能同时出现：
 
@@ -1172,27 +974,21 @@ $$
 
 如果 delay 本身严重错误，后面的 CF、MV、DMAS 同样是在错误对齐的数据上工作。
 
+![正确声速与错误声速下的轴向目标响应](figures/demo_das_failure_modes_04.png)
+
+**图 9｜先找峰在哪里，再看峰有多高。** 数据按 1540 m/s 生成，重建改用 1500 m/s 后，目标被放到了较浅的位置。近轴估算 $z_{\mathrm{BF}}\approx z_0 c_{\mathrm{BF}}/c_{\mathrm{true}}$，即约 29.22 mm。图中两条曲线使用同一个参考峰值，可同时观察移位与幅值变化；只在真实深度画横向剖面会漏掉移位后的峰。
+
 ---
 
 ## 23. DAS Failure Mode 4：phase aberration
 
 可以把额外的 channel-dependent delay 写成：
 
-$$
-\tau_m^{\mathrm{measured}}
-=
-\tau_m^{\mathrm{ideal}}
-+
-\delta\tau_m.
-$$
+$$ \tau_m^{\mathrm{measured}} = \tau_m^{\mathrm{ideal}} + \delta\tau_m. $$
 
 对应 phase error：
 
-$$
-\Delta\phi_m
-=
-2\pi f_c\delta\tau_m.
-$$
+$$ \Delta\phi_m = 2\pi f_c\delta\tau_m. $$
 
 只要 $\delta\tau_m$ 随阵元变化，理想几何 delay 就无法把所有通道完全对齐。
 
@@ -1226,11 +1022,7 @@ $$
 
 DAS 当前做的是：
 
-$$
-\boxed{
-\text{fixed channel weighting + coherent sum}
-}
-$$
+$$ \boxed{ \text{fixed channel weighting + coherent sum} } $$
 
 这自然产生几个问题。
 
@@ -1258,9 +1050,7 @@ $$
 
 所以后面的经典方法不是几个互不相干的新公式，而是围绕同一个：
 
-$$
-\mathbf s(\mathbf r)
-$$
+$$ \mathbf s(\mathbf r) $$
 
 在不同方向上继续利用信息。
 
@@ -1326,81 +1116,70 @@ point target
 
 ---
 
-## 27. 第 0 章的六条核心公式
+### 运行、读图，再改一个参数
+
+在仓库根目录打开 MATLAB：
+
+~~~matlab
+addpath(fullfile(pwd, 'matlab', '00_Fundamentals'));
+demo_delay_alignment
+% 一次重新生成全部教程图片（建议在独立 MATLAB 会话运行）：
+export_tutorial_figures
+~~~
+
+原始脚本会清理工作区并关闭已有图窗。全部图片、生成方式和 AI 插图提示词见 [配图说明](figures/README.md)，本次运行输出见 [MATLAB 结果记录](figures/matlab_results.txt)。
+
+下面是本次 R2021b 运行得到的几个检查点；它们属于这里的简化模型，不是通用性能常数。
+
+| 实验 | 本次结果 | 应该读出的含义 |
+|---|---|---|
+| 正确 / 错误横向聚焦 | 最大残余延时 0 / 427.016 ns | 错误位置无法让通道同时对齐 |
+| 16 / 32 / 64 阵元，Uniform | 横向半幅宽度 2.325 / 1.173 / 0.598 mm | 孔径增大，主瓣变窄 |
+| Uniform / Hann / Hamming，64 阵元 | 横向半幅宽度 0.598 / 1.003 / 0.913 mm | 加窗需要付出主瓣宽度代价 |
+| 短 / 长脉冲 | 轴向半幅宽度 0.130 / 0.309 mm | 相同中心频率不代表相同轴向分辨率 |
+| 声速 1540 / 1500 m/s 重建 | 轴向峰 29.990 / 29.210 mm | 错误声速导致定位偏差 |
+
+正确声速时峰值也不必精确落在 30.000 mm：有限采样、线性插值和成像网格都会影响离散峰的位置，应结合误差尺度解释。
+
+建议做三个小实验，每次只改一项：
+
+1. 把 `demo_delay_alignment` 的 `focus_wrong` 改为更接近真实点的位置，观察残余延时是否减小。
+2. 在孔径实验里固定窗函数，只改变 active elements，比较半幅宽度。
+3. 在轴向实验里固定 `fc`，只改变 `sigma_t`，观察脉冲长度和轴向宽度的关系。
+
+修改后先记录自己的预测，再运行检查。不要同时改声速、频率和孔径，否则很难判断变化来自哪里。
+
+---
+
+## 27. 第 0 章的七条核心公式
 
 总 delay：
 
-$$
-\boxed{
-\tau_m
-=
-\tau_{\mathrm{TX}}
-+
-\tau_{\mathrm{RX},m}
-}
-$$
+$$ \boxed{ \tau_m = \tau_{\mathrm{TX}} + \tau_{\mathrm{RX},m} } $$
 
 Delay 后样本：
 
-$$
-\boxed{
-s_m(\mathbf r)
-=
-x_m(\tau_m)
-}
-$$
+$$ \boxed{ s_m(\mathbf r) = v_m(\tau_m) } $$
 
 DAS：
 
-$$
-\boxed{
-y_{\mathrm{DAS}}
-=
-\sum_m w_ms_m
-}
-$$
+$$ \boxed{ y_{\mathrm{DAS}} = \sum_m w_ms_m } $$
 
 Residual delay：
 
-$$
-\boxed{
-\epsilon_m
-=
-\tau_m^{\mathrm{true}}
--
-\hat\tau_m
-}
-$$
+$$ \boxed{ \epsilon_m = \tau_m^{\mathrm{true}} - \hat\tau_m } $$
 
 Delay error 到 phase error：
 
-$$
-\boxed{
-\Delta\phi_m
-=
-2\pi f_c\epsilon_m
-}
-$$
+$$ \boxed{ \Delta\phi_m = 2\pi f_c\epsilon_m } $$
 
 横向分辨率尺度：
 
-$$
-\boxed{
-\Delta x
-\sim
-\lambda F\#
-}
-$$
+$$ \boxed{ \Delta x \sim \lambda F\# } $$
 
 轴向经典尺度：
 
-$$
-\boxed{
-\Delta z_{\mathrm{axial}}
-\sim
-\frac{\mathrm{SPL}}{2}
-}
-$$
+$$ \boxed{ \Delta z_{\mathrm{axial}} \sim \frac{\mathrm{SPL}}{2} } $$
 
 ---
 
@@ -1427,24 +1206,31 @@ $$
 
 如果只记住一句话：
 
-$$
-\boxed{
-\text{Beamforming 是利用传播模型，把空间位置转化为跨阵元相干性，再利用这种相干性形成图像。}
-}
-$$
+> **波束合成利用传播模型，把候选空间位置转化为跨阵元的对齐关系，再组合这些通道形成图像。**
 
 DAS 只是最朴素的实现：
 
-$$
-\boxed{
-\text{Delay}
-\rightarrow
-\text{Weight}
-\rightarrow
-\text{Coherent Sum}
-}
-$$
+$$ \boxed{ \text{Delay} \rightarrow \text{Weight} \rightarrow \text{Coherent Sum} } $$
 
 下一章开始，我们不再停留在 synthetic model，而是进入：
 
 > **真实 UFF channel data → 数据契约 → Tx/Rx delay → interpolation → 自己实现 MATLAB DAS → 点靶 PSF 验证。**
+
+## 30. 自测参考与延伸阅读
+
+<details>
+<summary>完成第 28 节后，展开核对思路</summary>
+
+- **1–4：传播与取样。** 不同阵元的接收路径不同；按候选点预测的到达时间重新取样，正确模型使残余延时接近零。时间误差会改变载波相位，因此非整数采样位置需要插值。
+- **5–7：孔径与窗。** 大孔径对横向偏离更敏感；F-number 用深度与孔径之比描述这一尺度。平滑窗压低孔径边缘权重，通常以更宽主瓣换取更低峰值旁瓣。
+- **8：脉冲与深度。** 脉冲越短，两个相近深度的回波越不容易重叠；脉冲长度与带宽相关，不能只看中心频率。
+- **9–10：误差与噪声。** 声速错误改变深度映射和跨通道对齐；独立零均值噪声可被平均抑制，有相关结构的杂波不满足同一假设。
+- **11–12：共同入口与公平比较。** $\mathbf s(\mathbf r)$ 保留各通道对齐后的观测；先建立可靠 DAS，才能判断新方法改变通道组合后是否真正改善结果。
+
+</details>
+
+延伸阅读不作为运行依赖：
+
+- [MathWorks：聚焦阵列响应](https://www.mathworks.com/help/phased/ug/examine-the-response-of-a-focused-array.html)：辅助理解球面接收波前与相干叠加；本章并不调用该工具箱。
+- [So you think you can DAS?](https://arxiv.org/abs/2007.11960)：进一步理解超声 DAS 的参数选择和实现细节。
+- [Analysis of the Time and Phase Delay Resolutions in Ultrasound Baseband I/Q Beamformers](https://pubmed.ncbi.nlm.nih.gov/32853148/)：理解基带 IQ 的时间延时与相位补偿为何需要分别考虑。
