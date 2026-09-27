@@ -64,6 +64,17 @@ Ultrasound_Beamforming_Learning/
 
 后续章节会随着实际学习进度逐步加入，不提前创建大量空目录。
 
+### 当前学习进度
+
+**第一讲：DAS Fundamentals — 已完成**
+
+- 完整讲义：[chapters/01_DAS/README.md](./chapters/01_DAS/)
+- 第一讲速查：[chapters/01_DAS/SUMMARY.md](./chapters/01_DAS/SUMMARY.md)
+- MATLAB 实践：[matlab/01_DAS/](./matlab/01_DAS/)
+- 已覆盖：Delay、interpolation、aperture、F-number、apodization、PSF、axial/lateral resolution、DAS failure modes
+
+下一阶段将在真实 UFF channel data 上实现统一 DAS baseline，再进入 coherence-based beamforming。
+
 ---
 
 # 0. 本文档要解决什么问题
