@@ -64,6 +64,7 @@ plot_raw_channel_overview_ustb
 | 文件 | 需要 USTB | 用途 |
 |---|---:|---|
 | `demo_synthetic_point_target.m` | 否 | 自包含 DAS 直觉实验 |
+| `demo_delay_alignment.m` | 否 | 可视化原始弯曲到达轨迹如何被正确 Delay 拉直，以及错误焦点留下的 residual delay |
 | `inspect_uff_hdf5.m` | 否 | 用 MATLAB HDF5 API 查看 UFF 文件结构 |
 | `inspect_uff_metadata_ustb.m` | 是 | 用 USTB 读取并核对 channel data 元数据 |
 | `plot_raw_channel_overview_ustb.m` | 是 | 显示真实 UFF 数据的“时间 × 阵元”图 |
@@ -75,17 +76,19 @@ plot_raw_channel_overview_ustb
 ```text
 1. demo_synthetic_point_target
         ↓
-2. 阅读 chapters/01_DAS/README.md
+2. demo_delay_alignment
         ↓
-3. inspect_uff_hdf5
+3. 阅读 chapters/01_DAS/README.md
         ↓
-4. 安装 USTB（准备进入真实数据）
+4. inspect_uff_hdf5
         ↓
-5. inspect_uff_metadata_ustb
+5. 安装 USTB（准备进入真实数据）
         ↓
-6. plot_raw_channel_overview_ustb
+6. inspect_uff_metadata_ustb
         ↓
-7. 下一阶段：真正实现 UFF 数据上的 DAS
+7. plot_raw_channel_overview_ustb
+        ↓
+8. 下一阶段：真正实现 UFF 数据上的 DAS
 ```
 
 ---
