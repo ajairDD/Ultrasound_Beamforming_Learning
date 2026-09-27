@@ -67,6 +67,7 @@ plot_raw_channel_overview_ustb
 | `demo_delay_alignment.m` | 否 | 可视化原始弯曲到达轨迹如何被正确 Delay 拉直，以及错误焦点留下的 residual delay |
 | `demo_aperture_psf_apodization.m` | 否 | 比较 aperture size、F-number 与 Uniform/Hann/Hamming 对 lateral PSF、-6 dB 宽度和 sidelobe 的影响 |
 | `demo_axial_lateral_2d_psf.m` | 否 | 比较 pulse duration/bandwidth 对 axial PSF、aperture 对 lateral PSF 的作用，并显示二维 PSF |
+| `demo_das_failure_modes.m` | 否 | 第一讲收尾：双目标分辨、强弱目标、独立噪声、声速失配和相位畸变等 DAS 典型边界 |
 | `inspect_uff_hdf5.m` | 否 | 用 MATLAB HDF5 API 查看 UFF 文件结构 |
 | `inspect_uff_metadata_ustb.m` | 是 | 用 USTB 读取并核对 channel data 元数据 |
 | `plot_raw_channel_overview_ustb.m` | 是 | 显示真实 UFF 数据的“时间 × 阵元”图 |
@@ -84,17 +85,19 @@ plot_raw_channel_overview_ustb
         ↓
 4. demo_axial_lateral_2d_psf
         ↓
-5. 阅读 chapters/01_DAS/README.md
+5. demo_das_failure_modes
         ↓
-6. inspect_uff_hdf5
+6. 阅读 chapters/01_DAS/README.md
         ↓
-7. 安装 USTB（准备进入真实数据）
+7. inspect_uff_hdf5
         ↓
-8. inspect_uff_metadata_ustb
+8. 安装 USTB（准备进入真实数据）
         ↓
-9. plot_raw_channel_overview_ustb
+9. inspect_uff_metadata_ustb
         ↓
-10. 下一阶段：真正实现 UFF 数据上的 DAS
+10. plot_raw_channel_overview_ustb
+        ↓
+11. 下一阶段：真实 UFF 数据上的 DAS 与后续算法
 ```
 
 ---
@@ -116,3 +119,21 @@ plot_raw_channel_overview_ustb
 - amplitude / power / dB。
 
 程序“能跑”不等于 beamforming 物理实现正确。
+
+
+---
+
+## 第一讲完成状态
+
+完成 `demo_das_failure_modes.m` 后，第一讲的 synthetic learning path 即告完成。
+
+建议进入真实数据前，至少能够解释：
+
+- 为什么 raw channel data 中点目标形成弯曲 arrival-time trajectory；
+- Delay 如何把它对齐；
+- residual delay 如何转成 phase error；
+- aperture / F-number 如何改变 lateral PSF；
+- apodization 为什么存在 mainlobe-sidelobe trade-off；
+- bandwidth / pulse length 为什么控制 axial PSF；
+- 为什么 sound-speed mismatch 与 phase aberration 会破坏 coherence；
+- 为什么独立随机噪声与结构化 clutter 不能混为一谈。
