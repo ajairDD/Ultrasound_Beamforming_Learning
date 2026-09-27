@@ -264,7 +264,171 @@ FI 的 Tx path 与实际 transmit focus / source / delay law 有关。
 
 ---
 
-## 8. 计划中的 DAS 核心接口
+## 8. 本项目到底使用哪一套 DAS 代码？
+
+### 8.1 主实现：我们自己写
+
+第 1 章的 **主算法实现不是 USTB 内置 DAS，也不是 RTB**。
+
+主文件：
+
+~~~text
+matlab/01_DAS_Real_UFF/das_fi_scanline_manual.m
+~~~
+
+USTB 在这个脚本里只负责：
+
+~~~matlab
+channel_data = uff.read_object(filename, '/channel_data');
+~~~
+
+从这一步以后，以下内容都由本项目显式实现：
+
+- RF → analytic signal；
+- focused-transmit virtual-source delay；
+- receive propagation delay；
+- fractional-sample linear interpolation；
+- receive aperture；
+- coherent receive summation；
+- envelope / dB display。
+
+这样做的原因是：如果直接调用 `midprocess.das()`，我们能得到图像，但对真正的 delay、sample index、wave.delay 和 aperture 数据流仍然缺少掌握。
+
+### 8.2 USTB DAS：作为 reference，不作为黑盒主实现
+
+等 manual DAS 在真实数据上跑通以后，会再生成一份 **匹配 grid / timing / aperture 的 USTB conventional DAS**，用于数值交叉验证。
+
+因此关系是：
+
+~~~text
+Manual DAS     = 我们真正学习和维护的实现
+USTB DAS       = reference / oracle-like cross-check
+RTB            = conventional DAS 之后的 focused-transmit 扩展
+~~~
+
+> 即使 Manual DAS 与 USTB 图像很像，也还要继续检查 delay、shape、unit、peak location 和 PSF，而不是把“看起来一样”当作唯一验证。
+
+---
+
+## 9. Conventional scanline DAS 与 RTB 是什么关系？
+
+### 9.1 Conventional scanline DAS
+
+对于本章这套 Focused Imaging 数据，最基础的 conventional reconstruction 是：
+
+~~~text
+Tx wave 1 → scanline 1
+Tx wave 2 → scanline 2
+Tx wave 3 → scanline 3
+...
+~~~
+
+横向位置直接由：
+
+~~~matlab
+x_line = sequence(i_wave).source.x;
+~~~
+
+给出。
+
+每个 transmit wave 只负责它自己的输出 scanline；在该 scanline 上做 dynamic receive focusing 和 Rx coherent sum。
+
+这就是 `das_fi_scanline_manual.m` 第一版实现的边界。
+
+### 9.2 RTB：同一次 focused transmit 生成多条 retrospective lines
+
+RTB（Retrospective Transmit Beamforming）仍然可以使用 DAS 做时间域 beamforming，但它不再限制为：
+
+~~~text
+1 transmit → 1 output line
+~~~
+
+而是允许：
+
+~~~text
+1 focused transmit
+      ↓
+对发射波场覆盖范围内的多个 candidate pixels / receive lines 重建
+      ↓
+邻近 focused transmits 的结果在相同 pixel 上进一步 coherent combination
+~~~
+
+因此 RTB 更接近一种 **focused-transmit synthetic-aperture / retrospective transmit focusing strategy**。
+
+### 9.3 它们不是两种互斥的“Sum 算法”
+
+二者最核心的区别发生在 **Tx dimension**：
+
+| 项目 | Conventional FI-DAS | RTB-DAS |
+|---|---|---|
+| 输入 | focused channel data | 同一类 focused channel data |
+| Rx delay | 动态计算 | 动态计算 |
+| Rx sum | DAS | DAS |
+| 一个 Tx 对应输出 | 通常 1 条 scanline | 多个 lateral pixels / lines |
+| Tx waves 是否互相合成 | 基本不跨 Tx 合成 | 多个 Tx 可在同一 pixel coherent combine |
+| Tx model | 只需本 scanline 的 focused-wave timing | 必须可靠描述 off-axis focused transmit wavefield |
+| lateral sampling | 受 transmit line spacing 约束 | 可以比 transmit line spacing 更密 |
+| 计算量 | 较低 | 明显更高 |
+
+所以可以把它理解成：
+
+$
+\boxed{\text{RTB-DAS = DAS receive focusing + retrospective transmit-domain synthesis}}
+$
+
+而不是：
+
+$
+\text{RTB} = \text{一种完全不同于 DAS 的通道求和公式}.
+$
+
+### 9.4 为什么 RTB 的 Tx delay 更难
+
+Conventional scanline reconstruction 只在每个 focused beam 自己的中心线附近使用该 transmit。
+
+此时 virtual-source spherical model 在 scanline 上比较简单，而且 USTB 的 spherical / hybrid 模型在中心线上给出相同的几何路径。
+
+RTB 则会把某个 focused transmit 用到离开其中心线的 pixels。
+
+这时简单 spherical virtual-source model 可能在 transmit focus 附近产生不连续 / artifact。Nguyen & Prager 的 unified pixel-based model，以及 Rindal 等人的 hybrid virtual-source model，就是为这个问题提出的改进。
+
+因此本项目的顺序是：
+
+~~~text
+Step 1  Conventional FI scanline DAS
+        ↓
+Step 2  与 USTB conventional DAS 交叉验证
+        ↓
+Step 3  明确 Tx dimension / receive dimension
+        ↓
+Step 4  RTB：一个 Tx 重建多条线 + 多 Tx coherent combination
+        ↓
+Step 5  比较 spherical / unified / hybrid Tx delay model
+~~~
+
+RTB 不会抢在 Step 1 前面。
+
+---
+
+## 10. 第一版 Manual DAS 的当前定义
+
+`das_fi_scanline_manual.m` 当前采用以下明确约定：
+
+- 只处理 conventional focused scanline FI；
+- 一次只读取一个 wave，控制内存；
+- 第一个版本只接受 RF 数据；
+- 使用公共时间轴 `initial_time + (n-1)/fs`；
+- `wave.delay` 在 Tx delay 中显式减去一次；
+- Tx 使用 focused spherical virtual-source geometry；
+- Rx 使用 pixel 到每个 probe element 的传播距离；
+- interpolation 使用 linear fractional sampling；
+- 默认 receive aperture 为 `full`，另提供显式 `f_number` boxcar 模式；
+- coherent sum 后再取 envelope / dB。
+
+默认 `full` receive aperture 是为了让第一版尽量少混入额外 window 变量。等它和 reference 核对正确后，再单独比较 full aperture 与 dynamic F-number aperture。
+
+---
+## 11. 计划中的 DAS 核心接口
 
 本章后续实现会尽量保持数据流清楚，而不是一开始就追求高度抽象。
 
@@ -315,7 +479,7 @@ end
 
 ---
 
-## 9. 输出不是“一个 DAS 图”这么简单
+## 12. 输出不是“一个 DAS 图”这么简单
 
 最终至少要明确以下几个阶段：
 
@@ -354,7 +518,7 @@ $$
 
 ---
 
-## 10. 本章验证标准
+## 13. 本章验证标准
 
 第 1 章不会以“程序跑通”为完成标准。
 
@@ -398,7 +562,7 @@ $$
 
 ---
 
-## 11. 当前已有代码
+## 14. 当前已有代码
 
 路径：
 
@@ -438,9 +602,21 @@ time × receive channel
 
 结构。
 
+### <code>das_fi_scanline_manual.m</code>
+
+需要 USTB 读取 UFF，但 **DAS 算法本体由本项目自己实现**。
+
+当前实现 conventional FI：
+
+~~~text
+1 focused Tx → 1 scanline
+~~~
+
+用于建立后续所有高级 beamformer 的真实数据 baseline。
+
 ---
 
-## 12. 当前状态
+## 15. 当前状态
 
 **数据准备完成。**
 
@@ -460,7 +636,7 @@ time × receive channel
 
 ---
 
-## 13. 本章完成后的意义
+## 16. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
 
