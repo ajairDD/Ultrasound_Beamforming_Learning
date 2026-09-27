@@ -587,3 +587,189 @@ Hamming
 二者虽然都会产生离轴响应，但物理来源不同。
 
 本项目会在后续阵列空间采样部分单独讨论 grating lobe，不在本节混在一起。
+
+
+---
+
+## 21. Axial resolution 与 lateral resolution 来自不同物理机制
+
+这一点必须明确区分。
+
+### Lateral resolution
+
+主要由：
+
+- aperture；
+- focusing；
+- F-number；
+- wavelength；
+- apodization
+
+控制。
+
+常用尺度关系：
+
+$$
+\Delta x
+\sim
+\frac{\lambda z}{D}
+=
+\lambda F\#.
+$$
+
+### Axial resolution
+
+主要由 transmitted / received pulse 在时间方向上的长度决定。
+
+更短的脉冲意味着更小的 spatial pulse length，从而更容易分开轴向上相邻的两个散射体。
+
+常见直觉关系：
+
+$$
+\Delta z_{\mathrm{axial}}
+\sim
+\frac{\mathrm{SPL}}{2},
+$$
+
+其中 SPL 是 spatial pulse length。
+
+因为 pulse length 与 bandwidth 互为 trade-off，所以通常：
+
+> **shorter pulse → broader bandwidth → better axial resolution**
+
+---
+
+## 22. 为什么 axial resolution 不主要由 aperture 决定
+
+固定 lateral coordinate 时，沿深度方向移动候选焦点，最主要变化是 pulse 到达时间。
+
+如果两个轴向目标的回波在时间上高度重叠，那么即使 aperture 很大，也无法仅靠横向聚焦把两个 temporal echoes 完全分开。
+
+因此：
+
+$$
+\boxed{
+\text{Axial resolution mainly follows temporal pulse extent}
+}
+$$
+
+而不是 receive aperture。
+
+---
+
+## 23. Spatial pulse length
+
+如果 pulse 大约包含 $N_c$ 个周期：
+
+$$
+\mathrm{SPL}
+\approx
+N_c\lambda.
+$$
+
+对于传统 pulse-echo 情况，常见轴向分辨率尺度：
+
+$$
+\Delta z_{\mathrm{axial}}
+\approx
+\frac{\mathrm{SPL}}{2}.
+$$
+
+这里的 $1/2$ 来自双程传播：两个深度之间的空间距离 $\Delta z$ 会对应大约 $2\Delta z/c$ 的往返时间差。
+
+这只是经典近似尺度关系；实际值仍受：
+
+- pulse shape；
+- bandwidth；
+- filtering；
+- demodulation；
+- envelope detection；
+- width definition
+
+影响。
+
+---
+
+## 24. Bandwidth 与 axial resolution
+
+时间越短的 pulse，其频谱通常越宽。
+
+因此：
+
+$$
+\boxed{
+\text{Short pulse}
+\Longleftrightarrow
+\text{Broad bandwidth}
+}
+$$
+
+进一步：
+
+$$
+\boxed{
+\text{Broad bandwidth}
+\Rightarrow
+\text{Better axial resolution}
+}
+$$
+
+这也是为什么不能只看 center frequency 判断 axial resolution。
+
+两个探头即使都有 5 MHz center frequency，如果 bandwidth 不同，轴向分辨率也可能明显不同。
+
+---
+
+## 25. 二维 PSF
+
+真实成像中的点目标响应是二维的：
+
+$$
+PSF(x,z).
+$$
+
+它通常表现为：
+
+- axial 方向：由 pulse length / bandwidth 主导；
+- lateral 方向：由 aperture / focusing 主导。
+
+因此二维 PSF 往往不是一个圆，而更像一个椭圆或具有复杂旁瓣结构的二维响应。
+
+配套脚本：
+
+```matlab
+demo_axial_lateral_2d_psf
+```
+
+会依次画出：
+
+1. short vs long pulse 的 axial PSF；
+2. 不同 aperture 的 lateral PSF；
+3. 一个完整 2-D PSF。
+
+---
+
+## 26. 关于当前脚本里的 bandwidth
+
+当前教学脚本使用 Gaussian-modulated complex analytic pulse：
+
+$$
+p(t)
+=
+\exp\left(-\frac{t^2}{2\sigma_t^2}\right)
+\exp(j2\pi f_ct).
+$$
+
+较小的 $\sigma_t$：
+
+- pulse 更短；
+- frequency-domain Gaussian 更宽；
+- axial PSF 更窄。
+
+较大的 $\sigma_t$：
+
+- pulse 更长；
+- bandwidth 更窄；
+- axial PSF 更宽。
+
+脚本打印的是近似的 -6 dB amplitude fractional bandwidth，只用于帮助建立趋势，不应当替代真实探头的实测 bandwidth 定义。
