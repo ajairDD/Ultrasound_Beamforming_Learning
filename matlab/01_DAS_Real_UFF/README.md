@@ -13,6 +13,7 @@
 | <code>inspect_uff_hdf5.m</code> | 否 | 使用 MATLAB HDF5 API 查看 UFF 文件结构 |
 | <code>inspect_uff_metadata_ustb.m</code> | 是 | 第 1 步：输出完整数据契约，检查 shape、RF/IQ、timing、probe、wavefront、source、origin 和 wave.delay |
 | <code>plot_raw_channel_overview_ustb.m</code> | 是 | 显示真实 channel data 的 time × channel 结构 |
+| <code>das_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | 本项目自己实现的 conventional FI scanline DAS：Tx/Rx delay、analytic RF、插值、aperture、coherent sum、dB 均显式实现 |
 
 ---
 
@@ -83,3 +84,36 @@ coherent sum
 由本项目自己实现并逐步验证。
 
 当前仓库还没有把“真实 UFF DAS”标成完成，因为这部分尚未正式实现和运行验证。
+
+
+---
+
+## 当前真正的 DAS 主线
+
+本项目不会把 `midprocess.das()` 当成教学主实现。
+
+运行顺序：
+
+```matlab
+inspect_uff_metadata_ustb
+plot_raw_channel_overview_ustb
+das_fi_scanline_manual
+```
+
+第三个脚本中，USTB 只负责：
+
+```matlab
+channel_data = uff.read_object(filename, '/channel_data');
+```
+
+之后的 beamforming 数学全部由仓库代码自己完成。
+
+默认先做：
+
+```text
+1 focused transmit -> 1 scanline
+```
+
+即 conventional FI-DAS。
+
+RTB 会在这套 baseline 完成并与 USTB reference 对齐之后再加入。
