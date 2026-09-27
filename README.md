@@ -15,7 +15,7 @@
 | 章节 | 内容 | 状态 |
 |---|---|---|
 | 第 0 章 | 波束合成共同基础：Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | **已完成** |
-| 第 1 章 | 在真实 UFF channel data 上从零实现 DAS | **准备进入** |
+| 第 1 章 | 在真实 UFF channel data 上从零实现 DAS | **进行中** |
 | 第 2 章 | CF / GCF：coherence weighting | 计划中 |
 | 第 3 章 | MV / MVDR / Capon：adaptive channel weighting | 计划中 |
 | 第 4 章 | DMAS / fDMAS：nonlinear inter-channel interaction | 计划中 |
