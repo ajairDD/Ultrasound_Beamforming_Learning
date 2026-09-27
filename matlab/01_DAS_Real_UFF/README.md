@@ -11,7 +11,7 @@
 | 文件 | USTB | 作用 |
 |---|---:|---|
 | <code>inspect_uff_hdf5.m</code> | 否 | 使用 MATLAB HDF5 API 查看 UFF 文件结构 |
-| <code>inspect_uff_metadata_ustb.m</code> | 是 | 读取 channel_data / probe / sequence 元数据 |
+| <code>inspect_uff_metadata_ustb.m</code> | 是 | 第 1 步：输出完整数据契约，检查 shape、RF/IQ、timing、probe、wavefront、source、origin 和 wave.delay |
 | <code>plot_raw_channel_overview_ustb.m</code> | 是 | 显示真实 channel data 的 time × channel 结构 |
 
 ---
