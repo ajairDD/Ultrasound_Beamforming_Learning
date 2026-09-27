@@ -378,3 +378,212 @@ $$
 7. 比较 aperture、F-number、apodization。
 
 届时开始使用真实 UFF 数据作为 benchmark。
+
+
+---
+
+## 14. Aperture → PSF → 横向分辨率
+
+点散射体并不会在重建图像中变成无限小的一个点。
+
+当 beamformer 在真实目标附近扫描候选位置时，附近位置虽然不是完全正确的 focus，但 residual delay 仍可能很小，因此仍能保留一定程度的 coherent summation。
+
+于是理想点目标会形成一个具有有限宽度的空间响应：
+
+$$
+\boxed{\text{Point Spread Function (PSF)}}
+$$
+
+对于本项目的第一阶段，我们主要观察固定深度处的 **lateral PSF**。
+
+在简化的一维接收孔径模型中，横向主瓣宽度的尺度近似满足：
+
+$$
+\Delta x
+\propto
+\frac{\lambda z}{D}
+=
+\lambda F\#,
+$$
+
+其中：
+
+- $\lambda=c/f_c$：波长；
+- $z$：成像深度；
+- $D$：有效接收孔径；
+- $F\#=z/D$。
+
+这里的比例系数并不是一个对所有系统都通用的常数，它会随 transmit/receive configuration、apodization、带宽、PSF 指标定义等变化。
+
+因此本项目会把 $\lambda z/D$ 当作**尺度关系**，而不会把它当作某个固定的精确公式。
+
+---
+
+## 15. 为什么孔径更大通常带来更窄的 lateral PSF
+
+当有效孔径较小时，候选 focus 在横向稍微移动后，各阵元预测传播时间的变化仍然比较接近，因此 aperture 上还能保持一定 coherence。
+
+当孔径增大后，左右两端阵元之间的传播路径差对横向位置更加敏感。
+
+于是错误候选位置会更快产生：
+
+$$
+\epsilon_m
+=
+\tau_m^{\mathrm{true}}
+-
+\hat{\tau}_m,
+$$
+
+以及对应的 phase error：
+
+$$
+\Delta\phi_m
+=
+2\pi f_c\epsilon_m.
+$$
+
+所以更大的 aperture 通常意味着：
+
+$$
+\boxed{\text{候选位置稍微偏离目标，就更快失去跨孔径相干性}}
+$$
+
+从而形成更窄的 lateral PSF。
+
+---
+
+## 16. F-number 与 dynamic aperture
+
+常见近似定义：
+
+$$
+F\#
+=
+\frac{z}{D}.
+$$
+
+如果希望在不同深度维持相近的横向分辨率尺度，可以让有效孔径随深度增加：
+
+$$
+D(z)
+\approx
+\frac{z}{F\#}.
+$$
+
+这就是 dynamic receive aperture 的核心思想之一。
+
+在实际系统中，$D(z)$ 最终会受到物理阵元总数、阵元 pitch、探头几何和最小/最大 aperture 的限制。
+
+---
+
+## 17. Apodization 为什么会改变主瓣和旁瓣
+
+把阵元权重写成 aperture function：
+
+$$
+w_m.
+$$
+
+Uniform weighting 相当于较“硬”的矩形孔径。
+
+它通常可以获得较窄主瓣，但 finite aperture 的截断会带来较明显的 sidelobe。
+
+Hann、Hamming 等窗函数通过降低孔径边缘阵元的权重，使 aperture 过渡更平滑，从而压低 sidelobe，但代价通常是主瓣展宽。
+
+因此：
+
+$$
+\boxed{
+\text{Lower sidelobes}
+\Longleftrightarrow
+\text{Wider main lobe}
+}
+$$
+
+这可以从 aperture function 与 spatial response 的 Fourier-duality 角度理解。
+
+---
+
+## 18. 本项目如何测量 PSF 宽度
+
+配套脚本：
+
+```matlab
+demo_aperture_psf_apodization
+```
+
+为了避免依赖 Signal Processing Toolbox，该教学脚本使用 complex analytic / IQ-like pulse，并直接对 beamformed complex response 取 magnitude。
+
+脚本中的 “FWHM” 定义为 normalized magnitude 降到 0.5 时的全宽。
+
+因为显示使用：
+
+$$
+20\log_{10}|y|,
+$$
+
+所以 0.5 amplitude 对应：
+
+$$
+20\log_{10}(0.5)
+\approx
+-6.02\ \mathrm{dB}.
+$$
+
+因此这里更准确地说是：
+
+> **-6 dB amplitude width**
+
+不要把它与 **-3 dB half-power beamwidth** 混为一谈。
+
+---
+
+## 19. 当前配套实验
+
+`demo_aperture_psf_apodization.m` 做两组比较。
+
+第一组固定 Uniform weighting，只改变 active aperture：
+
+```text
+16 elements
+32 elements
+64 elements
+```
+
+用来观察：
+
+- aperture $D$；
+- F-number；
+- -6 dB lateral width
+
+之间的关系。
+
+第二组固定 64 个 active elements，比较：
+
+```text
+Uniform
+Hann
+Hamming
+```
+
+观察：
+
+- main-lobe width；
+- sidelobe suppression
+
+之间的 trade-off。
+
+实验中所有曲线都会按各自 peak 归一化，因此主要用于比较**空间响应形状**，不表示不同窗口的绝对接收灵敏度。
+
+---
+
+## 20. Sidelobe 与 grating lobe 不要混淆
+
+**Sidelobe** 是有限 aperture / weighting 后空间响应中主瓣之外的次级峰。
+
+**Grating lobe** 则主要与阵列空间采样有关，特别受 element pitch 与 wavelength 的关系影响。
+
+二者虽然都会产生离轴响应，但物理来源不同。
+
+本项目会在后续阵列空间采样部分单独讨论 grating lobe，不在本节混在一起。
