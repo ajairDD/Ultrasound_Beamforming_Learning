@@ -95,69 +95,6 @@ flowchart TB
 
 ---
 
-## 2. 探头、波长、时间采样和空间采样
-
-一个典型教学参数可以是：
-
-$$
-c=1540\ \mathrm{m/s},
-$$
-
-$$
-f_c=5\ \mathrm{MHz},
-$$
-
-$$
-f_s=40\ \mathrm{MHz}.
-$$
-
-波长：
-
-$$
-\lambda
-=
-\frac{c}{f_c}
-=
-0.308\ \mathrm{mm}.
-$$
-
-载波周期：
-
-$$
-T_c
-=
-\frac1{f_c}
-=
-0.2\ \mu s.
-$$
-
-采样周期：
-
-$$
-T_s
-=
-\frac1{f_s}
-=
-25\ ns.
-$$
-
-因此一个 5 MHz 周期大约包含 8 个采样点。
-
-这里要分清两种完全不同的“采样”：
-
-~~~text
-fs
-→ 时间采样
-
-pitch
-→ 阵列空间采样
-~~~
-
-后者与 grating lobe 有关，前者与 delay 的离散实现、插值和相位误差有关。
-
----
-
-
 ### 1.1 先把“造数据”和“做成像”分开
 
 第 0 章第一个脚本 <code>demo_synthetic_point_target.m</code> 里其实存在两个完全不同的过程。
@@ -296,6 +233,69 @@ z_focus
 所以 pixel-based DAS 可以看作一种基于传播几何的 **spatial matching**。
 
 ---
+
+## 2. 探头、波长、时间采样和空间采样
+
+一个典型教学参数可以是：
+
+$$
+c=1540\ \mathrm{m/s},
+$$
+
+$$
+f_c=5\ \mathrm{MHz},
+$$
+
+$$
+f_s=40\ \mathrm{MHz}.
+$$
+
+波长：
+
+$$
+\lambda
+=
+\frac{c}{f_c}
+=
+0.308\ \mathrm{mm}.
+$$
+
+载波周期：
+
+$$
+T_c
+=
+\frac1{f_c}
+=
+0.2\ \mu s.
+$$
+
+采样周期：
+
+$$
+T_s
+=
+\frac1{f_s}
+=
+25\ ns.
+$$
+
+因此一个 5 MHz 周期大约包含 8 个采样点。
+
+这里要分清两种完全不同的“采样”：
+
+~~~text
+fs
+→ 时间采样
+
+pitch
+→ 阵列空间采样
+~~~
+
+后者与 grating lobe 有关，前者与 delay 的离散实现、插值和相位误差有关。
+
+---
+
 
 ## 3. Tx delay + Rx delay
 
