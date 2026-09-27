@@ -144,27 +144,27 @@ element_x = ((0:n_elements-1) - (n_elements-1)/2) * pitch;
 
 所以阵元中心从约：
 
-$
+$$
 -9.45\ \mathrm{mm}
-$
+$$
 
 排到：
 
-$
+$$
 +9.45\ \mathrm{mm}.
-$
+$$
 
 按阵元中心间距定义，有效几何跨度约：
 
-$
+$$
 D=(64-1)\times0.30=18.9\ \mathrm{mm}.
-$
+$$
 
 点目标设置为：
 
-$
+$$
 (x_0,z_0)=(2\ \mathrm{mm},30\ \mathrm{mm}).
-$
+$$
 
 故意不放在 $x=0$，是为了让 raw channel trajectory 不呈完全左右对称，从而更容易看出“离目标更近的阵元先收到回波”。
 
