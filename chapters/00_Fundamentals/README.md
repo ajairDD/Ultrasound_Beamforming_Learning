@@ -6,6 +6,24 @@
 
 ---
 
+
+## 阅读地图
+
+这是一章完整讲义，不需要一次全部记住。建议按下面四个阶段阅读：
+
+| Part | 主题 | 你最终要理解的核心 |
+|---|---|---|
+| A | Channel data 与 Delay | 点目标为什么在 channel domain 中形成弯曲轨迹，Delay 为什么能把它拉直 |
+| B | Coherence 与 PSF | 正确 focus 为什么相干增强，错误 focus 为什么下降，PSF 为什么有有限宽度 |
+| C | Aperture 与 Resolution | aperture / F-number / apodization 如何决定 lateral response，bandwidth 如何决定 axial response |
+| D | DAS 的边界 | close targets、strong/weak target、noise、sound-speed mismatch、phase aberration 分别是什么问题 |
+
+配套 MATLAB 代码按同样顺序组织在：
+
+**[matlab/00_Fundamentals](../../matlab/00_Fundamentals/README.md)**
+
+---
+
 ## 0.1 这一章最终要建立什么能力
 
 学完以后，不要求你背很多公式，但应该能够从 channel data 的角度解释：
@@ -46,7 +64,7 @@ PSF / image
 
 ---
 
-# 1. 从一个点散射体开始
+## 1. 从一个点散射体开始
 
 先只考虑最简单的场景：
 
@@ -77,7 +95,7 @@ flowchart TB
 
 ---
 
-# 2. 探头、波长、时间采样和空间采样
+## 2. 探头、波长、时间采样和空间采样
 
 一个典型教学参数可以是：
 
@@ -139,7 +157,147 @@ pitch
 
 ---
 
-# 3. Tx delay + Rx delay
+
+### 1.1 先把“造数据”和“做成像”分开
+
+第 0 章第一个脚本 <code>demo_synthetic_point_target.m</code> 里其实存在两个完全不同的过程。
+
+~~~text
+Forward model：模拟真实世界
+─────────────────────────
+真实 target_x / target_z
+        ↓
+真实 Tx / Rx propagation time
+        ↓
+每个阵元收到一条 RF
+        ↓
+channel_rf[sample, element]
+
+
+Reconstruction：模拟 beamformer
+────────────────────────────
+选择 candidate pixel (x_focus, z_focus)
+        ↓
+预测这个像素对应的 Tx / Rx delay
+        ↓
+到每个 channel 的对应时间取样
+        ↓
+focused_samples[element]
+        ↓
+weighted coherent sum
+~~~
+
+这个区分非常重要。
+
+真实 UFF 数据进入第 1 章以后，**Forward model 已经由真实 scanner + phantom / tissue 完成**。我们直接拿到 channel data，从 Reconstruction 开始。
+
+因此看到任何仿真代码时，都应该先问：
+
+> 哪一段是在“制造 acquisition”，哪一段才是真正的 beamforming？
+
+### 1.2 一个具体阵列例子
+
+第 0 章 synthetic demo 使用：
+
+~~~matlab
+n_elements = 64;
+pitch = 0.30e-3;
+element_x = ((0:n_elements-1) - (n_elements-1)/2) * pitch;
+~~~
+
+所以阵元中心从约：
+
+$
+-9.45\ \mathrm{mm}
+$
+
+排到：
+
+$
++9.45\ \mathrm{mm}.
+$
+
+按阵元中心间距定义，有效几何跨度约：
+
+$
+D=(64-1)\times0.30=18.9\ \mathrm{mm}.
+$
+
+点目标设置为：
+
+$
+(x_0,z_0)=(2\ \mathrm{mm},30\ \mathrm{mm}).
+$
+
+故意不放在 $x=0$，是为了让 raw channel trajectory 不呈完全左右对称，从而更容易看出“离目标更近的阵元先收到回波”。
+
+### 1.3 channel data 的 shape 要从第一天就说清楚
+
+synthetic demo 中：
+
+~~~matlab
+channel_rf = zeros(n_samples, n_elements);
+~~~
+
+其 shape 是：
+
+~~~text
+[sample, receive element]
+~~~
+
+所以：
+
+~~~matlab
+channel_rf(:, m)
+~~~
+
+表示：
+
+> 第 m 个 receive element 的完整时间序列。
+
+而：
+
+~~~matlab
+channel_rf(n, :)
+~~~
+
+表示：
+
+> 某一个时间采样点上，整个 receive aperture 的瞬时观测。
+
+第 1 章真实 UFF 数据会增加 wave / frame 等维度，但原则不变：
+
+> **永远先确认 shape 和 axis 的物理意义，再写 beamformer。**
+
+### 1.4 Beamformer 并不知道真实 target 在哪里
+
+在 synthetic data 生成阶段，我们当然使用了：
+
+~~~matlab
+target_x
+target_z
+~~~
+
+但进入 reconstruction 后，beamformer 只遍历：
+
+~~~matlab
+x_focus
+z_focus
+~~~
+
+它并不知道真实目标位置。
+
+它实际做的是：
+
+> “如果这个 candidate pixel 真的有一个散射体，各通道应该在哪些时间看到它？”
+
+然后检查按这套 delay 取出的 channel observations 是否能 coherent sum。
+
+所以 pixel-based DAS 可以看作一种基于传播几何的 **spatial matching**。
+
+---
+
+## 3. Tx delay + Rx delay
 
 设候选成像点：
 
@@ -204,7 +362,7 @@ Focused Imaging + DMAS
 
 ---
 
-# 4. 为什么原始 channel data 中点目标是一条弯曲轨迹
+## 4. 为什么原始 channel data 中点目标是一条弯曲轨迹
 
 假设真实点目标位于 $(x_0,z_0)$。
 
@@ -252,7 +410,7 @@ ______/                  \______
 
 ---
 
-# 5. Delay 的真正作用：把传播轨迹“拉直”
+## 5. Delay 的真正作用：把传播轨迹“拉直”
 
 Beamformer 对每个候选像素 $(x_f,z_f)$ 预测一套传播时间：
 
@@ -315,7 +473,7 @@ ch 4            /\              ch 4        /\
 
 ---
 
-# 6. Delay error 为什么会变成 phase error
+## 6. Delay error 为什么会变成 phase error
 
 对于窄带信号，时间误差可以转成相位误差：
 
@@ -349,7 +507,7 @@ $$
 
 ---
 
-# 7. 为什么需要 sub-sample interpolation
+## 7. 为什么需要 sub-sample interpolation
 
 实际 ADC 数据是离散序列：
 
@@ -389,7 +547,7 @@ n = round(tau * fs);
 
 ---
 
-# 8. focused aperture vector：后续所有算法的共同入口
+## 8. focused aperture vector：后续所有算法的共同入口
 
 对当前候选像素，在各阵元预测 delay 处取样：
 
@@ -434,7 +592,7 @@ $$
 
 ---
 
-# 9. 为什么正确 focus 会得到 coherent gain
+## 9. 为什么正确 focus 会得到 coherent gain
 
 若正确聚焦后：
 
@@ -498,7 +656,7 @@ $$
 
 ---
 
-# 10. Point Spread Function：为什么点目标不会成像成无限小的点
+## 10. Point Spread Function：为什么点目标不会成像成无限小的点
 
 即使 focus 没有完全落在真实目标上，只要候选位置足够近，residual delay 仍可能很小。
 
@@ -527,7 +685,7 @@ PSF 是后续比较 beamformer 最重要的基础工具之一。
 
 ---
 
-# 11. Aperture 为什么控制 lateral resolution
+## 11. Aperture 为什么控制 lateral resolution
 
 有效 aperture 宽度记作 $D$。
 
@@ -565,7 +723,7 @@ $$
 
 ---
 
-# 12. F-number 与 dynamic receive aperture
+## 12. F-number 与 dynamic receive aperture
 
 定义：
 
@@ -603,7 +761,7 @@ $$
 
 ---
 
-# 13. Apodization：主瓣与旁瓣的经典 trade-off
+## 13. Apodization：主瓣与旁瓣的经典 trade-off
 
 Uniform weighting：
 
@@ -643,7 +801,7 @@ $$
 
 ---
 
-# 14. FWHM、-6 dB amplitude width 与 -3 dB half-power
+## 14. FWHM、-6 dB amplitude width 与 -3 dB half-power
 
 如果归一化的是 amplitude：
 
@@ -681,11 +839,11 @@ $$
 
 ---
 
-# 15. Axial resolution 与 lateral resolution 来自不同机制
+## 15. Axial resolution 与 lateral resolution 来自不同机制
 
 这一点必须彻底分开。
 
-## Lateral
+### Lateral
 
 主要受：
 
@@ -705,7 +863,7 @@ $$
 \lambda F\#.
 $$
 
-## Axial
+### Axial
 
 主要受 pulse 在时间方向上的长度影响。
 
@@ -754,7 +912,7 @@ $$
 
 ---
 
-# 16. Center frequency 与 bandwidth 不是一回事
+## 16. Center frequency 与 bandwidth 不是一回事
 
 Center frequency：
 
@@ -794,7 +952,7 @@ $$
 
 ---
 
-# 17. 二维 PSF
+## 17. 二维 PSF
 
 真实点目标响应是：
 
@@ -831,7 +989,7 @@ $$
 
 ---
 
-# 18. Sidelobe 与 grating lobe 不要混淆
+## 18. Sidelobe 与 grating lobe 不要混淆
 
 Sidelobe：
 
@@ -855,7 +1013,7 @@ pitch 太大 → grating lobe
 
 ---
 
-# 19. DAS Failure Mode 1：两个目标太近
+## 19. DAS Failure Mode 1：两个目标太近
 
 有限 aperture 意味着有限宽度 PSF。
 
@@ -887,7 +1045,7 @@ $$
 
 ---
 
-# 20. DAS Failure Mode 2：强目标掩盖弱目标
+## 20. DAS Failure Mode 2：强目标掩盖弱目标
 
 强散射体的响应不只存在于目标中心，还包括：
 
@@ -919,7 +1077,7 @@ $$
 
 ---
 
-# 21. 独立随机噪声并不是 DAS 的“纯失败项”
+## 21. 独立随机噪声并不是 DAS 的“纯失败项”
 
 设 normalized DAS：
 
@@ -984,7 +1142,7 @@ $$
 
 ---
 
-# 22. DAS Failure Mode 3：sound-speed mismatch
+## 22. DAS Failure Mode 3：sound-speed mismatch
 
 如果：
 
@@ -1016,7 +1174,7 @@ $$
 
 ---
 
-# 23. DAS Failure Mode 4：phase aberration
+## 23. DAS Failure Mode 4：phase aberration
 
 可以把额外的 channel-dependent delay 写成：
 
@@ -1050,7 +1208,7 @@ $$
 
 ---
 
-# 24. 一张表总结 DAS 的边界
+## 24. 一张表总结 DAS 的边界
 
 | 情况 | 现象 | 核心原因 |
 |---|---|---|
@@ -1064,7 +1222,7 @@ $$
 
 ---
 
-# 25. 为什么后续算法会自然出现
+## 25. 为什么后续算法会自然出现
 
 DAS 当前做的是：
 
@@ -1108,7 +1266,7 @@ $$
 
 ---
 
-# 26. 本章 MATLAB 实践顺序
+## 26. 本章 MATLAB 实践顺序
 
 代码位于：
 
@@ -1168,7 +1326,7 @@ point target
 
 ---
 
-# 27. 第 0 章的六条核心公式
+## 27. 第 0 章的六条核心公式
 
 总 delay：
 
@@ -1246,7 +1404,7 @@ $$
 
 ---
 
-# 28. 进入第 1 章前的自测
+## 28. 进入第 1 章前的自测
 
 如果以下问题能从传播和 channel data 的角度自己解释，第 0 章就算真正完成：
 
@@ -1265,7 +1423,7 @@ $$
 
 ---
 
-# 29. 第 0 章一句话总结
+## 29. 第 0 章一句话总结
 
 如果只记住一句话：
 
