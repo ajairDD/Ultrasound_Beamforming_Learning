@@ -66,6 +66,7 @@ plot_raw_channel_overview_ustb
 | `demo_synthetic_point_target.m` | 否 | 自包含 DAS 直觉实验 |
 | `demo_delay_alignment.m` | 否 | 可视化原始弯曲到达轨迹如何被正确 Delay 拉直，以及错误焦点留下的 residual delay |
 | `demo_aperture_psf_apodization.m` | 否 | 比较 aperture size、F-number 与 Uniform/Hann/Hamming 对 lateral PSF、-6 dB 宽度和 sidelobe 的影响 |
+| `demo_axial_lateral_2d_psf.m` | 否 | 比较 pulse duration/bandwidth 对 axial PSF、aperture 对 lateral PSF 的作用，并显示二维 PSF |
 | `inspect_uff_hdf5.m` | 否 | 用 MATLAB HDF5 API 查看 UFF 文件结构 |
 | `inspect_uff_metadata_ustb.m` | 是 | 用 USTB 读取并核对 channel data 元数据 |
 | `plot_raw_channel_overview_ustb.m` | 是 | 显示真实 UFF 数据的“时间 × 阵元”图 |
@@ -81,17 +82,19 @@ plot_raw_channel_overview_ustb
         ↓
 3. demo_aperture_psf_apodization
         ↓
-4. 阅读 chapters/01_DAS/README.md
+4. demo_axial_lateral_2d_psf
         ↓
-5. inspect_uff_hdf5
+5. 阅读 chapters/01_DAS/README.md
         ↓
-6. 安装 USTB（准备进入真实数据）
+6. inspect_uff_hdf5
         ↓
-7. inspect_uff_metadata_ustb
+7. 安装 USTB（准备进入真实数据）
         ↓
-8. plot_raw_channel_overview_ustb
+8. inspect_uff_metadata_ustb
         ↓
-9. 下一阶段：真正实现 UFF 数据上的 DAS
+9. plot_raw_channel_overview_ustb
+        ↓
+10. 下一阶段：真正实现 UFF 数据上的 DAS
 ```
 
 ---
