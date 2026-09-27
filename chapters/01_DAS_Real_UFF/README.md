@@ -64,6 +64,50 @@ data/L7_FI_Verasonics_CIRS_points.uff
 
 ---
 
+### 2.1 在读取本地文件之前，官方资料已经确认的事实
+
+以下内容来自 USTB 官方数据目录、该数据对应的 fDMAS 示例和当前 USTB DAS 源码；它们可以作为我们检查本地文件时的“先验”，但**不能替代对实际 UFF metadata 的读取**。
+
+1. `L7_FI_Verasonics_CIRS_points.uff` 是 **channel data**，并与 USTB 的 TUFFC fDMAS publication example 关联。
+2. USTB 官方对这组 L7 FI 数据按 **conventional scanline Focused Imaging** 处理：一个 transmit wave 对应一条 scanline。
+3. 官方示例构造横向成像轴时使用：
+
+~~~matlab
+x_axis(n) = channel_data.sequence(n).source.x;
+~~~
+
+也就是说，`sequence(n).source.x` 是理解每条 focused transmit line 的关键字段。
+4. USTB 官方 fDMAS 示例对这套数据使用：
+   - `transmit_apodization.window = uff.window.scanline`
+   - `receive_apodization.window = uff.window.none`
+   - `receive_apodization.f_number = 1.7`
+5. 当前 USTB `uff.channel_data` 明确定义数据轴为：
+
+~~~text
+[time × channel × wave × frame]
+~~~
+
+6. USTB 的信号语义为：
+   - `modulation_frequency == 0`：RF；
+   - `modulation_frequency ~= 0`：IQ / complex baseband。
+7. `channel_data.time(n_wave)` 的时间轴包含：
+
+~~~text
+initial_time + sample_index / fs + sequence(n_wave).delay
+~~~
+
+因此后面自己实现 DAS 时，`wave.delay` **只能计入一次**。
+
+官方参考：
+
+- [USTB dataset catalog](https://unioslo.github.io/USTB/datasets.html)
+- [该数据对应的 fDMAS example](https://github.com/unioslo/USTB/blob/master/publications/TUFFC/Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS/FI_UFF_delay_multiply_and_sum_Fig5_and_Fig6.m)
+- [USTB `uff.channel_data`](https://github.com/unioslo/USTB/blob/master/+uff/channel_data.m)
+- [USTB `midprocess.das`](https://github.com/unioslo/USTB/blob/master/+midprocess/das.m)
+
+> 这里最重要的不是“照抄 USTB 参数”，而是用官方实现帮助我们解释 UFF 中每个字段的物理意义。真正的 DAS reconstruction 仍由本项目自己实现。
+
+---
 ## 3. USTB 在本章中的角色
 
 本章会使用 USTB，但要严格区分用途。
@@ -143,6 +187,8 @@ filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
 inspect_uff_metadata_ustb
 plot_raw_channel_overview_ustb
 ~~~
+
+`inspect_uff_metadata_ustb` 现在会输出完整的真实数据契约，包括代表性 wave 的 `wavefront / source.xyz / origin.xyz / wave.delay / sound_speed`。
 
 第一步不要急着写 beamformer。
 
