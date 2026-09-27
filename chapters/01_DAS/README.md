@@ -773,3 +773,450 @@ $$
 - axial PSF 更宽。
 
 脚本打印的是近似的 -6 dB amplitude fractional bandwidth，只用于帮助建立趋势，不应当替代真实探头的实测 bandwidth 定义。
+
+
+---
+
+## 27. DAS 的典型 Failure Modes
+
+配套脚本：
+
+```matlab
+demo_das_failure_modes
+```
+
+这一节不是为了证明 DAS “不好”，而是明确它的适用边界。
+
+### 27.1 两个目标太近：有限 lateral resolution
+
+当两个横向点目标的间距小于当前 PSF 能够有效区分的尺度时，它们的响应会明显重叠。
+
+因此，即使两个真实散射体彼此独立，DAS 图像中也可能只形成一个较宽峰或只有很浅的中间谷值。
+
+本质仍然是：
+
+$$
+\boxed{
+\text{finite aperture}
+\Rightarrow
+\text{finite-width PSF}
+}
+$$
+
+高级 beamformer 若声称“提高分辨率”，首先就应当与相同 acquisition、相同 grid、相同显示条件下的 DAS PSF 比较。
+
+---
+
+### 27.2 强目标掩盖弱目标：动态范围与旁瓣污染
+
+若强散射体幅度为 $A_s$，弱散射体幅度为 $A_w$，并且：
+
+$$
+A_w \ll A_s,
+$$
+
+那么强目标的 main-lobe tail、sidelobe 或其他空间响应可能高于弱目标本身。
+
+结果是：
+
+> 弱目标物理上存在，但在 DAS 空间响应中不容易从强目标背景中区分出来。
+
+这类问题与：
+
+- sidelobe suppression；
+- clutter suppression；
+- contrast；
+- target detectability
+
+直接相关。
+
+配套 synthetic demo 只用于展示机制，弱目标位置和幅度是为当前模型选择的教学参数，不是通用阈值。
+
+---
+
+### 27.3 独立随机噪声：DAS 实际上有 coherent gain
+
+不要把所有“不想要的信号”都称作同一种 noise。
+
+对于各通道上独立、零均值、等方差的随机噪声，如果 normalized DAS 使用：
+
+$$
+w_m=\frac1M,
+$$
+
+则正确聚焦的相干信号幅度基本保持，而独立噪声标准差约降低为：
+
+$$
+\frac{\sigma}{\sqrt M}.
+$$
+
+因此理想功率 SNR 增益约为：
+
+$$
+M,
+$$
+
+换成 dB：
+
+$$
+G_{\mathrm{SNR}}
+\approx
+10\log_{10}M.
+$$
+
+对于 $M=64$：
+
+$$
+G_{\mathrm{SNR}}
+\approx
+18.1\ \mathrm{dB}.
+$$
+
+因此：
+
+> **独立随机噪声不是 DAS 最核心的失败点；DAS 本身就擅长 coherent integration。**
+
+真正困难的是：
+
+- reverberation；
+- sidelobe clutter；
+- coherent interference；
+- phase-correlated clutter；
+- model mismatch；
+
+这些并不满足“独立白噪声”的简单假设。
+
+---
+
+### 27.4 Sound-speed mismatch：传播模型错误
+
+如果真实声速为：
+
+$$
+c_{\mathrm{true}},
+$$
+
+但 beamformer 使用：
+
+$$
+c_{\mathrm{BF}} \neq c_{\mathrm{true}},
+$$
+
+那么：
+
+$$
+\hat\tau_m
+\neq
+\tau_m^{\mathrm{true}}.
+$$
+
+其结果不只是“图像略微模糊”，还可能包括：
+
+- axial misregistration；
+- lateral defocus；
+- peak amplitude reduction；
+- coherence loss；
+- PSF distortion。
+
+这说明更高级的 channel-combination 方法也无法自动修复一个严重错误的传播模型。
+
+---
+
+### 27.5 Phase aberration：阵元间相对时延被破坏
+
+组织非均匀声速、传播路径差异或系统通道误差都可能导致额外的 channel-dependent delay。
+
+可以写成：
+
+$$
+\tau_m^{\mathrm{measured}}
+=
+\tau_m^{\mathrm{ideal}}
++
+\delta\tau_m.
+$$
+
+其相位误差近似为：
+
+$$
+\Delta\phi_m
+=
+2\pi f_c\delta\tau_m.
+$$
+
+如果 $\delta\tau_m$ 随阵元变化，那么即使 beamformer 使用理想几何 delay，也无法完全对齐各通道。
+
+于是会出现：
+
+- coherent sum 降低；
+- PSF 展宽或变形；
+- sidelobe / clutter 变化；
+- peak position 或强度改变。
+
+配套脚本使用的是**人工构造的空间相关 delay perturbation**，用于演示机制，不等同于真实组织 aberration 的完整统计模型。
+
+---
+
+## 28. DAS 为什么仍然必须作为后续算法的基线
+
+学完 failure modes 后，不应该得到：
+
+> “DAS 很差，所以应该换高级算法。”
+
+正确结论是：
+
+> **DAS 是物理意义最清楚、假设最透明、最适合做统一基线的 beamformer。**
+
+后续算法都需要回答：
+
+1. 它解决了 DAS 的哪个具体 failure mode？
+2. 它是否仍使用同一个 propagation delay？
+3. 它额外利用了什么信息？
+4. 它付出了什么计算、统计或鲁棒性代价？
+5. 改善的是 PSF、contrast、noise、clutter 还是 coherence？
+6. 改善是否在相同 acquisition / grid / display 条件下成立？
+
+---
+
+# 第一讲总结
+
+## 29. 一张图串起整讲
+
+```text
+真实散射体
+    ↓
+Tx propagation
+    ↓
+不同 Rx element 上形成不同 arrival time
+    ↓
+raw channel RF / IQ
+    ↓
+根据 candidate pixel 计算 Tx + Rx delay
+    ↓
+sub-sample interpolation
+    ↓
+focused aperture vector s(r)
+    ↓
+aperture selection + apodization
+    ↓
+coherent sum
+    ↓
+DAS pixel
+    ↓
+扫描 x,z
+    ↓
+PSF / B-mode
+```
+
+真正需要记住的是中间这一步：
+
+$$
+\boxed{
+\mathbf s(\mathbf r)
+=
+[s_1(\mathbf r),\ldots,s_M(\mathbf r)]^T
+}
+$$
+
+它是后续 CF、MV、DMAS、SLSC 等算法共同面对的输入对象。
+
+---
+
+## 30. 第一讲的核心公式
+
+### 总传播时间
+
+$$
+\tau_m(\mathbf r)
+=
+\tau_{\mathrm{TX}}(\mathbf r)
++
+\tau_{\mathrm{RX},m}(\mathbf r).
+$$
+
+### 接收传播时间
+
+$$
+\tau_{\mathrm{RX},m}
+=
+\frac{\|\mathbf r-\mathbf r_m\|}{c}.
+$$
+
+### Delay 后的通道值
+
+$$
+s_m(\mathbf r)
+=
+x_m\!\left(\tau_m(\mathbf r)\right).
+$$
+
+### DAS
+
+$$
+y_{\mathrm{DAS}}(\mathbf r)
+=
+\sum_{m=1}^{M}
+w_m(\mathbf r)s_m(\mathbf r).
+$$
+
+### Residual delay
+
+$$
+\epsilon_m
+=
+\tau_m^{\mathrm{true}}
+-
+\hat\tau_m.
+$$
+
+### 对应相位误差
+
+$$
+\Delta\phi_m
+=
+2\pi f_c\epsilon_m.
+$$
+
+### 横向分辨率尺度
+
+$$
+\Delta x
+\sim
+\frac{\lambda z}{D}
+=
+\lambda F\#.
+$$
+
+### 经典轴向分辨率尺度
+
+$$
+\Delta z_{\mathrm{axial}}
+\sim
+\frac{\mathrm{SPL}}{2}.
+$$
+
+---
+
+## 31. 第一讲必须区分开的五组概念
+
+### Acquisition 与 Beamformer
+
+```text
+PW / FI / DW / STA
+≠
+DAS / CF / MV / DMAS / SLSC
+```
+
+发射方式改变 $\tau_{\mathrm{TX}}$，而 beamformer 决定 delay 后通道如何组合。
+
+### RF 与 IQ
+
+RF 是实值载波信号；complex IQ 保留幅度与相位信息。
+
+在 coherent beamforming 完成前，不能没有依据地先取：
+
+```matlab
+abs(IQ)
+```
+
+否则相位信息会丢失。
+
+### Axial 与 Lateral resolution
+
+```text
+Axial
+→ pulse length / bandwidth
+
+Lateral
+→ aperture / F-number / focusing
+```
+
+### Sidelobe 与 Grating lobe
+
+```text
+Sidelobe
+→ finite aperture / weighting
+
+Grating lobe
+→ spatial sampling / pitch
+```
+
+### Independent noise 与 Clutter
+
+独立随机噪声可以被 coherent averaging 明显抑制。
+
+真实 clutter / reverberation / coherent interference 通常具有结构和相关性，不能简单套用独立噪声结论。
+
+---
+
+## 32. DAS 的优势与边界
+
+### 优势
+
+- 物理意义直接；
+- 实现简单；
+- 计算路径透明；
+- 对独立噪声有 coherent gain；
+- 很适合作为所有高级 beamformer 的 baseline；
+- 对 acquisition model 的关系最容易检查。
+
+### 主要边界
+
+- finite aperture 带来有限 lateral PSF；
+- fixed apodization 存在 mainlobe-sidelobe trade-off；
+- 强目标响应可能掩盖弱目标；
+- 对 sound-speed mismatch / phase aberration 敏感；
+- 不主动判断通道之间“为什么一致或不一致”；
+- fixed weights 不利用当前数据的统计结构。
+
+正是这些边界，引出了后面的经典方法。
+
+---
+
+## 33. 从 DAS 自然走向后续算法
+
+```text
+DAS：固定权重，相干求和
+│
+├─ “这些通道真的一致吗？”
+│      → CF / GCF / coherence weighting
+│
+├─ “为什么权重必须预先固定？”
+│      → MV / MVDR / Capon
+│
+├─ “能否直接使用通道两两关系？”
+│      → DMAS / fDMAS
+│
+├─ “能否直接用 spatial coherence 成像？”
+│      → SLSC
+│
+└─ “能否利用 beam-pattern null？”
+       → NSI
+```
+
+因此第一讲真正完成的不是“学会一个公式”，而是建立后续所有经典 beamformer 的共同坐标系。
+
+---
+
+## 34. 第一讲自测
+
+进入下一章前，建议自己尝试回答：
+
+1. 为什么 raw channel data 中的点目标回波是一条弯曲轨迹？
+2. Delay compensation 数学上究竟做了什么？
+3. 为什么错误 delay 会转化成 phase error？
+4. 为什么 `interp1` / sub-sample interpolation 对 RF beamforming 很重要？
+5. 为什么 aperture 增大通常让 lateral PSF 变窄？
+6. F-number 与 dynamic aperture 有什么关系？
+7. 为什么 Hann 可以降低 sidelobe，却通常让 main lobe 变宽？
+8. 为什么 axial resolution 主要与 bandwidth / pulse length 有关？
+9. 为什么 sound-speed mismatch 既可能造成位置偏差，也可能造成 defocus？
+10. 为什么独立 noise 和 reverberation/clutter 不能当成同一个问题？
+11. `focused_samples` 在后续 CF、MV、DMAS、SLSC 中扮演什么角色？
+12. 为什么 DAS 应继续作为后续所有算法比较的统一 baseline？
+
+如果这 12 个问题能够不用背定义、而是从传播和通道数据的角度解释出来，第一讲的目标就达到了。
+
+---
+
+**第一讲结束。下一阶段开始进入真实 UFF channel data 上的 DAS 实现，并以此作为后续 CF / MV / DMAS / SLSC / NSI 的统一 baseline。**
