@@ -636,6 +636,53 @@ time × receive channel
 
 ---
 
+## 15.1 Manual DAS vs USTB：真实数据交叉验证已通过
+
+在 `L7_FI_Verasonics_CIRS_points.uff` 上，使用：
+
+- 相同 `x_axis`；
+- 相同 `z_axis`；
+- conventional scanline Tx；
+- full receive aperture；
+- USTB MATLAB DAS reference；
+
+比较本项目 `das_fi_scanline_manual.m` 与 USTB `midprocess.das()`，得到：
+
+| 指标 | 结果 |
+|---|---:|
+| Image size | `1024 × 128` |
+| Envelope correlation | `0.999999940` |
+| Mean abs normalized error | `1.11320375e-07` |
+| RMSE normalized error | `2.08132789e-07` |
+| Max abs normalized error | `1.08395861e-05` |
+| Manual global peak | `x=-5.5130 mm, z=38.6266 mm` |
+| USTB global peak | `x=-5.5130 mm, z=38.6266 mm` |
+| Peak location delta | `dx=0 mm, dz=0 mm` |
+
+30 mm 深度的 lateral profile 也几乎完全重合。
+
+因此当前 conventional FI-DAS baseline 可以认为已经通过第一阶段数值交叉验证：
+
+$
+\boxed{
+\text{Manual FI-DAS} \approx \text{USTB conventional FI-DAS}
+}
+$
+
+这里的“通过”只针对当前已经匹配的条件：
+
+- spherical focused Tx model；
+- scanline transmit apodization；
+- full receive aperture；
+- linear interpolation；
+- RF analytic representation；
+- 当前成像 grid。
+
+这并不意味着后续修改 F-number、apodization、RTB 或 IQ 数据时可以跳过重新验证。
+
+下一步进入 **point-target PSF / FWHM / sidelobe** 定量分析。
+
+---
 ## 16. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
