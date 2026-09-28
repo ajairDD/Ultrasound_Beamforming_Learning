@@ -14,6 +14,7 @@
 | <code>inspect_uff_metadata_ustb.m</code> | 是 | 第 1 步：输出完整数据契约，检查 shape、RF/IQ、timing、probe、wavefront、source、origin 和 wave.delay |
 | <code>plot_raw_channel_overview_ustb.m</code> | 是 | 显示真实 channel data 的 time × channel 结构 |
 | <code>das_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | 本项目自己实现的 conventional FI scanline DAS：Tx/Rx delay、analytic RF、插值、aperture、coherent sum、dB 均显式实现 |
+| <code>validate_manual_vs_ustb.m</code> | 是 | 在相同 x/z grid、scanline Tx、full Rx aperture 下比较 Manual DAS 与 USTB MATLAB DAS reference，输出相关系数、误差、峰值位置和差分图 |
 
 ---
 
@@ -98,6 +99,7 @@ coherent sum
 inspect_uff_metadata_ustb
 plot_raw_channel_overview_ustb
 das_fi_scanline_manual
+validate_manual_vs_ustb
 ```
 
 第三个脚本中，USTB 只负责：
