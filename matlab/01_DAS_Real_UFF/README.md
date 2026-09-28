@@ -16,6 +16,7 @@
 | <code>das_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | 本项目自己实现的 conventional FI scanline DAS：Tx/Rx delay、analytic RF、插值、aperture、coherent sum、dB 均显式实现 |
 | <code>validate_manual_vs_ustb.m</code> | 是 | 在相同 x/z grid、scanline Tx、full Rx aperture 下比较 Manual DAS 与 USTB MATLAB DAS reference，输出相关系数、误差、峰值位置和差分图 |
 | <code>analyze_point_target_psf.m</code> | 是（只用于重建前读取 UFF） | 交互选择孤立点靶，局部峰值细化，测量 lateral / axial -6 dB amplitude FWHM，并检查 FWHM 相对于 x/z sampling 的采样充分性 |
+| <code>compare_receive_aperture_full_vs_fnumber.m</code> | 是（调用已验证的 Manual DAS） | 在完全相同的 Tx/Rx delay 与成像 grid 下，仅改变 receive aperture，对比 full aperture 与 dynamic F-number boxcar aperture 的 PSF |
 
 ---
 
