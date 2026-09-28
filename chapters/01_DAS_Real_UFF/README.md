@@ -683,6 +683,47 @@ $
 下一步进入 **point-target PSF / FWHM / sidelobe** 定量分析。
 
 ---
+## 15.2 下一小节：Full Receive Aperture vs Dynamic F-number
+
+在 Manual conventional FI-DAS 已通过 USTB 交叉验证后，下一步只改变一个变量：**receive aperture**。
+
+实验脚本：
+
+~~~text
+matlab/01_DAS_Real_UFF/compare_receive_aperture_full_vs_fnumber.m
+~~~
+
+保持不变：
+
+- 同一 UFF 数据；
+- 同一 focused Tx model；
+- 同一 `wave.delay` convention；
+- 同一 Rx delay；
+- 同一 interpolation；
+- 同一 x/z grid。
+
+只比较：
+
+~~~text
+Full aperture
+vs
+Dynamic boxcar aperture: D(z) = z / F#
+~~~
+
+默认 `F# = 1.7`。
+
+需要特别注意：这里的 F-number aperture 是本项目显式定义的教学模型，不应假设与任意厂商扫描仪或所有 USTB window 配置完全等价。
+
+预期主要观察：
+
+1. finite F-number 减小有效 receive aperture，因此 lateral PSF 通常变宽；
+2. axial FWHM 应变化较小，因为 axial resolution 主要受 pulse / bandwidth 限制；
+3. full-aperture lateral FWHM 当前只跨约 1–2 个 transmit scanline intervals，因此数值精度受 lateral sampling 明显限制；
+4. dynamic aperture 的目标不是在所有深度获得最窄主瓣，而是让有效 aperture 随深度变化，从而控制 F-number 和成像一致性。
+
+在真实 phantom 中，背景散斑和其他散射体会污染所谓“sidelobe profile”，因此本实验优先比较主瓣 FWHM，不把局部背景起伏直接解释成理想 point-target PSL。
+
+---
 ## 16. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
