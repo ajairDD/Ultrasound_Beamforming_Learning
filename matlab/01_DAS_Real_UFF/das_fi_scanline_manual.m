@@ -319,6 +319,32 @@ function tau_tx = focused_tx_delay_spherical(wave, x, y, z)
 %
 % For a focused virtual source in front of the probe (source.z > 0):
 %   signed_distance is negative before the focus and positive after it.
+%
+% IMPORTANT ABOUT wave.source.distance
+% ------------------------------------
+% USTB defines uff.point.distance as the Euclidean distance from the
+% virtual source to the GLOBAL coordinate origin [0,0,0]:
+%
+%   source.distance = norm(source.xyz)
+%
+% This is a TIME-REFERENCE convention, not a claim that the acoustic wave
+% physically travels from the global origin to the focus.
+%
+% If we instead choose the probe-plane point directly below the focus,
+%
+%   local_origin = [source.x, source.y, 0],
+%
+% the reference source distance would simply be source.z for a flat probe.
+% The two conventions differ only by the constant
+%
+%   source.distance - source.z
+%
+% and therefore generate the SAME relative transmit-delay law when the
+% event-time offset is shifted consistently. USTB exposes exactly this
+% correction through wave.t0_origin.
+%
+% For the present UFF data, we retain the native USTB convention because
+% it has already been numerically validated against midprocess.das().
 
     sx = wave.source.x;
     sy = wave.source.y;
@@ -332,8 +358,11 @@ function tau_tx = focused_tx_delay_spherical(wave, x, y, z)
         signed_d = d;
     end
 
+    % Global-origin reference length used by USTB's spherical model.
+    source_reference_distance = wave.source.distance;
+
     tau_tx = ...
-        (signed_d + wave.source.distance) / wave.sound_speed ...
+        (signed_d + source_reference_distance) / wave.sound_speed ...
         - wave.delay;
 end
 
