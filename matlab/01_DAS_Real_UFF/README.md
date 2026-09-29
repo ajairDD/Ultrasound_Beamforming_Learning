@@ -91,7 +91,7 @@ coherent sum
 
 由本项目自己实现并逐步验证。
 
-当前仓库还没有把“真实 UFF DAS”标成完成，因为这部分尚未正式实现和运行验证。
+Conventional FI-DAS 已完成实现，并已在真实 UFF 数据上与 USTB reference 做过数值交叉验证；RTB 已完成首版实现，但在 `validate_manual_rtb_vs_ustb.m` 跑通并记录数值结果前，仍视为“待 reference 验证”。
 
 
 ---
