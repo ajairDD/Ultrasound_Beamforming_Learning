@@ -42,23 +42,27 @@ end
 %% ------------------------------------------------------------------------
 % 1. Run our manual DAS
 % -------------------------------------------------------------------------
-receive_aperture_mode = 'full';
-
 fprintf('\n============================================================\n');
 fprintf(' STEP 1 / 3 - MANUAL FI-DAS\n');
 fprintf('============================================================\n');
 
-run('das_fi_scanline_manual.m');
+opts = struct();
+opts.z_min = z_min;
+opts.z_max = z_max;
+opts.n_z = n_z;
+opts.frame_index = frame_index;
+opts.receive_aperture_mode = 'full';
+opts.receive_f_number = 1.7;
+opts.display_dynamic_range_db = 60;
+opts.verbose = true;
 
-manual_envelope = envelope;
-manual_image_db = image_db;
-manual_x_axis = x_axis;
-manual_z_axis = z_axis;
+manual = reconstruct_fi_scanline_manual(filename,opts);
+
+manual_envelope = manual.envelope;
+manual_image_db = manual.image_db;
+manual_x_axis = manual.x_axis;
+manual_z_axis = manual.z_axis;
 manual_peak = max(manual_envelope(:));
-
-% Preserve parameters because the manual script deliberately clears most
-% workspace variables at startup.
-manual_nz = numel(manual_z_axis);
 
 %% ------------------------------------------------------------------------
 % 2. USTB conventional scanline reference
