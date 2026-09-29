@@ -18,6 +18,10 @@
 | <code>validate_manual_vs_ustb.m</code> | 是 | 在相同 x/z grid、scanline Tx、full Rx aperture 下比较 Manual DAS 与 USTB MATLAB DAS reference，输出相关系数、误差、峰值位置和差分图 |
 | <code>analyze_point_target_psf.m</code> | 是（只用于重建前读取 UFF） | 交互选择孤立点靶，局部峰值细化，测量 lateral / axial -6 dB amplitude FWHM，并检查 FWHM 相对于 x/z sampling 的采样充分性 |
 | <code>compare_receive_aperture_full_vs_fnumber.m</code> | 是（调用已验证的 Manual DAS） | 在完全相同的 Tx/Rx delay 与成像 grid 下，仅改变 receive aperture，对比 full aperture 与 dynamic F-number boxcar aperture 的 PSF |
+| <code>reconstruct_fi_rtb_manual.m</code> | 是（仅用于读取 UFF） | **Manual RTB 核心**：pixel-based Tx/Rx delay、Tx F-number/Tukey weighting、single-Tx Rx-DAS、跨 Tx coherent sum 与 overlap normalization |
+| <code>compare_conventional_vs_rtb.m</code> | 是 | Conventional FI、纯 lateral interpolation、Hybrid RTB 三方对比，区分“采样变密”和“真正重新利用 RF/Tx dimension” |
+| <code>validate_manual_rtb_vs_ustb.m</code> | 是 | Manual Hybrid RTB vs USTB Hybrid RTB 数值交叉验证 |
+| <code>experiment_rtb_parameter_sweep.m</code> | 是 | 一次只改变一个 RTB 参数：delay model、x upsample、Tx/Rx F#、minimum aperture、PW margin、wave stride |
 
 ---
 
@@ -148,3 +152,41 @@ result = reconstruct_fi_scanline_manual(filename, opts);
 ```
 
 所有结果通过 `result.envelope`、`result.x_axis` 等显式返回。后续算法代码不再依赖脚本间共享 workspace。
+
+
+---
+
+## RTB 推荐运行顺序
+
+先跑最重要的主对照：
+
+```matlab
+filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+
+target_x_mm = -4.917;
+target_z_mm = 20.21;
+
+compare_conventional_vs_rtb
+```
+
+然后做 reference validation：
+
+```matlab
+validate_manual_rtb_vs_ustb
+```
+
+验证通过后再做参数实验，例如：
+
+```matlab
+experiment = 'delay_model';
+experiment_rtb_parameter_sweep
+```
+
+或：
+
+```matlab
+experiment = 'wave_stride';
+experiment_rtb_parameter_sweep
+```
+
+RTB 比 conventional FI-DAS 计算量大很多，因此参数探索默认使用较小的 `n_z`。确认趋势以后再提高到 512 / 1024。
