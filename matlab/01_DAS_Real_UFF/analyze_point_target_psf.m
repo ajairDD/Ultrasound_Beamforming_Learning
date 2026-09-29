@@ -38,13 +38,26 @@ end
 %% ------------------------------------------------------------------------
 % 1. Reconstruct the manual conventional FI-DAS image
 % -------------------------------------------------------------------------
-receive_aperture_mode = 'full';
-
 fprintf('============================================================\n');
 fprintf(' POINT-TARGET PSF ANALYSIS\n');
 fprintf('============================================================\n');
 
-run('das_fi_scanline_manual.m');
+opts = struct();
+opts.z_min = z_min;
+opts.z_max = z_max;
+opts.n_z = n_z;
+opts.frame_index = frame_index;
+opts.receive_aperture_mode = 'full';
+opts.receive_f_number = 1.7;
+opts.display_dynamic_range_db = 60;
+opts.verbose = true;
+
+result = reconstruct_fi_scanline_manual(filename,opts);
+
+envelope = result.envelope;
+image_db = result.image_db;
+x_axis = result.x_axis;
+z_axis = result.z_axis;
 
 % Work with normalized linear envelope, not the clipped dB image.
 env = envelope / (max(envelope(:)) + eps);
@@ -120,11 +133,9 @@ fprintf('  image level  : %.3f dB relative to global image peak\n', ...
 % -------------------------------------------------------------------------
 has_gt = false;
 
-if isprop(channel_data,'phantom') && ~isempty(channel_data.phantom) && ...
-        isprop(channel_data.phantom,'points') && ...
-        ~isempty(channel_data.phantom.points)
+if ~isempty(result.phantom_points)
 
-    pts = channel_data.phantom.points;
+    pts = result.phantom_points;
 
     % Only compare geometry here; Gamma is not needed for nearest-point
     % matching. Restrict to approximately the x-z imaging plane.
