@@ -724,6 +724,44 @@ Dynamic boxcar aperture: D(z) = z / F#
 在真实 phantom 中，背景散斑和其他散射体会污染所谓“sidelobe profile”，因此本实验优先比较主瓣 FWHM，不把局部背景起伏直接解释成理想 point-target PSL。
 
 ---
+## 15.3 Full aperture vs F#=1.7：真实数据结果
+
+在同一个约 `x=-4.917 mm, z=20.21 mm` 的点靶附近，仅改变 receive aperture，得到：
+
+| 指标 | Full aperture | Dynamic F# = 1.7 |
+|---|---:|---:|
+| Active Rx channels | `128 / 128` | `41 / 128` |
+| Physical / requested aperture | `37.846 mm` center span | `11.934 mm` from `D=z/F#` |
+| Refined peak x | `-4.9170 mm` | `-4.9170 mm` |
+| Refined peak z | `20.2102 mm` | `20.2884 mm` |
+| Lateral -6 dB amplitude FWHM | `0.481698 mm` | `0.699202 mm` |
+| Lateral FWHM / scanline spacing | `1.616` | `2.346` |
+| Axial -6 dB amplitude FWHM | `0.427685 mm` | `0.430554 mm` |
+| Axial FWHM / z sampling | `10.938` | `11.011` |
+
+主要观察：
+
+1. 将 receive aperture 从全部 128 通道缩到约 41 通道后，lateral PSF 明显变宽；
+2. axial FWHM 几乎不变，符合 axial resolution 主要由 pulse / bandwidth 决定的预期；
+3. F# aperture 的实际 active-channel 数与 `D=z/F#` 和 probe pitch 的量级一致，说明 aperture selection 逻辑工作正常；
+4. Full-aperture lateral FWHM 仅跨 `1.616` 个 scanline intervals，因此 lateral width 的定量精度仍明显受 conventional-FI 横向采样限制；
+5. F#=1.7 的 lateral FWHM 也只跨 `2.346` 个 scanline intervals，仍未达到充分横向采样。
+
+这里不能简单使用 `Delta x ~ lambda z / D` 去预测两组 FWHM 的精确比值，因为真实 two-way PSF 同时受到 transmit beam、receive aperture、element directivity、有限 scanline sampling、真实 phantom/background 等因素影响；这个尺度关系主要用于趋势理解，而不是对当前实测 FWHM 做一比一精确预测。
+
+因此这一小节的结论是：
+
+$
+\boxed{
+D_{\mathrm{Rx}}\downarrow
+\Rightarrow
+\text{lateral PSF broadens strongly, while axial PSF changes little}
+}
+$
+
+这也进一步说明：receive F-number 改变的是 **Rx spatial aperture**，而后续 RTB 主要改变的是 **Tx dimension 的 retrospective reconstruction / combination**，两者是不同自由度。
+
+---
 ## 16. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
