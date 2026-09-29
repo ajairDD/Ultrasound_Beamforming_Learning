@@ -762,7 +762,345 @@ $
 这也进一步说明：receive F-number 改变的是 **Rx spatial aperture**，而后续 RTB 主要改变的是 **Tx dimension 的 retrospective reconstruction / combination**，两者是不同自由度。
 
 ---
-## 16. 本章完成后的意义
+## 16. RTB：从“一发一线”到 Pixel-based Transmit Reconstruction
+
+### 16.1 RTB 不是另一种通道求和公式
+
+RTB（Retrospective Transmit Beamforming）仍然可以使用 DAS 完成 receive beamforming。
+
+传统 focused scanline reconstruction：
+
+~~~text
+Tx 1 -> scanline 1
+Tx 2 -> scanline 2
+...
+Tx T -> scanline T
+~~~
+
+即一个 focused transmit 只用于它自己的 scanline。
+
+RTB 则对每个 focused transmit 构建一张 pixel-based single-transmit image：
+
+$
+S_t(x,z)
+=
+\sum_{m=1}^{M}
+w_m^{Rx}(x,z)
+s_{m,t}(x,z).
+$
+
+然后在同一个 pixel 上跨 transmit coherent combine：
+
+$
+S_{RTB}(x,z)
+=
+\frac{
+\sum_{t=1}^{T}
+w_t^{Tx}(x,z)S_t(x,z)
+}{
+\sum_{t=1}^{T}w_t^{Tx}(x,z)
+}.
+$
+
+因此：
+
+$
+\boxed{
+\text{RTB-DAS}
+=
+\text{pixel-based Rx DAS}
++
+\text{retrospective Tx-domain coherent combination}
+}
+$
+
+不是另一种类似 CF / DMAS 的 channel-combination formula。
+
+### 16.2 为什么 conventional scanline 没暴露 spherical-model 的焦点不连续问题？
+
+设 focused virtual source 为：
+
+$
+F=(x_f,z_f).
+$
+
+simple spherical model 对 candidate pixel $P=(x,z)$ 使用：
+
+$
+L_{Tx}^{sph}
+=
+R_f
++
+\operatorname{sgn}(z-z_f)
+\sqrt{(x-x_f)^2+(z-z_f)^2},
+$
+
+其中 $R_f=\texttt{source.distance}$。
+
+当 conventional scanline 只取：
+
+$
+x=x_f,
+$
+
+焦点前后极限都连续收敛到 $R_f$。
+
+但是 RTB 会使用 off-axis pixel，即 $x\neq x_f$。在 $z\to z_f^-$ 与 $z\to z_f^+$ 时：
+
+$
+L_- = R_f-|x-x_f|,
+$
+
+$
+L_+ = R_f+|x-x_f|.
+$
+
+因此存在跳变：
+
+$
+\boxed{
+\Delta L
+=
+2|x-x_f|
+}
+$
+
+对应时间跳变：
+
+$
+\Delta\tau
+=
+\frac{2|x-x_f|}{c}.
+$
+
+这就是 simple spherical virtual-source RTB 在 focal depth 附近产生 artifact 的根本原因。Rindal 等人的 IUS 2018 工作正是针对这个问题。
+
+### 16.3 Hybrid Tx delay
+
+Hybrid model 在远离焦点时仍使用 spherical virtual-source delay；只在：
+
+$
+|z-z_f|\le d_{PW}
+$
+
+这一小段焦点带内，改用局部 plane-wave delay：
+
+$
+L_{Tx}^{PW}
+=
+R_f+(z-z_f).
+$
+
+它不再依赖横向距离 $x-x_f$，因此穿过 focal depth 时连续。
+
+本项目默认：
+
+~~~text
+pw_margin = 1 mm
+~~~
+
+即与 USTB IUS-2018 示例一致的量级。
+
+### 16.4 Tx apodization：不是所有 Tx 都应该贡献给所有 pixel
+
+一个 focused transmit 的可靠 insonified region 是有限的，因此 RTB 必须有 pixel-dependent Tx weight：
+
+$
+w_t^{Tx}(x,z).
+$
+
+本项目使用 F-number 定义的局部 transmit support。对于波束局部坐标 $(x',z')$：
+
+$
+r
+=
+F\#_{Tx}
+\frac{|x'|}{|z'|}.
+$
+
+有效区域约为：
+
+$
+r\le\frac12.
+$
+
+焦点附近为了避免 aperture 收缩到零，引入：
+
+$
+D_{min}^{Tx}.
+$
+
+默认参数按照官方 RTB 示例：
+
+~~~text
+Tx F#             = 2
+Tx minimum aperture = 3 mm
+Tx window         = Tukey25
+~~~
+
+Tukey25 相比 hard boxcar 会把 beam-support 边缘平滑衰减，减少 abrupt Tx weighting。
+
+### 16.5 为什么最后还要除以 Tx weight sum？
+
+不同 pixel 被多少个 focused transmissions 覆盖并不相同。
+
+如果直接：
+
+$
+\sum_t w_t^{Tx}S_t,
+$
+
+多 Tx overlap 的区域会天然更亮。
+
+因此官方 RTB 示例以及本项目都采用：
+
+$
+\boxed{
+S_{RTB}
+=
+\frac{\sum_t w_t^{Tx}S_t}
+{\sum_t w_t^{Tx}}
+}
+$
+
+这一步是 overlap compensation，不是 envelope normalization。
+
+### 16.6 Manual RTB 实现的数据流
+
+~~~text
+UFF channel data
+    |
+    +-- Tx 1
+    |    |
+    |    +-- analytic RF
+    |    +-- pixel-dependent Tx support
+    |    +-- Tx delay
+    |    +-- Rx delay for each element
+    |    +-- fractional interpolation
+    |    +-- Rx DAS -> single-Tx image S1(x,z)
+    |
+    +-- Tx 2 -> S2(x,z)
+    |
+    +-- ...
+    |
+    +-- Tx T -> ST(x,z)
+            |
+            v
+      Tx Tukey/F# weights
+            |
+            v
+      coherent Tx sum
+            |
+            v
+      divide by sum(Tx weights)
+            |
+            v
+        RTB complex image
+            |
+            v
+       envelope / dB
+~~~
+
+主代码：
+
+~~~text
+matlab/01_DAS_Real_UFF/reconstruct_fi_rtb_manual.m
+~~~
+
+代码按 wave 流式处理，不保存完整 `[z x Tx]` low-quality-image cube，从而降低内存需求。
+
+### 16.7 Conventional、纯插值和 RTB 必须区分
+
+`compare_conventional_vs_rtb.m` 同时比较：
+
+1. conventional FI-DAS：原始约 128 条 scanlines；
+2. conventional envelope 仅做 lateral interpolation 到 RTB grid；
+3. RTB：真正从 RF channel data 对 off-scanline pixels 重新计算 delay 并跨 Tx coherent combine。
+
+其中第 2 项非常重要：
+
+$
+\boxed{
+\text{display interpolation}
+\neq
+\text{RTB}
+}
+$
+
+插值只能让现有图像更平滑，不会重新利用 raw RF，也不会引入新的 transmit-domain coherent information。
+
+### 16.8 与传统 FI-DAS 的核心比较
+
+| 项目 | Conventional FI-DAS | RTB-DAS |
+|---|---|---|
+| Acquisition | focused Tx | 同一 focused Tx data |
+| 一个 Tx 的输出 | 1 条 scanline | 多个 pixels / lines |
+| Rx focusing | dynamic DAS | dynamic DAS |
+| Tx dimension | 基本不跨 Tx 合成 | 多 Tx 对同一 pixel coherent combine |
+| lateral grid | 受 Tx line spacing 约束 | 可比 Tx line spacing 更密 |
+| Tx delay model | 中心线较简单 | off-axis model 非常关键 |
+| focal-depth artifact | 通常不明显 | spherical model 可产生明显 artifact |
+| 计算量 | 低 | 高得多 |
+| 主要优势 | 简单、快速、稳定 | 更充分利用 focused-transmit channel data |
+
+### 16.9 当前 Manual RTB 默认参数
+
+~~~text
+x_upsample       = 4
+Tx delay model   = hybrid
+pw_margin        = 1 mm
+Tx F#            = 2
+Tx min aperture  = 3 mm
+Tx window        = Tukey25
+Rx F#            = 1.7
+wave_stride      = 1
+Tx normalization = enabled
+~~~
+
+这些参数来自 / 接近 USTB 的 IUS-2018 RTB 示例，但仍需在本数据上重新验证，不能因为来源于官方示例就直接视为当前数据的最优参数。
+
+### 16.10 参数实验应该怎样解释
+
+`experiment_rtb_parameter_sweep.m` 一次只改变一个变量：
+
+| 参数 | 主要改变什么 | 重点观察 |
+|---|---|---|
+| `tx_delay_model` | spherical vs hybrid | focal-depth artifact / image continuity |
+| `x_upsample` | output lateral sampling | dx、FWHM sampling support；不应把更密 grid 自动解释成真实 resolution 提升 |
+| `tx_f_number` | 每个 Tx 可贡献的横向角域 | active Tx、compounding 范围、artifact/clutter |
+| `tx_min_aperture` | 焦点附近最小 Tx support | focus 附近 coverage 与稳定性 |
+| `pw_margin` | 使用 plane-delay 的焦点带宽 | spherical artifact 消除与模型偏差之间的折中 |
+| `rx_fnumber` | receive aperture | lateral PSF；这是 Rx 自由度，不是 RTB 本身 |
+| `wave_stride` | 实际使用多少个 Tx | acquisition-count / overlap / image quality trade-off |
+
+`wave_stride=2/4` 是用现有数据模拟“只采每 2 / 4 个 focused transmissions”的情形。输出 grid 保持不变，因此可以观察 RTB 在减少 transmit 数量时如何退化。
+
+### 16.11 Manual RTB 也必须做 reference validation
+
+验证脚本：
+
+~~~text
+validate_manual_rtb_vs_ustb.m
+~~~
+
+它会在匹配的 grid、Tx F#、Tukey25、minimum aperture、hybrid margin 和 Rx F# 下，将 Manual RTB 与 USTB `midprocess.das()` hybrid RTB 做数值比较。
+
+在该脚本真正跑通并得到相关系数 / error / peak-location 结果以前，Manual RTB 只能称为 **实现完成、待真实数据 reference 验证**，不能称为已经科学验证。
+
+### 16.12 Unified model 放在哪里？
+
+Nguyen & Prager 2016 的 unified pixel-based beamforming 从 transmit field shape 出发，比 simple spherical model 更细致地处理 focused transmit 的有效波前；USTB 提供 `spherical_transmit_delay_model.unified`。
+
+本章主实现暂不复制 unified model 的整套区域划分与 delay interpolation，而是：
+
+- Manual baseline 实现 simple spherical + hybrid；
+- unified model 作为重要参考方法保留；
+- 先验证 hybrid RTB，因为其物理动机和代码更透明。
+
+这符合本项目目标：先掌握可解释的核心，再进入更复杂模型。
+
+---
+## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
 
