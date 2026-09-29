@@ -309,22 +309,27 @@ grid on;
 
 function out = run_manual_once( ...
     aperture_mode,f_number,filename,z_min,z_max,n_z,frame_index)
-%RUN_MANUAL_ONCE Run the already validated manual DAS script once.
+%RUN_MANUAL_ONCE Call the reusable DAS core with explicit inputs/outputs.
+%
+% Do NOT call das_fi_scanline_manual.m with run() from inside a function.
+% That script is an interactive wrapper and uses clearvars. Passing data
+% through the workspace is fragile and can make names such as "envelope"
+% resolve to MATLAB functions instead of variables.
 
-    receive_aperture_mode = aperture_mode;
-    receive_f_number = f_number;
+    opts = struct();
 
-    run('das_fi_scanline_manual.m');
+    opts.z_min = z_min;
+    opts.z_max = z_max;
+    opts.n_z = n_z;
+    opts.frame_index = frame_index;
 
-    out.envelope = envelope;
-    out.image_db = image_db;
-    out.x_axis = x_axis;
-    out.z_axis = z_axis;
-    out.active_channel_count = active_channel_count;
+    opts.receive_aperture_mode = aperture_mode;
+    opts.receive_f_number = f_number;
 
-    out.N_channels = channel_data.N_channels;
-    out.probe_x_min = min(channel_data.probe.x(:));
-    out.probe_x_max = max(channel_data.probe.x(:));
+    opts.display_dynamic_range_db = 60;
+    opts.verbose = true;
+
+    out = reconstruct_fi_scanline_manual(filename,opts);
 end
 
 function peak = refine_local_peak( ...
