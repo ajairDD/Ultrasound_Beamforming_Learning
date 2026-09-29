@@ -13,7 +13,8 @@
 | <code>inspect_uff_hdf5.m</code> | 否 | 使用 MATLAB HDF5 API 查看 UFF 文件结构 |
 | <code>inspect_uff_metadata_ustb.m</code> | 是 | 第 1 步：输出完整数据契约，检查 shape、RF/IQ、timing、probe、wavefront、source、origin 和 wave.delay |
 | <code>plot_raw_channel_overview_ustb.m</code> | 是 | 显示真实 channel data 的 time × channel 结构 |
-| <code>das_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | 本项目自己实现的 conventional FI scanline DAS：Tx/Rx delay、analytic RF、插值、aperture、coherent sum、dB 均显式实现 |
+| <code>reconstruct_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | **可复用的 Manual FI-DAS 核心函数**；所有真实数据实验统一调用它，显式实现 Tx/Rx delay、analytic RF、插值、aperture、coherent sum、envelope/dB |
+| <code>das_fi_scanline_manual.m</code> | 是 | 面向学习者的直接运行入口；负责设置参数、调用核心函数、显示图像和 diagnostics，不再承载另一份算法实现 |
 | <code>validate_manual_vs_ustb.m</code> | 是 | 在相同 x/z grid、scanline Tx、full Rx aperture 下比较 Manual DAS 与 USTB MATLAB DAS reference，输出相关系数、误差、峰值位置和差分图 |
 | <code>analyze_point_target_psf.m</code> | 是（只用于重建前读取 UFF） | 交互选择孤立点靶，局部峰值细化，测量 lateral / axial -6 dB amplitude FWHM，并检查 FWHM 相对于 x/z sampling 的采样充分性 |
 | <code>compare_receive_aperture_full_vs_fnumber.m</code> | 是（调用已验证的 Manual DAS） | 在完全相同的 Tx/Rx delay 与成像 grid 下，仅改变 receive aperture，对比 full aperture 与 dynamic F-number boxcar aperture 的 PSF |
@@ -105,7 +106,9 @@ validate_manual_vs_ustb
 analyze_point_target_psf
 ```
 
-第三个脚本中，USTB 只负责：
+`reconstruct_fi_scanline_manual.m` 是唯一的 Manual DAS 算法核心。`das_fi_scanline_manual.m`、验证、PSF 和 aperture 对比脚本都调用这一核心。
+
+核心函数中，USTB 只负责：
 
 ```matlab
 channel_data = uff.read_object(filename, '/channel_data');
@@ -122,3 +125,26 @@ channel_data = uff.read_object(filename, '/channel_data');
 即 conventional FI-DAS。
 
 RTB 会在这套 baseline 完成并与 USTB reference 对齐之后再加入。
+
+
+---
+
+## 关于 MATLAB workspace 的实现约定
+
+早期版本的 aperture-comparison 脚本曾在局部函数中通过：
+
+```matlab
+run('das_fi_scanline_manual.m')
+```
+
+调用脚本，再依赖 `envelope`、`x_axis` 等变量留在调用工作区。
+
+这种写法不稳定：脚本中的 `clearvars` 与函数 workspace 会导致变量丢失，MATLAB 还可能把丢失的变量名解析为同名函数，例如 `envelope()`。
+
+现在统一改为：
+
+```matlab
+result = reconstruct_fi_scanline_manual(filename, opts);
+```
+
+所有结果通过 `result.envelope`、`result.x_axis` 等显式返回。后续算法代码不再依赖脚本间共享 workspace。
