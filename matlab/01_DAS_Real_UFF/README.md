@@ -23,6 +23,7 @@
 | <code>validate_manual_rtb_vs_ustb.m</code> | 是 | Manual Hybrid RTB vs USTB Hybrid RTB 数值交叉验证 |
 | <code>experiment_rtb_parameter_sweep.m</code> | 是 | 一次只改变一个 RTB 参数：delay model、x upsample、Tx/Rx F#、minimum aperture、PW margin、wave stride |
 | <code>diagnose_rtb_edge_darkening.m</code> | 是 | 诊断 RTB 左右暗边：Tx count / Tx weight sum / active Rx count / Full-Rx vs F#-Rx / 横向背景亮度趋势 |
+| <code>audit_fi_datasets_tx_timing.m</code> | 是 | **跨 FI 数据集 Tx timing 审计**：不施加任何 timing correction，比对 RTB/FI、Tx coherence 与 adjacent-Tx phase，判断 CIRS 右侧问题是数据特例还是可重复现象 |
 
 ---
 
@@ -307,3 +308,66 @@ rtb = reconstruct_fi_rtb_manual(filename,opts);
 `rtb_corrected` 是诊断脚本已经算出的修正结果，不需要再重建。
 `test_rtb_tx_timing` 用已知时间偏移的合成点靶检验偏移符号与相干恢复。
 详细实测与限制见 `../../artifacts/rtb_darkening/README.md`。
+
+
+---
+
+## 跨 FI 数据集检查 Tx timing
+
+不要把 `right_edge_tx_time_offsets()` 直接套到其它数据。
+
+先运行：
+
+```matlab
+data_dir = '../../data';
+audit_fi_datasets_tx_timing
+```
+
+默认检查：
+
+```text
+L7_FI_Verasonics_CIRS_points.uff
+L7_FI_TheGB.uff
+L7_FI_carotid_cross_1.uff
+L7_FI_carotid_cross_2.uff
+Alpinion_L3-8_FI_hypoechoic.uff
+```
+
+其中：
+
+- `L7_FI_TheGB.uff` 是最重要的同平台/同类 focused acquisition 对照；
+- 两份 carotid 检查真实人体 acquisition 是否复现；
+- Alpinion 数据作为不同平台负对照。
+
+脚本默认使用较轻量的：
+
+```text
+n_z = 256
+x_upsample = 2
+```
+
+并且显式设置：
+
+```matlab
+tx_time_offsets = [];
+```
+
+即**不做任何 Tx timing 修正**。
+
+输出写入：
+
+```text
+artifacts/fi_timing_audit/
+```
+
+重点看：
+
+```text
+RTB_minus_FI_left/center/right
+RTB_coherence_left/center/right
+adj_phase_left/middle/right
+adj_corr_left/middle/right
+```
+
+如果只有 CIRS points 出现明显右侧异常，当前 correction 应继续视为该数据特例。
+如果多个 L7/Verasonics FI 数据出现相似右侧 onset / phase drift，再研究共享的采集或 UFF timing convention。
