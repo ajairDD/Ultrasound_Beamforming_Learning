@@ -1188,6 +1188,50 @@ blending_power = 0.5
 参数实验 `delay_model` 现在会三方比较 spherical / hybrid / blended。
 
 ---
+### 16.15 RTB lateral edge darkening：如何区分 Tx、Rx 与显示因素
+
+Blended model 明显改善 focal-band seam 后，当前真实数据仍可观察到左右边缘比中心略暗。
+
+这个现象不应立即解释为算法错误。对于有限长度线阵和有限 focused-transmit coverage，边缘 pixel 往往同时面临：
+
+1. 可参与的 transmit events 更少；
+2. Tx Tukey / F-number 权重总和更低；
+3. dynamic receive aperture 在探头物理边缘被截断，active Rx channels 变少；
+4. 即使除以 `sum(Tx weights)`，也只能补偿平均 overlap gain，无法恢复边缘缺失的 synthetic aperture / coherent information。
+
+因此增加专用诊断脚本：
+
+~~~text
+matlab/01_DAS_Real_UFF/diagnose_rtb_edge_darkening.m
+~~~
+
+它在完全相同的 Blended RTB Tx 设置下，对比：
+
+~~~text
+Rx F# = 1.7
+vs
+Full Rx aperture
+~~~
+
+并同时输出：
+
+- `active_tx_count(x,z)`；
+- `tx_weight_sum(x,z)`；
+- dynamic F-number 下的 `active_rx_count(x,z)`；
+- Full-Rx 与 F#-Rx 的 RTB B-mode；
+- 选定深度范围内，沿 x 的 median envelope level；
+- left / center / right 三个区域的 Tx count、Tx weight、Rx count 和相对背景亮度统计。
+
+其中横向背景趋势使用 **depth-wise median envelope**，目的是降低孤立点靶对均值的污染；它仍然只是诊断统计，不是绝对声学灵敏度标定。
+
+推荐解释顺序：
+
+1. 若 edge 的 `active_tx_count` / `tx_weight_sum` 明显下降，说明 Tx support 是主要因素之一；
+2. 若 dynamic F# 的 `active_rx_count` 在边缘下降，而且切换到 full Rx 后暗边减轻，说明 Rx aperture truncation 也很重要；
+3. 若 full Rx 后仍明显存在暗边，则 Tx coverage / synthetic-aperture loss 更可能是主因；
+4. 不应直接按 `tx_weight_sum` 或 `active_tx_count` 对 B-mode 做增益补偿并把它称为 RTB 本身，因为那会引入额外的 post-processing / display correction。
+
+---
 ## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
