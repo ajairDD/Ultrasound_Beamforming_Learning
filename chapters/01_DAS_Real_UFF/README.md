@@ -1388,6 +1388,51 @@ UFF 没有可用的实际 Tx apodization（读出的值为 NaN），因此孔径
 详细数据、图像、验证和复现命令见 `../../artifacts/rtb_darkening/README.md`。
 
 ---
+### 16.18 跨数据集验证：CIRS timing 问题能否复现？
+
+当前 `L7_FI_Verasonics_CIRS_points.uff` 已发现右侧跨 Tx timing / phase mismatch；但其具体 acquisition mechanism 尚未由原始 Verasonics `TX.Delay / TX.Apod` 证明。
+
+因此下一步不能把 CIRS 专用 correction 直接推广到所有 focused data，而应先做 **uncorrected cross-dataset audit**。
+
+新增：
+
+~~~text
+matlab/01_DAS_Real_UFF/audit_fi_datasets_tx_timing.m
+~~~
+
+默认测试五套 Focused Imaging 数据：
+
+1. `L7_FI_Verasonics_CIRS_points.uff`：已知问题参考；
+2. `L7_FI_TheGB.uff`：L7 / Verasonics focused phantom，对判断是否为同类 acquisition 共性最重要；
+3. `L7_FI_carotid_cross_1.uff`；
+4. `L7_FI_carotid_cross_2.uff`：两份独立 in-vivo FI；
+5. `Alpinion_L3-8_FI_hypoechoic.uff`：不同平台/探头负对照。
+
+暂不纳入 `CPWC / DW / STA / PICMUS`，因为它们的 transmit geometry 与 focused virtual-source RTB 不同。
+
+每套兼容数据都在 **不施加 timing correction** 的条件下测：
+
+- matched conventional FI vs Blended RTB 的绝对 envelope ratio；
+- left / center / right 的 RTB Tx coherence；
+- adjacent Tx 在相同 candidate pixels 上的 complex correlation phase；
+- left / middle / right-edge 的 phase / correlation 统计。
+
+判别逻辑：
+
+~~~text
+只有 CIRS points 异常
+    -> 更支持 dataset/acquisition-specific timing issue
+
+多套 L7/Verasonics FI 都在右侧出现相似 drift
+    -> 需要研究共享 acquisition / UFF timing convention
+
+Alpinion 等不同平台也出现同型问题
+    -> 需要重新检查更一般的 RTB timing/model assumption
+~~~
+
+任何情况下，都不能仅因为“也是 FI 数据”就直接调用 CIRS 的 `right_edge_tx_time_offsets(...,16)`。
+
+---
 ## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
