@@ -14,6 +14,7 @@
 %   experiment = 'pw_margin'
 %   experiment = 'rx_fnumber'
 %   experiment = 'wave_stride'
+%   experiment = 'blending_power'
 %
 % The default n_z=256 is for parameter exploration. Once a trend is clear,
 % rerun the selected cases at n_z=512/1024.
@@ -62,6 +63,7 @@ base.x_upsample = 4;
 
 base.tx_delay_model = 'hybrid';
 base.pw_margin = 1e-3;
+base.blending_power = 0.5;
 
 base.tx_f_number = 2;
 base.tx_min_aperture = 3e-3;
@@ -217,33 +219,47 @@ legend('Location','best');
 %% ------------------------------------------------------------------------
 % Delay-model-specific focal-depth difference
 % -------------------------------------------------------------------------
-if strcmpi(experiment,'delay_model') && N == 2
+if strcmpi(experiment,'delay_model') && N == 3
 
-    a = results{1}.envelope / ...
+    sph = results{1}.envelope / ...
         (max(results{1}.envelope(:))+eps);
 
-    b = results{2}.envelope / ...
+    hyb = results{2}.envelope / ...
         (max(results{2}.envelope(:))+eps);
 
-    assert(isequal(size(a),size(b)), ...
+    bld = results{3}.envelope / ...
+        (max(results{3}.envelope(:))+eps);
+
+    assert(isequal(size(sph),size(hyb),size(bld)), ...
         'Delay-model cases must use the same grid.');
 
     focus_z = median(results{1}.source_z);
 
     figure('Color','w');
 
+    subplot(1,2,1);
     imagesc( ...
         results{1}.x_axis*1e3, ...
         results{1}.z_axis*1e3, ...
-        abs(a-b));
-
+        abs(sph-hyb));
     set(gca,'YDir','reverse');
     axis image;
-
     xlabel('x (mm)');
     ylabel('z (mm)');
-    title('|Spherical RTB - Hybrid RTB| normalized envelope');
+    title('|Spherical - Hybrid|');
+    ylim(([focus_z-4e-3,focus_z+4e-3])*1e3);
+    colorbar;
 
+    subplot(1,2,2);
+    imagesc( ...
+        results{1}.x_axis*1e3, ...
+        results{1}.z_axis*1e3, ...
+        abs(hyb-bld));
+    set(gca,'YDir','reverse');
+    axis image;
+    xlabel('x (mm)');
+    ylabel('z (mm)');
+    title('|Hybrid - Blended|');
     ylim(([focus_z-4e-3,focus_z+4e-3])*1e3);
     colorbar;
 end
@@ -256,11 +272,11 @@ function [cases,labels] = make_cases(experiment,base)
     switch lower(experiment)
 
         case 'delay_model'
-            values = {'spherical','hybrid'};
-            labels = {'spherical','hybrid'};
-            cases = cell(2,1);
+            values = {'spherical','hybrid','blended'};
+            labels = {'spherical','hybrid','blended'};
+            cases = cell(numel(values),1);
 
-            for k = 1:2
+            for k = 1:numel(values)
                 cases{k} = base;
                 cases{k}.tx_delay_model = values{k};
             end
@@ -314,6 +330,18 @@ function [cases,labels] = make_cases(experiment,base)
             for k = 1:numel(values)
                 cases{k} = base;
                 cases{k}.rx_f_number = values(k);
+            end
+
+
+        case 'blending_power'
+            values = [0.25 0.5 1.0];
+            labels = {'blend p=0.25','blend p=0.5','blend p=1.0'};
+            cases = cell(numel(values),1);
+
+            for k = 1:numel(values)
+                cases{k} = base;
+                cases{k}.tx_delay_model = 'blended';
+                cases{k}.blending_power = values(k);
             end
 
         case 'wave_stride'
