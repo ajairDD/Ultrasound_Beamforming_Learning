@@ -32,12 +32,10 @@
 % Example:
 %   addpath(genpath('D:/USTB'));
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+%   filename = '../../data/L7_FI_TheGB.uff';
 %
-%   % Reuse the point target selected in the previous subsection:
-%   target_x_mm = -4.9170;
-%   target_z_mm = 20.2102;
-%
+%   % Click a point target interactively, or reuse coordinates
+%   % selected in analyze_point_target_psf.
 %   compare_receive_aperture_full_vs_fnumber
 
 clearvars -except filename z_min z_max n_z frame_index ...
@@ -46,7 +44,7 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 
 if ~exist('z_min','var')
