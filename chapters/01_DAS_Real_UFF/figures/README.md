@@ -1,6 +1,6 @@
 # 第一章配图与课件索引
 
-本目录提供 **5 张 AI 概念插图和 27 张 MATLAB 图**。正文按 19 组图片组织教学；本索引还收录正文未全部展开的公共幅值图、轴向对照和 reference 剖面，便于按课时选用。
+本目录提供 **5 张 AI 概念插图和 27 张 MATLAB 图**。正文按 19 组图片组织教学：先用图 1–5 建立 conventional FI-DAS 与 RTB 的完整理论主线，再用图 6–10 对应真实重建与 reference，最后用图 11–19 解释实现和读图细节。本索引还收录正文未全部展开的公共幅值图、轴向对照和 reference 剖面，便于按课时选用。
 
 [返回第一章教程](../README.md) · [MATLAB 入口说明](../../../matlab/01_DAS_Real_UFF/README.md)
 
@@ -17,10 +17,10 @@
 | 正文 | 原图 | 课件讲解目的 |
 |---|---|---|
 | 图 1 | [focused_acquisition.png](focused_acquisition.png) | 区分发射焦点 F、散射体 P 与多条 Rx 波形 |
-| 图 4 | [virtual_source_geometry.png](virtual_source_geometry.png) | 焦点前后的正负时间参考；声波始终向深处传播 |
-| 图 7 | [coherent_processing.png](coherent_processing.png) | 延时后保留相位，相干相加，再取包络与 dB |
-| 图 11 | [conventional_vs_rtb.png](conventional_vs_rtb.png) | 一发一线、一发多像素、多发同像素 |
-| 图 16 | [tx_rx_apertures.png](tx_rx_apertures.png) | Tx support 选像素，Rx aperture 选阵元 |
+| 图 2 | [virtual_source_geometry.png](virtual_source_geometry.png) | 焦点前后的正负时间参考；声波始终向深处传播 |
+| 图 3 | [coherent_processing.png](coherent_processing.png) | 延时后保留相位，相干相加，再取包络与 dB |
+| 图 4 | [conventional_vs_rtb.png](conventional_vs_rtb.png) | 一发一线、一发多像素、多发同像素 |
+| 图 5 | [tx_rx_apertures.png](tx_rx_apertures.png) | Tx support 选像素，Rx aperture 选阵元 |
 
 插图由 Codex 内置 imagegen 生成，PNG、白色背景。逐张核对了文字、探头位置与传播方向；相干处理图的 B-mode 缩略图经一次编辑，改为适合 linear array 的矩形。它仍是概念缩略图，不能当作 MATLAB 重建结果。
 

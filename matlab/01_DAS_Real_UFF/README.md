@@ -81,7 +81,7 @@ result = reconstruct_fi_scanline_manual(filename,opts);
 
 ## RTB core
 
-教学主线默认使用 blended Tx-delay model。它以连续权重混合 spherical 与 plane；离轴焦深处仍可能有残余延时跳变，推导和数值图见 [教程第 14 节](../../chapters/01_DAS_Real_UFF/README.md#14-rtb-的新增难点离轴像素的-tx-delay)。
+教学主线默认使用 blended Tx-delay model。它以连续权重混合 spherical 与 plane；离轴焦深处仍可能有残余延时跳变，推导和数值图见 [教程第 11 节](../../chapters/01_DAS_Real_UFF/README.md#tx-delay-models)。初次学习请先读教程第一部分的完整算法主线，再查本目录的实现参数。
 
 ~~~matlab
 opts = struct();
