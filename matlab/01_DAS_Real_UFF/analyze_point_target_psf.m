@@ -9,7 +9,7 @@
 %   - report how many image samples span each measured width.
 %
 % Why interactive selection?
-%   This is an experimental CIRS dataset. If UFF phantom ground-truth
+%   This is a real focused-imaging dataset. If UFF phantom ground-truth
 %   coordinates are absent, the script should not pretend to know which
 %   bright object is a calibration point. The user selects the target,
 %   and the code refines the location to the local maximum.
@@ -19,12 +19,11 @@
 % Example:
 %   addpath(genpath('D:/USTB'));
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+%   filename = '../../data/L7_FI_TheGB.uff';
 %   analyze_point_target_psf
 %
 % Optional non-interactive use:
-%   target_x_mm = -5.5;
-%   target_z_mm = 38.6;
+%   Set target_x_mm / target_z_mm after inspecting the image, then run:
 %   analyze_point_target_psf
 
 clearvars -except filename target_x_mm target_z_mm z_min z_max n_z frame_index;
@@ -32,7 +31,7 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 
 %% ------------------------------------------------------------------------
