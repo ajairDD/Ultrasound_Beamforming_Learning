@@ -1,4 +1,4 @@
-function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
+function out = reconstruct_fi_rtb_manual(filename, opts)
 %RECONSTRUCT_FI_RTB_MANUAL Manual retrospective transmit beamforming (RTB).
 %
 % Chapter 1 RTB core for focused-imaging UFF channel data.
@@ -23,8 +23,8 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 %   Tx F-number                     = 2
 %   Tx Tukey25 weighting
 %   minimum Tx aperture             = 3 mm
-%   hybrid Tx delay model
-%   plane-wave margin around focus  = 1 mm
+%   blended Tx delay model
+%   blending power                  = 0.5
 %   Rx boxcar F-number              = 1.7
 %
 % INPUT
@@ -40,7 +40,7 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 %   x_upsample             default 4
 %   n_x                    [] -> N_waves*x_upsample
 %
-%   tx_delay_model         'spherical' / 'hybrid' / 'blended', default 'hybrid'
+%   tx_delay_model         'spherical' / 'hybrid' / 'blended', default 'blended'
 %   pw_margin              [m], default 1e-3 (hybrid only)
 %   blending_power         default 0.5 (blended only)
 %   tx_f_number            default 2
@@ -54,8 +54,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 %                          1=all Tx, 2=every second Tx, ...
 %
 %   normalize_tx_weights   default true
-%   tx_time_offsets        [s], [] or one value per original Tx event.
-%                          Added to the RF query time, before interpolation.
 %   display_dynamic_range_db default 60
 %   inspect_wave_index     [] or original wave index
 %   verbose                default false
@@ -70,9 +68,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 % out.active_tx_count      [z, x]
 % out.selected_waves
 % out.options
-% out.tx_coherence         |sum(w*S)| / sum(w*|S|), [z, x]
-% out.incoherent_envelope  sum(w*|S|) / sum(w), [z, x]
-% A third argument can supply an already-read uff.channel_data object.
 %
 % Optional diagnostic maps for inspect_wave_index:
 % out.single_tx_unweighted
@@ -96,7 +91,7 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 % caused by the hard hybrid transition.
 
     if nargin < 1 || isempty(filename)
-        filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+        filename = '../../data/L7_FI_TheGB.uff';
     end
     if nargin < 2 || isempty(opts)
         opts = struct();
@@ -112,9 +107,7 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
     %% --------------------------------------------------------------------
     % 1. Read and validate UFF
     % ---------------------------------------------------------------------
-    if nargin < 3 || isempty(channel_data)
-        channel_data = uff.read_object(filename,'/channel_data');
-    end
+    channel_data = uff.read_object(filename,'/channel_data');
 
     assert(opts.frame_index >= 1 && ...
            opts.frame_index <= channel_data.N_frames, ...
@@ -135,16 +128,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
     N_samples = channel_data.N_samples;
     N_channels = channel_data.N_channels;
     N_waves = channel_data.N_waves;
-
-    tx_time_offsets = opts.tx_time_offsets;
-    if isempty(tx_time_offsets)
-        tx_time_offsets = zeros(N_waves,1);
-    end
-    assert(isnumeric(tx_time_offsets) && isreal(tx_time_offsets) && ...
-        isvector(tx_time_offsets) && numel(tx_time_offsets) == N_waves && ...
-        all(isfinite(tx_time_offsets(:))), ...
-        'tx_time_offsets must contain one finite real offset [s] per Tx.');
-    tx_time_offsets = double(tx_time_offsets(:));
 
     assert(N_channels == probe.N_elements, ...
         'N_channels does not match probe.N_elements.');
@@ -219,7 +202,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
     % 3. Allocate RTB accumulators
     % ---------------------------------------------------------------------
     coherent_sum = complex(zeros(opts.n_z,N_x));
-    incoherent_sum = zeros(opts.n_z,N_x);
     tx_weight_sum = zeros(opts.n_z,N_x);
     active_tx_count = zeros(opts.n_z,N_x);
 
@@ -279,7 +261,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
             % Tx delay for every active lateral pixel.
             tau_tx = focused_tx_delay_rtb( ...
                 wave,x_pixels,z_pixel,opts);
-            tau_tx = tau_tx + tx_time_offsets(iw);
 
             % Rx propagation delay: [active pixel, receive channel].
             rx_distance = sqrt( ...
@@ -310,8 +291,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
             txw = tx_weights_all(active_x);
 
             weighted_values = txw .* single_tx_values;
-            incoherent_sum(iz,active_x) = ...
-                incoherent_sum(iz,active_x) + abs(weighted_values).';
 
             coherent_sum(iz,active_x) = ...
                 coherent_sum(iz,active_x) + weighted_values.';
@@ -367,9 +346,6 @@ function out = reconstruct_fi_rtb_manual(filename, opts, channel_data)
 
     out.tx_weight_sum = tx_weight_sum;
     out.active_tx_count = active_tx_count;
-    out.tx_time_offsets = tx_time_offsets;
-    out.tx_coherence = abs(coherent_sum) ./ max(incoherent_sum,realmin);
-    out.incoherent_envelope = incoherent_sum ./ max(tx_weight_sum,realmin);
 
     out.selected_waves = selected_waves;
     out.N_channels = N_channels;
@@ -404,7 +380,7 @@ function opts = apply_defaults(opts)
         'frame_index',1, ...
         'x_upsample',4, ...
         'n_x',[], ...
-        'tx_delay_model','hybrid', ...
+        'tx_delay_model','blended', ...
         'pw_margin',1e-3, ...
         'blending_power',0.5, ...
         'tx_f_number',2, ...
@@ -414,7 +390,6 @@ function opts = apply_defaults(opts)
         'rx_f_number',1.7, ...
         'wave_stride',1, ...
         'normalize_tx_weights',true, ...
-        'tx_time_offsets',[], ...
         'display_dynamic_range_db',60, ...
         'inspect_wave_index',[], ...
         'verbose',false);
