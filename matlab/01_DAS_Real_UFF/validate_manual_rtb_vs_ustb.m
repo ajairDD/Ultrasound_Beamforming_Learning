@@ -24,7 +24,7 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 if ~exist('z_min','var')
     z_min = 5e-3;
@@ -39,7 +39,7 @@ if ~exist('x_upsample','var')
     x_upsample = 4;
 end
 if ~exist('delay_model','var')
-    delay_model = 'hybrid';
+    delay_model = 'blended';
 end
 if ~exist('blending_power','var')
     blending_power = 0.5;
