@@ -1,5 +1,5 @@
 %% validate_manual_rtb_vs_ustb.m
-% Chapter 1 - Manual RTB vs USTB hybrid-RTB reference.
+% Chapter 1 - Manual RTB vs USTB reference.
 %
 % Purpose:
 %   Validate our explicit RTB implementation against the official USTB
@@ -13,12 +13,13 @@
 %   Tx window        = Tukey25
 %   Tx min aperture  = 3 mm
 %   hybrid PW margin = 1 mm
+%   blended power    = 0.5
 %   Rx boxcar F#     = 1.7
 %
 % To keep first validation runtime reasonable, default n_z = 256.
 % Increase to 512 / 1024 after the implementation is verified.
 
-clearvars -except filename z_min z_max n_z x_upsample;
+clearvars -except filename z_min z_max n_z x_upsample delay_model blending_power;
 clc;
 close all;
 
@@ -37,12 +38,18 @@ end
 if ~exist('x_upsample','var')
     x_upsample = 4;
 end
+if ~exist('delay_model','var')
+    delay_model = 'hybrid';
+end
+if ~exist('blending_power','var')
+    blending_power = 0.5;
+end
 
 %% ------------------------------------------------------------------------
 % 1. Manual RTB
 % -------------------------------------------------------------------------
 fprintf('============================================================\n');
-fprintf(' STEP 1 / 3 - MANUAL HYBRID RTB\n');
+fprintf(' STEP 1 / 3 - MANUAL %s RTB\n',upper(delay_model));
 fprintf('============================================================\n');
 
 opts = struct();
@@ -52,8 +59,9 @@ opts.z_max = z_max;
 opts.n_z = n_z;
 opts.x_upsample = x_upsample;
 
-opts.tx_delay_model = 'hybrid';
+opts.tx_delay_model = delay_model;
 opts.pw_margin = 1e-3;
+opts.blending_power = blending_power;
 
 opts.tx_f_number = 2;
 opts.tx_min_aperture = 3e-3;
@@ -72,7 +80,7 @@ manual = reconstruct_fi_rtb_manual(filename,opts);
 % 2. USTB RTB reference
 % -------------------------------------------------------------------------
 fprintf('\n============================================================\n');
-fprintf(' STEP 2 / 3 - USTB HYBRID RTB REFERENCE\n');
+fprintf(' STEP 2 / 3 - USTB %s RTB REFERENCE\n',upper(delay_model));
 fprintf('============================================================\n');
 
 channel_data = uff.read_object(filename,'/channel_data');
@@ -88,10 +96,24 @@ mid_ref.scan = scan_ref;
 
 mid_ref.dimension = dimension.both();
 
-mid_ref.spherical_transmit_delay_model = ...
-    spherical_transmit_delay_model.hybrid;
+switch lower(delay_model)
+    case 'spherical'
+        mid_ref.spherical_transmit_delay_model = ...
+            spherical_transmit_delay_model.spherical;
 
-mid_ref.pw_margin = 1e-3;
+    case 'hybrid'
+        mid_ref.spherical_transmit_delay_model = ...
+            spherical_transmit_delay_model.hybrid;
+        mid_ref.pw_margin = 1e-3;
+
+    case 'blended'
+        mid_ref.spherical_transmit_delay_model = ...
+            spherical_transmit_delay_model.blended;
+        mid_ref.blending_power = blending_power;
+
+    otherwise
+        error('delay_model must be spherical, hybrid, or blended.');
+end
 
 mid_ref.transmit_apodization.window = uff.window.tukey25;
 mid_ref.transmit_apodization.f_number = 2;
@@ -194,7 +216,7 @@ set(gca,'YDir','reverse');
 axis image;
 xlabel('x (mm)');
 ylabel('z (mm)');
-title('Manual hybrid RTB');
+title(sprintf('Manual %s RTB',delay_model));
 caxis([-60 0]);
 colorbar;
 
@@ -204,7 +226,7 @@ set(gca,'YDir','reverse');
 axis image;
 xlabel('x (mm)');
 ylabel('z (mm)');
-title('USTB hybrid RTB');
+title(sprintf('USTB %s RTB',delay_model));
 caxis([-60 0]);
 colorbar;
 colormap gray;
