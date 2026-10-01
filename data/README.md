@@ -15,7 +15,20 @@ USTB 的 UFF 是基于 HDF5 的超声数据格式，可直接在 MATLAB/USTB 中
 > **重要：不要仅根据文件名假设数据一定是 RF、IQ、基波或谐波。**  
 > USTB 数据目录对这些文件统一确认的是“channel data”。后续算法实现时应实际检查 UFF 内部的 sampling frequency、modulation/demodulation frequency、initial time、probe geometry、sequence、sound speed 等字段。对于未被原始资料明确标记为 THI/PIHI 的数据，本清单统一记为“谐波模式未明确”。
 
+## 第 1 章默认教学数据
+
+第 1 章统一使用：
+
+~~~text
+L7_FI_TheGB.uff
+~~~
+
+作为 conventional Focused Imaging、receive F-number 和 RTB 的主教学数据。
+
+其它 UFF 数据继续保留在本目录清单中，用于后续不同 transmit strategy、contrast、in-vivo 和 benchmark 实验；但不与第 1 章主线混用。
+
 ---
+
 
 ## 2. 当前数据总览
 
