@@ -23,24 +23,18 @@
 % Example:
 %   addpath(genpath('D:/USTB'));
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-%   target_x_mm = -4.917;
-%   target_z_mm = 20.21;
+%   filename = '../../data/L7_FI_TheGB.uff';
+%   % Run directly and click a point target, or define
+%   % target_x_mm / target_z_mm beforehand.
 %   compare_conventional_vs_rtb
 
 clearvars -except filename target_x_mm target_z_mm ...
-    z_min z_max n_z rtb_x_upsample tx_time_offsets;
+    z_min z_max n_z rtb_x_upsample;
 clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-end
-if ~exist('target_x_mm','var')
-    target_x_mm = -4.917;
-end
-if ~exist('target_z_mm','var')
-    target_z_mm = 20.21;
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 if ~exist('z_min','var')
     z_min = 5e-3;
@@ -71,9 +65,6 @@ opts_c.n_z = n_z;
 opts_c.receive_aperture_mode = 'f_number';
 opts_c.receive_f_number = rx_f_number;
 opts_c.verbose = true;
-if exist('tx_time_offsets','var')
-    opts_c.tx_time_offsets = tx_time_offsets;
-end
 
 conv = reconstruct_fi_scanline_manual(filename,opts_c);
 
@@ -91,7 +82,7 @@ opts_r.n_z = n_z;
 
 opts_r.x_upsample = rtb_x_upsample;
 
-opts_r.tx_delay_model = 'hybrid';
+opts_r.tx_delay_model = 'blended';
 opts_r.pw_margin = 1e-3;
 
 opts_r.tx_f_number = 2;
@@ -104,9 +95,6 @@ opts_r.rx_f_number = rx_f_number;
 opts_r.wave_stride = 1;
 opts_r.normalize_tx_weights = true;
 opts_r.verbose = true;
-if exist('tx_time_offsets','var')
-    opts_r.tx_time_offsets = tx_time_offsets;
-end
 
 rtb = reconstruct_fi_rtb_manual(filename,opts_r);
 
@@ -136,8 +124,24 @@ fprintf('RTB dx                 : %.6f mm\n',dx_rtb*1e3);
 fprintf('Lateral sampling ratio : %.3f x denser\n',dx_conv/dx_rtb);
 
 %% ------------------------------------------------------------------------
-% 4. Compare the same point target
+% 4. Select and compare the same point target
 % -------------------------------------------------------------------------
+if ~(exist('target_x_mm','var') && exist('target_z_mm','var'))
+    figure('Color','w');
+    imagesc(conv.x_axis*1e3,conv.z_axis*1e3,conv_db);
+    set(gca,'YDir','reverse');
+    axis image;
+    xlabel('x (mm)');
+    ylabel('z (mm)');
+    title({'Select one isolated point target', ...
+           'The same neighborhood will be used for all three images'});
+    caxis([-60 0]);
+    colorbar;
+    colormap gray;
+    [target_x_mm,target_z_mm] = ginput(1);
+    close(gcf);
+end
+
 x0 = target_x_mm*1e-3;
 z0 = target_z_mm*1e-3;
 
