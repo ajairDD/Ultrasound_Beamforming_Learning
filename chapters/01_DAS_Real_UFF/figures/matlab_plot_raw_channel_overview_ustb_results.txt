@@ -1,0 +1,12 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Data: L7_FI_TheGB.uff
+Frame 1; depths 5--45 mm; target seed (-0.75,20.05) mm.
+Reference outputs are comparisons, not automatic pass/fail verdicts.
+
+--- plot_raw_channel_overview_ustb | n_z=1024 ---
+Displayed [samples x channels] = [1920 x 128]
+sampling_frequency = 2.08333e+07 Hz
+initial_time = 0 s
+isreal(channel_data.data) = 1
+
+Exported 1 figures; elapsed 22.6 s.

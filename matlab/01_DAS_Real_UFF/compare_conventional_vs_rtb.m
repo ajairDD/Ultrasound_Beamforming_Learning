@@ -245,7 +245,8 @@ set(gca,'YDir','reverse');
 axis image;
 xlabel('x (mm)');
 ylabel('z (mm)');
-title(sprintf('RTB hybrid (%d pixels)',numel(rtb.x_axis)));
+title(sprintf('RTB %s (%d pixels)', ...
+    opts_r.tx_delay_model,numel(rtb.x_axis)));
 caxis([-60 0]);
 colorbar;
 colormap gray;

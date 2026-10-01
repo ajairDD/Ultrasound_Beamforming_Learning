@@ -19,16 +19,18 @@ USTB 用于 UFF 读取和 reference validation；Manual beamformer 的核心计�
 | `inspect_uff_hdf5.m` | 不依赖 USTB，只查看 UFF/HDF5 结构 |
 | `inspect_uff_metadata_ustb.m` | 检查 shape、RF/IQ、fs、initial_time、probe、sequence、wave.delay |
 | `plot_raw_channel_overview_ustb.m` | 查看一个 wave 的原始 channel data |
+| `demo_fi_geometry_and_sampling.m` | 从真实 metadata 画几何、Tx 时间、Tx/Rx 权重，再演示非整数取样 |
 | `reconstruct_fi_scanline_manual.m` | conventional FI-DAS 核心 |
 | `das_fi_scanline_manual.m` | conventional FI-DAS 直接运行入口 |
 | `validate_manual_vs_ustb.m` | Manual conventional DAS vs USTB reference |
-| `analyze_point_target_psf.m` | 交互选择 point target，测 lateral/axial FWHM |
+| `analyze_point_target_psf.m` | 交互选择或给定搜索起点，测 point-like object 的 lateral/axial FWHM |
 | `compare_receive_aperture_full_vs_fnumber.m` | Full Rx vs dynamic F-number |
 | `reconstruct_fi_rtb_manual.m` | Manual RTB 核心 |
 | `compare_conventional_vs_rtb.m` | Conventional / display interpolation / RTB 三方比较 |
 | `compare_rtb_spherical_plane_blended.m` | **重点教学实验**：All spherical / All plane / Blended 三种 Tx-delay model 对比 |
 | `validate_manual_rtb_vs_ustb.m` | Manual RTB vs USTB reference |
 | `experiment_rtb_parameter_sweep.m` | RTB 单因素参数实验 |
+| `export_chapter1_figures.m` | 非交互复现课程 PNG 和运行记录，可导出全部或指定实验 |
 
 ---
 
@@ -41,6 +43,8 @@ cd matlab/01_DAS_Real_UFF
 filename = '../../data/L7_FI_TheGB.uff';
 
 inspect_uff_metadata_ustb
+plot_raw_channel_overview_ustb
+demo_fi_geometry_and_sampling
 das_fi_scanline_manual
 validate_manual_vs_ustb
 
@@ -77,7 +81,7 @@ result = reconstruct_fi_scanline_manual(filename,opts);
 
 ## RTB core
 
-教学主线默认使用 continuous blended Tx-delay model：
+教学主线默认使用 blended Tx-delay model。它以连续权重混合 spherical 与 plane；离轴焦深处仍可能有残余延时跳变，推导和数值图见 [教程第 14 节](../../chapters/01_DAS_Real_UFF/README.md#14-rtb-的新增难点离轴像素的-tx-delay)。
 
 ~~~matlab
 opts = struct();
@@ -150,10 +154,28 @@ blended    <- Chapter 1 baseline
 3. 焦点深度附近放大；
 4. spherical / plane 相对 blended 的 difference map。
 
-这个实验用于建立直觉：
+这个实验用于建立直觉，并与 `demo_fi_geometry_and_sampling` 中的 Tx 时间曲线一起读：
 
 ~~~text
-远离焦点：spherical 更符合波前曲率
-焦点附近：local plane approximation 更稳定
-blended：连续交接二者
+spherical：保留离轴曲率，但在焦深处有正负切换
+plane：绕开该切换，但全图使用会忽略离轴曲率
+blended：用连续权重混合二者；权重连续不等于最终延时处处连续
 ~~~
+
+权重使用 `sqrt(x.^2+z.^2)` 与 `wave.source.distance` 的差，不是只用像素到焦点的距离。三模型的差异图以 blended 为比较参考，不是独立真值。
+
+---
+
+## 课程配图复现
+
+在独立 MATLAB 会话中加入 USTB 与本目录后运行：
+
+~~~matlab
+export_chapter1_figures                 % 全部实验和 reference
+export_chapter1_figures('experiments')  % 实验图
+export_chapter1_figures('references')   % 两组 reference
+% 也可只重新导出某个实验：
+export_chapter1_figures('compare_rtb_spherical_plane_blended')
+~~~
+
+输出位于 `chapters/01_DAS_Real_UFF/figures/`，同名 PNG 与对应运行记录会更新。导出入口设定 frame 1、5–45 mm 深度范围，以及从真实图像选取的目标搜索起点 `(-0.75,20.05)` mm；各实验的 `n_z` 不同，详见 [配图索引与运行参数](../../chapters/01_DAS_Real_UFF/figures/README.md)。AI 概念插图不由 MATLAB 导出入口生成。

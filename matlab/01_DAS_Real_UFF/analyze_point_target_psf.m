@@ -33,6 +33,10 @@ close all;
 if ~exist('filename','var')
     filename = '../../data/L7_FI_TheGB.uff';
 end
+if ~exist('z_min','var'), z_min = 5e-3; end
+if ~exist('z_max','var'), z_max = 45e-3; end
+if ~exist('n_z','var'), n_z = 1024; end
+if ~exist('frame_index','var'), frame_index = 1; end
 
 %% ------------------------------------------------------------------------
 % 1. Reconstruct the manual conventional FI-DAS image

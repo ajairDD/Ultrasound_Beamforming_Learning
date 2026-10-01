@@ -1,0 +1,34 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Data: L7_FI_TheGB.uff
+Frame 1; depths 5--45 mm; target seed (-0.75,20.05) mm.
+Reference outputs are comparisons, not automatic pass/fail verdicts.
+
+--- compare_rtb_spherical_plane_blended | n_z=384 ---
+============================================================
+ RTB TX-DELAY MODEL TEACHING COMPARISON
+============================================================
+Reconstructing spherical  ... UFF: reading channel_data [uff.channel_data]
+38.35 s
+Reconstructing plane      ... UFF: reading channel_data [uff.channel_data]
+37.35 s
+Reconstructing blended    ... UFF: reading channel_data [uff.channel_data]
+37.82 s
+
+Reference: blended RTB
+Median Tx focus depth : 29.568 mm
+Spherical vs blended  : corr 0.961755 | MAE 3.408241e-03
+Plane vs blended      : corr 0.961762 | MAE 5.625318e-03
+
+How to read the figures:
+  Spherical everywhere:
+    physically intuitive away from focus, but off-axis focal
+    pixels can suffer from the before/after-focus sign switch.
+  Plane everywhere:
+    removes that focal sign-switch problem, but ignores lateral
+    wavefront curvature away from focus.
+  Blended:
+    combines the models with continuous radial weights.
+    Off-axis delay jumps can remain if the spherical weight
+    is nonzero at the focal plane. See the model diagnostic.
+
+Exported 4 figures; elapsed 119.3 s.

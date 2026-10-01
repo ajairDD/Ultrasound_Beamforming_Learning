@@ -1,0 +1,62 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Data: L7_FI_TheGB.uff
+Frame 1; depths 5--45 mm; target seed (-0.75,20.05) mm.
+Reference outputs are comparisons, not automatic pass/fail verdicts.
+
+--- analyze_point_target_psf | n_z=1024 ---
+============================================================
+ POINT-TARGET PSF ANALYSIS
+============================================================
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : full
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+Image sampling:
+  median lateral spacing dx = 0.297981 mm
+  median axial spacing   dz = 0.039101 mm
+
+Selected / refined target:
+  click        : x = -0.7500 mm, z = 20.0500 mm
+  local peak   : x = -0.7450 mm, z = 20.0538 mm
+  image level  : 0.000 dB relative to global image peak
+
+UFF phantom ground truth: not available / not usable.
+  The selected image peak is therefore treated as the PSF center,
+  not as independently verified physical target coordinates.
+
+-6 dB amplitude FWHM:
+  lateral FWHM : 0.419726 mm
+  axial FWHM   : 0.446062 mm
+
+Sampling support across measured FWHM:
+  lateral width / dx : 1.409 samples
+  axial width / dz   : 11.408 samples
+[警告: Lateral FWHM spans fewer than 3 scanline intervals. The width estimate is therefore strongly limited by conventional FI lateral sampling. This is one motivation for studying
+RTB.]
+
+Interpretation note:
+  Axial FWHM is typically sampled much more densely here than lateral
+  FWHM because conventional FI has one output x position per
+  transmit scanline. Do not over-interpret sub-scanline lateral
+  precision from this conventional image.
+
+Exported 4 figures; elapsed 30.8 s.

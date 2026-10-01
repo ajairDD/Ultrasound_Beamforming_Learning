@@ -64,7 +64,8 @@ xlabel('Channel index');
 ylabel('Time (\mus)');
 title(sprintf('%s | wave=%d | frame=%d', ...
     display_label, wave_index, frame_index), 'Interpreter', 'none');
-colorbar;
+cb = colorbar;
+cb.Label.String = 'RF / full-record peak';
 
 fprintf('Displayed [samples x channels] = [%d x %d]\n', ...
     size(display_data,1), size(display_data,2));

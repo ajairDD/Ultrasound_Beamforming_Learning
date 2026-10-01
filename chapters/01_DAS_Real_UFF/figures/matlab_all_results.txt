@@ -1,0 +1,571 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Data: L7_FI_TheGB.uff
+Frame 1; depths 5--45 mm; target seed (-0.75,20.05) mm.
+Reference outputs are comparisons, not automatic pass/fail verdicts.
+Presentation QA: raw-channel, PSF and three-model subsections were refreshed by focused reruns; reference sections are from the original full run.
+
+--- inspect_uff_metadata_ustb | n_z=1024 ---
+============================================================
+ Chapter 1 - UFF DATA CONTRACT INSPECTION
+============================================================
+File: D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+
+[1] CHANNEL DATA
+MATLAB class        : single
+isreal(data)        : 1
+size [T C W F]      : [1920 128 128 1]
+N_samples           : 1920
+N_channels          : 128
+N_waves             : 128
+N_frames            : 1
+
+[2] TIMING / SIGNAL STATE
+sampling_frequency  : 20833334 Hz
+sampling_interval   : 4.79999968661e-08 s
+initial_time        : 0 s
+sound_speed         : 1540 m/s
+modulation_frequency: 0 Hz
+PRF                 : <empty / unavailable>
+USTB signal meaning : RF according to USTB modulation_frequency
+
+[Pulse]
+pulse class          : uff.pulse
+center_frequency     : 5208333.5 Hz
+lambda = c/fc        : 0.000295679987175 m
+
+[3] PROBE GEOMETRY
+probe class          : uff.linear_array
+N_elements           : 128
+pitch                : 0.00029799999902 m
+x range              : [-0.0189229995012, 0.0189229995012] m
+y range              : [0, 0] m
+z range              : [0, 0] m
+center-span aperture : 0.0378459990025 m
+
+[4] TRANSMIT SEQUENCE
+number of waves      : 128
+wavefront types      : spherical
+source.x range       : [-0.0189217906445, 0.0189217906445] m
+source.z range       : [0.0295679979026, 0.0295680016279] m
+source.distance range: [0.0295683760196, 0.0351041406393] m
+wave.delay range     : [-1.8954594907e-06, 1.69922168425e-06] s
+wave sound speed     : [1540, 1540] m/s
+sequence interpretation: focused / converging spherical waves
+
+[5] REPRESENTATIVE WAVES
+
+Wave 1 / 128
+  wavefront          : spherical
+  source.xyz         : [-0.0189217906445 0 0.0295679997653] m
+  source.distance    : 0.0351041406393 m
+  origin.xyz         : [-0.0189217887819 0 0] m
+  wave.delay         : 1.69922168425e-06 s
+  wave.sound_speed   : 1540 m/s
+  first stored time  : 1.69922168425e-06 s
+  last stored time   : 9.38112134463e-05 s
+
+Wave 64 / 128
+  wavefront          : spherical
+  source.xyz         : [-0.000148990453454 0 0.0295679997653] m
+  source.distance    : 0.0295683760196 m
+  origin.xyz         : [-0.000148990468006 0 0] m
+  wave.delay         : -1.8954594907e-06 s
+  wave.sound_speed   : 1540 m/s
+  first stored time  : -1.8954594907e-06 s
+  last stored time   : 9.0216533863e-05 s
+
+Wave 128 / 128
+  wavefront          : spherical
+  source.xyz         : [0.0189217906445 0 0.0295679997653] m
+  source.distance    : 0.0351041406393 m
+  origin.xyz         : [0.0189217887819 0 0] m
+  wave.delay         : 1.69922168425e-06 s
+  wave.sound_speed   : 1540 m/s
+  first stored time  : 1.69922168425e-06 s
+  last stored time   : 9.38112134463e-05 s
+
+[6] SCANLINE-FI CHECKS
+source.x monotonic   : 1
+median source.x step : 0.000297980965115 m
+For conventional linear-array FI, USTB official examples build
+the image x-axis from sequence(n).source.x and use one
+transmit wave per scanline.
+
+[7] TIMING CONVENTION - READ THIS BEFORE WRITING DAS
+USTB channel_data.time(k) is defined as:
+  initial_time + sample_index/fs + sequence(k).delay
+
+Therefore a custom beamformer must choose ONE consistent convention:
+  A) use channel_data.time(k), and do NOT add wave.delay again; OR
+  B) use a common time axis based on initial_time, and include
+     wave.delay explicitly in the Tx-delay equation.
+
+Never do both, or wave.delay will be double counted.
+
+[8] BEFORE IMPLEMENTING DAS
+Confirm and record the following values from this report:
+  [ ] data size [T C W F]
+  [ ] RF or IQ state
+  [ ] fs, initial_time, modulation_frequency
+  [ ] sound speed
+  [ ] probe element coordinates / pitch
+  [ ] number of focused waves / scanlines
+  [ ] source.x and source.z behavior
+  [ ] wave.delay convention
+
+Only after these are confirmed should the real-data DAS be implemented.
+
+Exported 0 figures; elapsed 18.8 s.
+
+--- plot_raw_channel_overview_ustb | n_z=1024 ---
+Displayed [samples x channels] = [1920 x 128]
+sampling_frequency = 2.08333e+07 Hz
+initial_time = 0 s
+isreal(channel_data.data) = 1
+
+Exported 1 figures; elapsed 22.6 s.
+
+--- demo_fi_geometry_and_sampling | n_z=1024 ---
+Model limit at focal depth: offset 0.0 mm; spherical jump 0.000 ns; blended jump 0.000 ns
+Model limit at focal depth: offset 1.0 mm; spherical jump 1298.701 ns; blended jump 26.019 ns
+Sampling demo: fs 20.833334 MHz; fc 5.208333 MHz; u 3.35; linear -0.650000; nearest -1.000000; exact -0.852640
+
+Exported 4 figures; elapsed 25.9 s.
+
+--- das_fi_scanline_manual | n_z=1024 ---
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : full
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+=== Diagnostics ===
+Requested channel samples : 16777216
+Out-of-record samples     : 0 (0.0000%)
+Active Rx channels range  : 128 to 128
+Global image peak         : x = -0.745 mm, z = 20.054 mm
+
+Scientific status:
+  This is our own conventional scanline FI-DAS implementation.
+  USTB is used only for UFF reading inside the reusable core.
+  The full-aperture baseline has already been validated against
+  matched USTB conventional DAS on this dataset.
+
+Exported 1 figures; elapsed 23.8 s.
+
+--- analyze_point_target_psf | n_z=1024 ---
+============================================================
+ POINT-TARGET PSF ANALYSIS
+============================================================
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : full
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+Image sampling:
+  median lateral spacing dx = 0.297981 mm
+  median axial spacing   dz = 0.039101 mm
+
+Selected / refined target:
+  click        : x = -0.7500 mm, z = 20.0500 mm
+  local peak   : x = -0.7450 mm, z = 20.0538 mm
+  image level  : 0.000 dB relative to global image peak
+
+UFF phantom ground truth: not available / not usable.
+  The selected image peak is therefore treated as the PSF center,
+  not as independently verified physical target coordinates.
+
+-6 dB amplitude FWHM:
+  lateral FWHM : 0.419726 mm
+  axial FWHM   : 0.446062 mm
+
+Sampling support across measured FWHM:
+  lateral width / dx : 1.409 samples
+  axial width / dz   : 11.408 samples
+[警告: Lateral FWHM spans fewer than 3 scanline intervals. The width estimate is therefore strongly limited by conventional FI lateral sampling. This is one motivation for studying
+RTB.]
+
+Interpretation note:
+  Axial FWHM is typically sampled much more densely here than lateral
+  FWHM because conventional FI has one output x position per
+  transmit scanline. Do not over-interpret sub-scanline lateral
+  precision from this conventional image.
+
+Exported 4 figures; elapsed 30.8 s.
+
+--- compare_receive_aperture_full_vs_fnumber | n_z=1024 ---
+============================================================
+ RECEIVE APERTURE COMPARISON
+============================================================
+A: full receive aperture
+B: dynamic boxcar aperture with F# = 1.700
+
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : full
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : f_number
+receive F-number      : 1.700
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+============================================================
+ RESULT SUMMARY
+============================================================
+
+Image sampling:
+  dx = 0.297981 mm
+  dz = 0.039101 mm
+
+Selected target neighborhood:
+  click          : x = -0.7500 mm, z = 20.0500 mm
+
+FULL aperture peak:
+  x = -0.7450 mm, z = 20.0538 mm
+  active channels = 128 / 128
+  physical center span = 37.8460 mm
+
+F# aperture peak:
+  x = -0.7450 mm, z = 20.0538 mm
+  F# = 1.700
+  requested D(z)=z/F# = 11.7963 mm
+  active channels = 39 / 128
+
+-6 dB amplitude FWHM:
+  FULL lateral = 0.419726 mm | 1.409 scanline intervals
+  F#   lateral = 0.732243 mm | 2.457 scanline intervals
+  FULL axial   = 0.446062 mm | 11.408 z samples
+  F#   axial   = 0.447879 mm | 11.455 z samples
+
+Expected interpretation:
+  Reducing the receive aperture with a finite F# should mainly
+  broaden the lateral PSF. The axial PSF should change much less,
+  because axial resolution is mainly pulse/bandwidth limited.
+
+NOTE: the FULL-aperture lateral FWHM is sampled by fewer than
+3 scanline intervals, so its numerical FWHM is strongly
+limited by conventional-FI lateral sampling.
+
+Exported 4 figures; elapsed 46.5 s.
+
+--- compare_conventional_vs_rtb | n_z=512 ---
+============================================================
+ A / C - CONVENTIONAL FI-DAS
+============================================================
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : f_number
+receive F-number      : 1.700
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+============================================================
+ C / C - MANUAL RTB
+============================================================
+============================================================
+ Manual focused-imaging RTB
+============================================================
+File                : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data [T C W F]      : [1920 128 128 1]
+Output grid [z x]   : [512 512]
+Original Tx waves   : 128
+Used Tx waves       : 128 (stride 1)
+x spacing           : 0.074058 mm
+Tx delay model      : blended
+Tx F-number         : 2.000
+Tx minimum aperture : 3.000 mm
+Tx window           : tukey25
+PW margin           : 1.000 mm
+Blending power      : 0.500
+Rx aperture         : f_number
+Rx F-number         : 1.700
+
+RTB wave 1 / 128 (original index 1) ...
+RTB wave 13 / 128 (original index 13) ...
+RTB wave 25 / 128 (original index 25) ...
+RTB wave 37 / 128 (original index 37) ...
+RTB wave 49 / 128 (original index 49) ...
+RTB wave 61 / 128 (original index 61) ...
+RTB wave 73 / 128 (original index 73) ...
+RTB wave 85 / 128 (original index 85) ...
+RTB wave 97 / 128 (original index 97) ...
+RTB wave 109 / 128 (original index 109) ...
+RTB wave 121 / 128 (original index 121) ...
+
+============================================================
+ GRID COMPARISON
+============================================================
+Conventional x samples : 128
+RTB x samples          : 512
+Conventional dx        : 0.297981 mm
+RTB dx                 : 0.074058 mm
+Lateral sampling ratio : 4.024 x denser
+
+============================================================
+ POINT-TARGET COMPARISON
+============================================================
+Target neighborhood     : x -0.750 mm, z 20.050 mm
+
+Peak locations:
+Conventional            : x -0.7450 mm, z 20.1076 mm
+Conventional interpolated: x -0.7035 mm, z 20.1076 mm
+RTB                     : x -0.7035 mm, z 20.0294 mm
+
+Lateral -6 dB amplitude FWHM:
+Conventional             : 0.708410 mm | 2.377 original lines
+Conventional interpolated: 0.735372 mm | 9.930 RTB-grid samples
+RTB                      : 0.701003 mm | 9.466 RTB-grid samples
+
+Axial -6 dB amplitude FWHM:
+Conventional : 0.446485 mm
+RTB          : 0.430893 mm
+
+RTB Tx overlap at target:
+Active Tx count : 16
+Tx weight sum   : 14.004479
+
+Interpretation:
+  Conventional interpolation only makes the existing 128-line image
+  smoother. RTB re-queries RF channel data for off-scanline pixels
+  and coherently combines multiple focused transmit events.
+
+Exported 3 figures; elapsed 69.3 s.
+
+--- compare_rtb_spherical_plane_blended | n_z=384 ---
+============================================================
+ RTB TX-DELAY MODEL TEACHING COMPARISON
+============================================================
+Reconstructing spherical  ... UFF: reading channel_data [uff.channel_data]
+38.35 s
+Reconstructing plane      ... UFF: reading channel_data [uff.channel_data]
+37.35 s
+Reconstructing blended    ... UFF: reading channel_data [uff.channel_data]
+37.82 s
+
+Reference: blended RTB
+Median Tx focus depth : 29.568 mm
+Spherical vs blended  : corr 0.961755 | MAE 3.408241e-03
+Plane vs blended      : corr 0.961762 | MAE 5.625318e-03
+
+How to read the figures:
+  Spherical everywhere:
+    physically intuitive away from focus, but off-axis focal
+    pixels can suffer from the before/after-focus sign switch.
+  Plane everywhere:
+    removes that focal sign-switch problem, but ignores lateral
+    wavefront curvature away from focus.
+  Blended:
+    combines the models with continuous radial weights.
+    Off-axis delay jumps can remain if the spherical weight
+    is nonzero at the focal plane. See the model diagnostic.
+
+Exported 4 figures; elapsed 119.3 s.
+
+--- validate_manual_vs_ustb | n_z=512 ---
+
+============================================================
+ STEP 1 / 3 - MANUAL FI-DAS
+============================================================
+============================================================
+ Manual conventional FI-DAS core
+============================================================
+File                  : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data size [T C W F]   : [1920 128 128 1]
+fs                    : 20.833 MHz
+initial_time          : 0.000000 us
+sound speed           : 1540.000 m/s
+N scanlines / waves   : 128
+receive aperture mode : full
+
+Beamforming wave 1 / 128 ...
+Beamforming wave 13 / 128 ...
+Beamforming wave 25 / 128 ...
+Beamforming wave 37 / 128 ...
+Beamforming wave 49 / 128 ...
+Beamforming wave 61 / 128 ...
+Beamforming wave 73 / 128 ...
+Beamforming wave 85 / 128 ...
+Beamforming wave 97 / 128 ...
+Beamforming wave 109 / 128 ...
+Beamforming wave 121 / 128 ...
+
+============================================================
+ STEP 2 / 3 - USTB CONVENTIONAL FI-DAS REFERENCE
+============================================================
+
+[USTB] If this toolbox contributes to your published work, please cite:
+  * Rodriguez-Molares et al., "The UltraSound ToolBox," IEEE IUS, 2017. doi:10.1109/ULTSYM.2017.8092389
+  * Rindal et al., "The Generalized Beamformer in the UltraSound ToolBox," Ultrasonics, 2026. doi:10.1016/j.ultras.2026.108289
+Datasets and individual processes may need additional references - see www.ustb.no/citation/
+
+USTB MATLAB beamformer...Completed in 7.99 seconds.
+
+============================================================
+ STEP 3 / 3 - COMPARISON
+============================================================
+Image size                 : [512 x 128]
+Envelope correlation       : 0.999999583
+Mean abs normalized error  : 1.57734476e-07
+RMSE normalized error      : 2.73482016e-07
+Max abs normalized error   : 5.5494661e-06
+
+Manual global peak : x = -0.7450 mm, z = 20.0294 mm
+USTB   global peak : x = -0.7450 mm, z = 20.0294 mm
+Peak location delta: dx = 0.0000 mm, dz = 0.0000 mm
+
+Interpretation guide:
+  High envelope correlation + matching peak location + small
+  normalized difference indicate that the manual delay/timing
+  implementation is consistent with the USTB reference.
+  If they differ, inspect Tx delay, wave.delay, time axis,
+  interpolation, and analytic-signal conversion before moving on.
+
+Exported 3 figures; elapsed 51.0 s.
+
+--- validate_manual_rtb_vs_ustb | n_z=256 ---
+============================================================
+ STEP 1 / 3 - MANUAL BLENDED RTB
+============================================================
+============================================================
+ Manual focused-imaging RTB
+============================================================
+File                : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Data [T C W F]      : [1920 128 128 1]
+Output grid [z x]   : [256 512]
+Original Tx waves   : 128
+Used Tx waves       : 128 (stride 1)
+x spacing           : 0.074058 mm
+Tx delay model      : blended
+Tx F-number         : 2.000
+Tx minimum aperture : 3.000 mm
+Tx window           : tukey25
+PW margin           : 1.000 mm
+Blending power      : 0.500
+Rx aperture         : f_number
+Rx F-number         : 1.700
+
+RTB wave 1 / 128 (original index 1) ...
+RTB wave 13 / 128 (original index 13) ...
+RTB wave 25 / 128 (original index 25) ...
+RTB wave 37 / 128 (original index 37) ...
+RTB wave 49 / 128 (original index 49) ...
+RTB wave 61 / 128 (original index 61) ...
+RTB wave 73 / 128 (original index 73) ...
+RTB wave 85 / 128 (original index 85) ...
+RTB wave 97 / 128 (original index 97) ...
+RTB wave 109 / 128 (original index 109) ...
+RTB wave 121 / 128 (original index 121) ...
+
+============================================================
+ STEP 2 / 3 - USTB BLENDED RTB REFERENCE
+============================================================
+USTB MATLAB beamformer...Completed in 20.13 seconds.
+
+============================================================
+ STEP 3 / 3 - COMPARISON
+============================================================
+Image size                : [256 x 512]
+Envelope correlation      : 1.000000000
+Mean abs normalized error : 1.1366398e-07
+RMSE normalized error     : 2.04538125e-07
+Max abs normalized error  : 5.23669951e-06
+
+Manual peak : x -0.8517 mm, z 38.0980 mm
+USTB peak   : x -0.8517 mm, z 38.0980 mm
+Peak delta  : dx 0.0000 mm, dz 0.0000 mm
+
+Do not declare RTB validated from visual similarity alone.
+Use correlation, error magnitude, peak location, and the difference
+map together. If mismatch is material, inspect Tx apodization/origin
+first, then hybrid Tx delay and interpolation.
+
+Exported 2 figures; elapsed 76.1 s.

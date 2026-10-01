@@ -1,12 +1,12 @@
 %% compare_rtb_spherical_plane_blended.m
-% Chapter 1 - Why RTB needs a blended Tx-delay model.
+% Chapter 1 - Compare three Tx-delay models for RTB.
 %
 % This experiment changes ONLY the Tx-delay model:
 %
 %   1) spherical : use the virtual-source spherical path everywhere
 %   2) plane     : use the local plane approximation everywhere
-%   3) blended   : use more plane behavior near focus and more spherical
-%                  behavior away from focus
+%   3) blended   : combine the two paths with continuous radial weights
+%                  (continuous weights do not guarantee continuous delays)
 %
 % Everything else is identical:
 %   same UFF data
@@ -72,7 +72,7 @@ models = {'spherical','plane','blended'};
 labels = { ...
     'All spherical', ...
     'All plane (teaching-only)', ...
-    'Blended (recommended)'};
+    'Blended (baseline)'};
 
 results = cell(3,1);
 
@@ -140,9 +140,10 @@ fprintf('Plane vs blended      : corr %.6f | MAE %.6e\n', ...
 % focusing artifacts from overall gain.
 % -------------------------------------------------------------------------
 figure('Color','w','Position',[80 80 1600 620]);
+tiledlayout(1,3,'TileSpacing','compact','Padding','compact');
 
 for k = 1:3
-    subplot(1,3,k);
+    nexttile;
 
     imagesc( ...
         x*1e3, ...
@@ -154,17 +155,13 @@ for k = 1:3
 
     xlabel('x (mm)');
     ylabel('z (mm)');
-    title(labels{k});
+    title({labels{k},'Normalized to own peak'});
 
     caxis([-60 0]);
     colorbar;
 end
 
 colormap gray;
-
-sgtitle({ ...
-    'RTB Tx-delay model comparison', ...
-    'Each image normalized to its own peak: compare morphology, not gain'});
 
 %% ------------------------------------------------------------------------
 % 5. Figure 2 - common-reference brightness comparison
@@ -176,9 +173,10 @@ sgtitle({ ...
 ref_peak = max(blended.envelope(:));
 
 figure('Color','w','Position',[80 80 1600 620]);
+tiledlayout(1,3,'TileSpacing','compact','Padding','compact');
 
 for k = 1:3
-    subplot(1,3,k);
+    nexttile;
 
     image_db = 20*log10( ...
         results{k}.envelope/(ref_peak+eps) + eps);
@@ -193,17 +191,13 @@ for k = 1:3
 
     xlabel('x (mm)');
     ylabel('z (mm)');
-    title(labels{k});
+    title({labels{k},'Common blended peak'});
 
     caxis([-60 0]);
     colorbar;
 end
 
 colormap gray;
-
-sgtitle({ ...
-    'Same amplitude reference for all three models', ...
-    'Reference peak = blended RTB peak'});
 
 %% ------------------------------------------------------------------------
 % 6. Figure 3 - focal-region zoom
@@ -216,10 +210,12 @@ focus_half_span = 4e-3;
 z1 = max(min(z),focus_z-focus_half_span);
 z2 = min(max(z),focus_z+focus_half_span);
 
-figure('Color','w','Position',[80 80 1600 540]);
+% Stack the full-width focal strips so the small depth range stays legible.
+figure('Color','w','Position',[80 80 1400 1000]);
+layout = tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
 
 for k = 1:3
-    subplot(1,3,k);
+    nexttile;
 
     imagesc( ...
         x*1e3, ...
@@ -241,9 +237,9 @@ end
 
 colormap gray;
 
-sgtitle(sprintf( ...
+title(layout,sprintf( ...
     'Zoom around median transmit focus: z_f = %.2f mm', ...
-    focus_z*1e3));
+    focus_z*1e3),'FontSize',16);
 
 %% ------------------------------------------------------------------------
 % 7. Figure 4 - difference from blended
@@ -291,8 +287,9 @@ fprintf(['  Plane everywhere:\n' ...
          '    removes that focal sign-switch problem, but ignores lateral\n' ...
          '    wavefront curvature away from focus.\n']);
 fprintf(['  Blended:\n' ...
-         '    uses more local-plane behavior near the focal region and\n' ...
-         '    gradually returns to spherical behavior away from it.\n']);
+         '    combines the models with continuous radial weights.\n' ...
+         '    Off-axis delay jumps can remain if the spherical weight\n' ...
+         '    is nonzero at the focal plane. See the model diagnostic.\n']);
 
 %% =========================================================================
 % Local helper

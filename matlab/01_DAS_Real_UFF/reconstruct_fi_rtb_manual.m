@@ -91,8 +91,10 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
 % everywhere. It is intentionally crude and exists only to show why the
 % plane approximation should not be used globally.
 %
-% The USTB-compatible 'blended' model mixes spherical and plane delays
-% continuously and is the Chapter 1 teaching baseline.
+% The USTB-compatible 'blended' model uses continuous mixing weights.
+% Its global-radius weight need not vanish on every off-axis focal-depth
+% pixel, so the resulting delay is not guaranteed continuous everywhere.
+% It is the Chapter 1 teaching baseline, not an exact acoustic field model.
 
     if nargin < 1 || isempty(filename)
         filename = '../../data/L7_FI_TheGB.uff';
@@ -479,8 +481,9 @@ function tau_tx = focused_tx_delay_rtb(wave,x,z,opts)
 %
 % BLENDED MODEL
 % -------------
-% Continuously mix spherical and plane paths using the current USTB
-% blended-model definition, avoiding a hard z-boundary switch.
+% Mix spherical and plane paths using continuous USTB blending weights.
+% The spherical path still has an off-axis sign switch. Where alpha does
+% not vanish at that switch, a residual discontinuity remains.
 
     sx = wave.source.x;
     sy = wave.source.y;
