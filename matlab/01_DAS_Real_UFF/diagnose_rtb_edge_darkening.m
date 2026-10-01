@@ -39,7 +39,7 @@
 
 clearvars -except filename z_min z_max n_z x_upsample ...
     rx_f_number tx_f_number blending_power ...
-    profile_z_min profile_z_max;
+    profile_z_min profile_z_max tx_time_offsets;
 clc;
 close all;
 
@@ -110,6 +110,9 @@ base.normalize_tx_weights = true;
 
 base.display_dynamic_range_db = display_dynamic_range_db;
 base.verbose = true;
+if exist('tx_time_offsets','var')
+    base.tx_time_offsets = tx_time_offsets;
+end
 
 %% ------------------------------------------------------------------------
 % 2. RTB with dynamic Rx F-number
@@ -164,6 +167,9 @@ opts_conv.receive_aperture_mode = 'f_number';
 opts_conv.receive_f_number = rx_f_number;
 opts_conv.display_dynamic_range_db = display_dynamic_range_db;
 opts_conv.verbose = true;
+if exist('tx_time_offsets','var')
+    opts_conv.tx_time_offsets = tx_time_offsets;
+end
 
 conv = reconstruct_fi_scanline_manual(filename,opts_conv);
 
@@ -179,10 +185,6 @@ conv_interp_env = interp1( ...
     conv.envelope.', ...
     x_axis, ...
     'linear',0).';
-
-conv_interp_db = to_db( ...
-    conv_interp_env, ...
-    display_dynamic_range_db);
 
 %% ------------------------------------------------------------------------
 % 4. Read probe geometry and compute active Rx count map
@@ -202,10 +204,13 @@ assert(all(active_rx_full(:) == N_channels), ...
     'Full-Rx active channel count should equal N_channels everywhere.');
 
 %% ------------------------------------------------------------------------
-% 5. Normalize images with the SAME rule
+% 5. Display all images with one shared amplitude reference
 % -------------------------------------------------------------------------
-fnum_db = to_db(rtb_fnum.envelope,display_dynamic_range_db);
-full_db = to_db(rtb_full.envelope,display_dynamic_range_db);
+display_reference = max([rtb_fnum.envelope(:);rtb_full.envelope(:); ...
+    conv.envelope(:)]);
+fnum_db = to_db(rtb_fnum.envelope,display_dynamic_range_db,display_reference);
+full_db = to_db(rtb_full.envelope,display_dynamic_range_db,display_reference);
+conv_interp_db = to_db(conv_interp_env,display_dynamic_range_db,display_reference);
 
 %% ------------------------------------------------------------------------
 % 6. Lateral background-level profiles: RTB vs conventional
@@ -257,6 +262,9 @@ conv_profile_smooth = movmean(conv_profile_db,smooth_span);
 % Positive: RTB relatively brighter than conventional at that x.
 % Negative: RTB relatively darker than conventional at that x.
 rtb_minus_conv_db = fnum_profile_smooth - conv_profile_smooth;
+% Unlike the center-aligned residual above, this preserves overall gain.
+rtb_absolute_ratio_db = 20*log10(max(fnum_lateral_level,realmin) ...
+    ./ max(conv_lateral_level,realmin));
 
 %% ------------------------------------------------------------------------
 % 7. Left / center / right regional summaries
@@ -364,10 +372,10 @@ fprintf(['  1) If Tx count / Tx weight sum drop toward the edges, finite Tx\n' .
          '  2) If active Rx count also drops at the edges and FULL-Rx RTB\n' ...
          '     reduces the brightness roll-off, Rx aperture truncation is\n' ...
          '     also important.\n' ...
-         '  3) If conventional FI shows the SAME left/right brightness\n' ...
-         '     asymmetry, the dominant cause is likely already present in\n' ...
-         '     the acquired data / phantom / probe / transmit sensitivity,\n' ...
-         '     rather than being created by RTB.\n' ...
+         '  3) A conventional edge roll-off does NOT exclude additional\n' ...
+         '     RTB loss. Inspect the absolute ratio and Tx coherence.\n' ...
+         '     Inter-Tx timing errors can strongly affect coherent RTB\n' ...
+         '     while remaining less visible in one-Tx-per-line FI.\n' ...
          '  4) If conventional FI is laterally uniform but RTB is not,\n' ...
          '     continue investigating off-axis Tx modeling/apodization.\n' ...
          '  5) Tx-weight normalization removes simple overlap gain, but it\n' ...
@@ -484,6 +492,8 @@ figure('Color','w');
 
 plot(x_axis*1e3,rtb_minus_conv_db,'LineWidth',2.0);
 hold on;
+plot(x_axis*1e3,rtb_absolute_ratio_db,'LineWidth',1.5);
+legend('Center-aligned residual','Absolute RTB / Conventional','Location','best');
 yline(0,':');
 
 xlabel('x (mm)');
@@ -568,8 +578,8 @@ function s = summarize_regions(y,left_mask,center_mask,right_mask)
     s.right = median(y(right_mask));
 end
 
-function db_img = to_db(env,dynamic_range)
-    env = env/(max(env(:))+eps);
+function db_img = to_db(env,dynamic_range,reference)
+    env = env/reference;
     db_img = 20*log10(env+eps);
     db_img(db_img < -dynamic_range) = -dynamic_range;
 end

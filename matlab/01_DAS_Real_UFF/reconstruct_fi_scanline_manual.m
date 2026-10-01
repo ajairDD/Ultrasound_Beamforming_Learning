@@ -1,4 +1,4 @@
-function out = reconstruct_fi_scanline_manual(filename, opts)
+function out = reconstruct_fi_scanline_manual(filename, opts, channel_data)
 %RECONSTRUCT_FI_SCANLINE_MANUAL Manual conventional FI scanline DAS.
 %
 % This is the reusable Chapter-1 DAS CORE.
@@ -24,6 +24,8 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
 %   frame_index             default 1
 %   receive_aperture_mode   'full' or 'f_number', default 'full'
 %   receive_f_number        default 1.7
+%   tx_time_offsets         [s], [] or one value per original Tx event;
+%                           added to RF query time before interpolation.
 %   display_dynamic_range_db default 60
 %   verbose                 true/false, default false
 %
@@ -60,6 +62,7 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
 %   - one focused Tx -> one output scanline.
 %
 % RTB is deliberately NOT implemented here.
+% A third argument can supply an already-read uff.channel_data object.
 
     if nargin < 1 || isempty(filename)
         filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
@@ -79,7 +82,9 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
          'Run addpath(genpath(''YOUR_USTB_PATH'')) first.']);
 
     %% 1. Read UFF
-    channel_data = uff.read_object(filename, '/channel_data');
+    if nargin < 3 || isempty(channel_data)
+        channel_data = uff.read_object(filename, '/channel_data');
+    end
 
     assert(opts.frame_index >= 1 && ...
            opts.frame_index <= channel_data.N_frames, ...
@@ -100,6 +105,16 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
     N_samples = channel_data.N_samples;
     N_channels = channel_data.N_channels;
     N_waves = channel_data.N_waves;
+
+    tx_time_offsets = opts.tx_time_offsets;
+    if isempty(tx_time_offsets)
+        tx_time_offsets = zeros(N_waves,1);
+    end
+    assert(isnumeric(tx_time_offsets) && isreal(tx_time_offsets) && ...
+        isvector(tx_time_offsets) && numel(tx_time_offsets) == N_waves && ...
+        all(isfinite(tx_time_offsets(:))), ...
+        'tx_time_offsets must contain one finite real offset [s] per Tx.');
+    tx_time_offsets = double(tx_time_offsets(:));
 
     assert(N_channels == probe.N_elements, ...
         'N_channels does not match probe.N_elements.');
@@ -185,6 +200,7 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
             % Focused spherical Tx delay.
             tau_tx = focused_tx_delay_spherical( ...
                 sequence(iw), x_line, 0, z_pixel);
+            tau_tx = tau_tx + tx_time_offsets(iw);
 
             % Rx delay to every receive element.
             rx_distance = sqrt( ...
@@ -258,6 +274,7 @@ function out = reconstruct_fi_scanline_manual(filename, opts)
 
     out.source_x = source_x;
     out.source_z = source_z;
+    out.tx_time_offsets = tx_time_offsets;
 
     out.phantom_points = [];
     if isprop(channel_data,'phantom') && ...
@@ -281,6 +298,7 @@ function opts = apply_defaults(opts)
         'frame_index', 1, ...
         'receive_aperture_mode', 'full', ...
         'receive_f_number', 1.7, ...
+        'tx_time_offsets', [], ...
         'display_dynamic_range_db', 60, ...
         'verbose', false);
 

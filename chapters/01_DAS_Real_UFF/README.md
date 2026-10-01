@@ -1285,7 +1285,7 @@ Conventional 图像只在最终显示/统计时插值到 RTB x-grid，不会把�
 - synthetic-aperture coherence at the FOV boundary。
 
 ---
-### 16.17 Conventional 对照结果：右侧 roll-off 不是 RTB 独有
+### 16.17 Conventional 对照的初步判断（已由 16.18 更新）
 
 将诊断扩展为 matched conventional FI-DAS 后，观察到：
 
@@ -1293,7 +1293,8 @@ Conventional 图像只在最终显示/统计时插值到 RTB x-grid，不会把�
 - RTB full-Rx；
 - conventional FI-DAS F#=1.7；
 
-三者在右侧 `x≈14–18 mm` 都出现相似的亮度下降，smoothed lateral profile 的下降位置和量级基本一致。
+上一轮观察到三者在右侧 `x≈14–18 mm` 均出现下降，当时将其趋势视为基本一致。
+后续的绝对幅度和跨 Tx 相位验证表明，这个观察不足以排除 RTB 的额外相干损失。
 
 结合前一轮 support 结果：
 
@@ -1303,11 +1304,11 @@ Tx weight sum : 12.858 / 12.870 / 12.858
 Rx count      : 37 / 54 / 37
 ~~~
 
-可以得到当前最重要的结论：
+当时提出的初步判断为（不能作为最终结论）：
 
 > 当前明显的右侧 lateral roll-off **不是 Blended RTB 特有 artifact**，也不是由 RTB Tx-overlap normalization 或 dynamic Rx aperture truncation 单独造成；它已经存在于同一份 focused-acquisition 数据的 conventional reconstruction 中。
 
-因此后续若要追根因，应优先检查 acquisition / scene 本身，例如：
+当时列出的 acquisition / scene 候选包括：
 
 - phantom lateral non-uniformity；
 - 实际 focused-transmit aperture 在边缘 scanlines 的截断或能量变化；
@@ -1315,7 +1316,8 @@ Rx count      : 37 / 54 / 37
 - element / transmit beam directivity；
 - 其它 acquisition-side lateral sensitivity variation。
 
-这类因素会同时影响 conventional FI 和 RTB，因此不应再把当前右侧暗边作为 RTB 模型错误继续调参。
+这类因素可能同时影响 Conventional FI 和 RTB，但跨 Tx 时间参考误差也会影响
+两种重建，且对 RTB 的相干抵消尤其明显。下一节记录了相应的运行验证。
 
 #### 一个统计注意事项
 
@@ -1345,7 +1347,45 @@ clear profile_z_min profile_z_max
 
 再运行脚本。
 
-这个重新统计主要用于更可靠地量化左右 roll-off，**不会改变“conventional 与 RTB 都具有相同右侧下降趋势”这一已观察到的定性结论**。
+采用干净深度区域及绝对幅度参考，才能判断两者是否具有相同下降量级；
+不能预先断言重新统计不会改变旧结论。
+
+---
+### 16.18 右侧额外暗带：跨 Tx 的 RF 时间参考偏移
+
+2026-10-01 的进一步运行验证修正了前述判断：**Conventional 也有右侧
+roll-off，并不证明 RTB 的额外暗带完全来自横向散射/灵敏度变化。**
+一条 scanline 只用一个 Tx，而 RTB 需要不同 Tx 之间保持一致的时间和相位。
+
+在 512×512 grid、10–27 mm 深度、x=15±1 mm 区域，原始 RTB 相对 matched
+Conventional 的绝对 median-envelope 比为 −10.146 dB，中心 x=−2±1 mm
+为 −4.353 dB。右侧 Tx coherence 仅 0.442，中心为 0.844。
+
+从 Tx 112→113 起，相邻 Tx 的低分辨率图像仍高度相关，但出现明显相位漂移。
+使用 16 pitch 半孔径、右侧末端阵元参考路径的几何修正：
+
+~~~text
+dt(t) = [hypot(z_focus,16*pitch)
+         - hypot(z_focus,min(16*pitch,x_last-x_source(t)))] / c
+tau_query_corrected = tau_query + dt(t)
+~~~
+
+第 1–112 次 Tx 不变，第 113–128 次 Tx 的查询时间增加，最大约 248 ns。
+**这是 RF 采样时间修正，不是把图像乘一个位置相关增益。** Conventional
+也使用相同修正，保持对照一致。
+
+修正后右侧 RTB/FI 比为 −4.391 dB，Tx coherence 恢复到 0.829。
+中心和左侧不变，右侧额外约 5.75 dB 损失得到恢复。
+独立的 10–18、22–27、34–42 mm 深度区间，相邻右侧 Tx 相位偏差的中位数
+分别从 28.455°/19.536°/17.552° 降到 2.713°/8.378°/8.455°。
+
+UFF 没有可用的实际 Tx apodization（读出的值为 NaN），因此孔径大小及末端
+阵元参考机制仍是与数据吻合的工作假设，不能当作已验证的采集配置。
+近焦点仍存在模型误差，修正也会改变右侧点靶位置；缺少真值坐标，尚不能
+声称空间标定已被验证。修正通过显式 `tx_time_offsets` 启用，默认算法不变。
+
+运行 `diagnose_rtb_tx_timing` 查看原始/修正对照。
+详细数据、图像、验证和复现命令见 `../../artifacts/rtb_darkening/README.md`。
 
 ---
 ## 17. 本章完成后的意义

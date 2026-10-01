@@ -1,0 +1,76 @@
+============================================================
+ Manual focused-imaging RTB
+============================================================
+File                : ../../data/L7_FI_Verasonics_CIRS_points.uff
+Data [T C W F]      : [1920 128 128 1]
+Output grid [z x]   : [512 512]
+Original Tx waves   : 128
+Used Tx waves       : 128 (stride 1)
+x spacing           : 0.074063 mm
+Tx delay model      : blended
+Tx F-number         : 2.000
+Tx minimum aperture : 3.000 mm
+Tx window           : tukey25
+PW margin           : 1.000 mm
+Blending power      : 0.500
+Rx aperture         : f_number
+Rx F-number         : 1.700
+
+RTB wave 1 / 128 (original index 1) ...
+RTB wave 13 / 128 (original index 13) ...
+RTB wave 25 / 128 (original index 25) ...
+RTB wave 37 / 128 (original index 37) ...
+RTB wave 49 / 128 (original index 49) ...
+RTB wave 61 / 128 (original index 61) ...
+RTB wave 73 / 128 (original index 73) ...
+RTB wave 85 / 128 (original index 85) ...
+RTB wave 97 / 128 (original index 97) ...
+RTB wave 109 / 128 (original index 109) ...
+RTB wave 121 / 128 (original index 121) ...
+============================================================
+ Manual focused-imaging RTB
+============================================================
+File                : ../../data/L7_FI_Verasonics_CIRS_points.uff
+Data [T C W F]      : [1920 128 128 1]
+Output grid [z x]   : [512 512]
+Original Tx waves   : 128
+Used Tx waves       : 128 (stride 1)
+x spacing           : 0.074063 mm
+Tx delay model      : blended
+Tx F-number         : 2.000
+Tx minimum aperture : 3.000 mm
+Tx window           : tukey25
+PW margin           : 1.000 mm
+Blending power      : 0.500
+Rx aperture         : f_number
+Rx F-number         : 1.700
+
+RTB wave 1 / 128 (original index 1) ...
+RTB wave 13 / 128 (original index 13) ...
+RTB wave 25 / 128 (original index 25) ...
+RTB wave 37 / 128 (original index 37) ...
+RTB wave 49 / 128 (original index 49) ...
+RTB wave 61 / 128 (original index 61) ...
+RTB wave 73 / 128 (original index 73) ...
+RTB wave 85 / 128 (original index 85) ...
+RTB wave 97 / 128 (original index 97) ...
+RTB wave 109 / 128 (original index 109) ...
+RTB wave 121 / 128 (original index 121) ...
+    x_mm    original_RTB_minus_FI_dB    corrected_RTB_minus_FI_dB    original_coherence    corrected_coherence
+    ____    ________________________    _________________________    __________________    ___________________
+
+    -16             -4.5317                      -4.5317                  0.81796                0.81796
+     -2             -4.3533                      -4.3533                  0.84424                0.84424
+     15             -10.146                      -4.3912                  0.44154                0.82896
+
+First corrected Tx: 113; max RF time offset: 248.014 ns
+Uniform RTB display gain for matched background: 4.435 dB (display only).
+RF timing correction tested; acquisition-reference mechanism remains inferred.
+SYNTHETIC_TIMING_TEST_PASS: known RF shifts recovered; invalid offsets rejected.
+FINAL_ENTRY_POINT_PASS
+{����ʹ�� exit
+��������� 'Settings' �޷�ʶ��
+}
+{����ʹ�� exit
+��������� 'Settings' �޷�ʶ��
+}

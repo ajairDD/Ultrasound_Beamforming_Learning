@@ -279,3 +279,31 @@ lateral median-envelope profile
 ```
 
 这一步只用于定因，不自动做亮度补偿。
+
+### 右侧暗带：RF 时间参考的针对性检查
+
+2026-10-01 在本地 CIRS points 数据上复现了 RTB 特有的额外损失。
+Conventional 也有边缘 roll-off，不能据此排除 RTB 的跨 Tx 相干抵消。
+
+```matlab
+filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+diagnose_rtb_tx_timing
+```
+
+这个脚本对比原始/修正的 RTB 和 Conventional，导出共享幅度参考图、
+绝对幅度比、Tx coherence，以及三个独立深度区间的相邻 Tx 相位。
+当前修正显式检验“右侧孔径截断改变末端阵元时间参考”的几何假设；
+使用 16 个 pitch 的半孔径，不会对其他文件自动启用。
+
+核心新增 `opts.tx_time_offsets`（秒，按原始 Tx 顺序），在 RF 插值前
+加到查询时间；两种重建均使用同一向量。默认空向量保持原行为。
+核心也可接收第三个 `channel_data` 参数，供这些对照复用同一份 UFF 数据。
+
+```matlab
+opts.tx_time_offsets = tx_time_offsets;  % 诊断脚本的输出，单位 s
+rtb = reconstruct_fi_rtb_manual(filename,opts);
+```
+
+`rtb_corrected` 是诊断脚本已经算出的修正结果，不需要再重建。
+`test_rtb_tx_timing` 用已知时间偏移的合成点靶检验偏移符号与相干恢复。
+详细实测与限制见 `../../artifacts/rtb_darkening/README.md`。

@@ -1,0 +1,29 @@
+METADATA fs=2.08333e+07 t0=0 c=1540 focus=0.0295699 source_distance=0.0351064 origin_x=-0.018923
+CONV elapsed=2.17913
+blended elapsed=26.8676
+x=-16 raw_ratio=-4.53173 peak_norm_ratio=1.3993 coherence=0.817961
+x=-2 raw_ratio=-4.35325 peak_norm_ratio=1.57778 coherence=0.844238
+x=15 raw_ratio=-10.1459 peak_norm_ratio=-4.21484 coherence=0.441537
+hybrid elapsed=26.761
+x=-16 raw_ratio=-4.37668 peak_norm_ratio=0.81877 coherence=0.842093
+x=-2 raw_ratio=-4.2214 peak_norm_ratio=0.974052 coherence=0.84504
+x=15 raw_ratio=-11.0577 peak_norm_ratio=-5.8623 coherence=0.393251
+spherical elapsed=26.8949
+x=-16 raw_ratio=-4.37668 peak_norm_ratio=0.81877 coherence=0.842093
+x=-2 raw_ratio=-4.2214 peak_norm_ratio=0.974052 coherence=0.84504
+x=15 raw_ratio=-11.0577 peak_norm_ratio=-5.8623 coherence=0.393251
+blended_f3 elapsed=22.6792
+x=-16 raw_ratio=-3.10835 peak_norm_ratio=0.366309 coherence=0.872589
+x=-2 raw_ratio=-2.86206 peak_norm_ratio=0.6126 coherence=0.879214
+x=15 raw_ratio=-9.01368 peak_norm_ratio=-5.53903 coherence=0.433974
+blended_f4 elapsed=20.8581
+x=-16 raw_ratio=-2.40454 peak_norm_ratio=1.01868 coherence=0.912534
+x=-2 raw_ratio=-2.42101 peak_norm_ratio=1.00222 coherence=0.906231
+x=15 raw_ratio=-9.2969 peak_norm_ratio=-5.87367 coherence=0.409297
+BASELINE_DONE
+{����ʹ�� exit
+��������� 'Settings' �޷�ʶ��
+}
+{����ʹ�� exit
+��������� 'Settings' �޷�ʶ��
+}

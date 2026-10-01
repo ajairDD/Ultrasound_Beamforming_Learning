@@ -1,0 +1,24 @@
+ZERO_OFFSET_REGRESSION_PASS: unchanged complex RTB and Conventional outputs.
+PHASE_BAND_1: median 28.455 -> 2.713 deg; correlation 0.9754 -> 0.9750
+PHASE_BAND_2: median 19.536 -> 8.378 deg; correlation 0.9346 -> 0.9369
+PHASE_BAND_3: median 17.552 -> 8.455 deg; correlation 0.9717 -> 0.9732
+TARGET x=-4.917: peak gain 0.000 dB; location [-4.8511 20.1859] -> [-4.8511 20.1859] mm
+TARGET x=15.350: peak gain 1.487 dB; location [15.9605 29.8141] -> [16.3308 29.3444] mm
+SYNTHETIC_TIMING_TEST_PASS: known RF shifts recovered; invalid offsets rejected.
+CHECKCODE reconstruct_fi_rtb_manual.m: 4 messages
+  line 135: �������� 'N_samples' ��ֵ����δʹ�á�
+  line 326: ���� 'single_tx_unweighted' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+  line 328: ���� 'single_tx_weighted' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+  line 330: ���� 'single_tx_delay' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+CHECKCODE reconstruct_fi_scanline_manual.m: 1 messages
+  line 105: �������� 'N_samples' ��ֵ����δʹ�á�
+CHECKCODE right_edge_tx_time_offsets.m: 0 messages
+CHECKCODE diagnose_rtb_tx_timing.m: 0 messages
+CHECKCODE diagnose_rtb_edge_darkening.m: 0 messages
+CHECKCODE test_rtb_tx_timing.m: 3 messages
+  line 16: ���� 'w' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+  line 17: ���� 'w' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+  line 18: ���� 'w' �ƺ���������������ı䡣��Ԥ�����ڴ��Ի�ø��ߵ������ٶȡ�
+FINAL_CHECKCODE test_rtb_tx_timing.m: 1 messages
+FINAL_CHECKCODE compare_conventional_vs_rtb.m: 0 messages
+FINAL_CHECKCODE diagnose_rtb_tx_timing.m: 0 messages

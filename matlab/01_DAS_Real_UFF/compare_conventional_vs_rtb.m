@@ -29,7 +29,7 @@
 %   compare_conventional_vs_rtb
 
 clearvars -except filename target_x_mm target_z_mm ...
-    z_min z_max n_z rtb_x_upsample;
+    z_min z_max n_z rtb_x_upsample tx_time_offsets;
 clc;
 close all;
 
@@ -71,6 +71,9 @@ opts_c.n_z = n_z;
 opts_c.receive_aperture_mode = 'f_number';
 opts_c.receive_f_number = rx_f_number;
 opts_c.verbose = true;
+if exist('tx_time_offsets','var')
+    opts_c.tx_time_offsets = tx_time_offsets;
+end
 
 conv = reconstruct_fi_scanline_manual(filename,opts_c);
 
@@ -101,6 +104,9 @@ opts_r.rx_f_number = rx_f_number;
 opts_r.wave_stride = 1;
 opts_r.normalize_tx_weights = true;
 opts_r.verbose = true;
+if exist('tx_time_offsets','var')
+    opts_r.tx_time_offsets = tx_time_offsets;
+end
 
 rtb = reconstruct_fi_rtb_manual(filename,opts_r);
 
