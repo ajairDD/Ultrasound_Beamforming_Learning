@@ -16,7 +16,7 @@
 % Expected use:
 %   addpath(genpath('D:/USTB'));  % change path
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+%   filename = '../../data/L7_FI_TheGB.uff';
 %   validate_manual_vs_ustb
 
 clearvars -except filename z_min z_max n_z frame_index;
@@ -24,7 +24,7 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 if ~exist('z_min','var')
     z_min = 5e-3;
