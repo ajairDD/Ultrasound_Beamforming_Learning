@@ -190,3 +190,50 @@ experiment_rtb_parameter_sweep
 ```
 
 RTB 比 conventional FI-DAS 计算量大很多，因此参数探索默认使用较小的 `n_z`。确认趋势以后再提高到 512 / 1024。
+
+
+---
+
+## Hybrid focal-band seam 与 Blended model
+
+在当前真实 CIRS focused dataset 上，Manual Hybrid RTB 与 USTB Hybrid RTB 都观察到 focal region 的横向接缝。
+
+原因是 Hybrid 使用固定 `pw_margin` 做 hard switch：
+
+```text
+spherical -> plane -> spherical
+```
+
+切换边界处两种 path model 对 off-axis pixels 不一定严格相等。
+
+当前 Manual RTB 已同步支持 USTB 的连续 `blended` model：
+
+```matlab
+opts.tx_delay_model = 'blended';
+opts.blending_power = 0.5;
+```
+
+三方实验：
+
+```matlab
+experiment = 'delay_model';
+experiment_rtb_parameter_sweep
+```
+
+现在比较：
+
+```text
+spherical
+hybrid
+blended
+```
+
+如果本地 USTB 版本也包含 `spherical_transmit_delay_model.blended`，还可以：
+
+```matlab
+delay_model = 'blended';
+blending_power = 0.5;
+validate_manual_rtb_vs_ustb
+```
+
+若本地 USTB 版本较旧、不包含该枚举，需要先更新 USTB，Manual blended 重建本身不依赖 USTB 的 DAS。
