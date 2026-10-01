@@ -9,7 +9,7 @@ clearvars -except filename wave_index frame_index;
 clc;
 
 if ~exist('filename', 'var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 if ~exist('wave_index', 'var')
     wave_index = 1;
