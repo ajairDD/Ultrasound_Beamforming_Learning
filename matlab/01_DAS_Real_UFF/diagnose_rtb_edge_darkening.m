@@ -38,7 +38,8 @@
 %   diagnose_rtb_edge_darkening
 
 clearvars -except filename z_min z_max n_z x_upsample ...
-    rx_f_number tx_f_number blending_power;
+    rx_f_number tx_f_number blending_power ...
+    profile_z_min profile_z_max;
 clc;
 close all;
 
@@ -73,11 +74,15 @@ end
 display_dynamic_range_db = 60;
 
 % Depth band used for lateral "background level" summary.
-% Use a broad band but exclude very shallow data where geometry differs
-% strongly. The statistic is a MEDIAN across z to reduce sensitivity to
-% bright point targets.
-profile_z_min = 10e-3;
-profile_z_max = 45e-3;
+% Default deliberately avoids the ~30 mm point-target group and the large
+% bright structure around x~-15 mm, z~35-42 mm in this CIRS dataset.
+% Users can override profile_z_min / profile_z_max before running.
+if ~exist('profile_z_min','var')
+    profile_z_min = 10e-3;
+end
+if ~exist('profile_z_max','var')
+    profile_z_max = 27e-3;
+end
 
 % Relative x regions used for left / center / right summaries.
 edge_fraction = 0.15;
