@@ -1100,6 +1100,94 @@ Nguyen & Prager 2016 的 unified pixel-based beamforming 从 transmit field shap
 这符合本项目目标：先掌握可解释的核心，再进入更复杂模型。
 
 ---
+### 16.13 实测发现：Hybrid 仍可能出现 focal-band seam
+
+在当前 `L7_FI_Verasonics_CIRS_points.uff` 上，Manual Hybrid RTB 与 USTB Hybrid RTB 的图像几乎一致，但二者都在 transmit focus 附近出现明显横向分界。
+
+这不是 Manual RTB 独有实现错误，而与 Hybrid model 本身的 **hard model switch** 有关。
+
+USTB 当前 Hybrid 源码的逻辑为：
+
+~~~text
+z < zf - pw_margin      -> spherical
+zf-pw_margin < z < zf+pw_margin -> plane
+z > zf + pw_margin      -> spherical
+~~~
+
+因此 Hybrid 确实移除了 simple spherical model 在 `z=zf` 的符号跳变，但对 off-axis pixel，spherical path 与 plane path 在：
+
+$
+z=z_f\pm d_{PW}
+$
+
+一般并不严格相等。
+
+所以 hard replacement 可能把原来的焦点不连续转化为两个 focal-band transition seams。
+
+这次实测说明：
+
+> `hybrid` 不应被机械理解为“任何数据上都没有焦点区域 artifact”；它是一种简单、有效但仍然近似的 transmit-delay model。
+
+### 16.14 当前 USTB 的 Blended model
+
+当前 USTB 源码还提供：
+
+~~~matlab
+spherical_transmit_delay_model.blended
+~~~
+
+它不再在固定深度边界硬切 spherical / plane delay，而定义连续权重：
+
+$
+d_n
+=
+\min\left(
+\frac{|R_f-\|P\||}{R_f},
+1
+\right),
+$
+
+$
+\alpha=d_n^p,
+$
+
+默认：
+
+$
+p=\frac12.
+$
+
+然后：
+
+$
+L_{blend}
+=
+\alpha L_{spherical}
++
+(1-\alpha)L_{plane}.
+$
+
+靠近 focal spherical shell 时，plane model 权重更大；远离该区域时逐步回到 spherical model。
+
+这种连续混合没有 `z_f±pw_margin` 的硬切边界，因此特别适合检验当前看到的横向 seam 是否由 Hybrid hard switch 导致。
+
+Manual RTB 现已支持：
+
+~~~text
+tx_delay_model = 'spherical'
+tx_delay_model = 'hybrid'
+tx_delay_model = 'blended'
+~~~
+
+并增加：
+
+~~~text
+blending_power = 0.5
+~~~
+
+参数实验 `delay_model` 现在会三方比较 spherical / hybrid / blended。
+
+---
 ## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
