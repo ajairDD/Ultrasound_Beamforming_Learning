@@ -40,8 +40,9 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
 %   x_upsample             default 4
 %   n_x                    [] -> N_waves*x_upsample
 %
-%   tx_delay_model         'hybrid' or 'spherical', default 'hybrid'
-%   pw_margin              [m], default 1e-3
+%   tx_delay_model         'spherical' / 'hybrid' / 'blended', default 'hybrid'
+%   pw_margin              [m], default 1e-3 (hybrid only)
+%   blending_power         default 0.5 (blended only)
 %   tx_f_number            default 2
 %   tx_min_aperture        [m], default 3e-3
 %   tx_window              'tukey25' or 'boxcar', default 'tukey25'
@@ -81,8 +82,13 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
 % geometry used by the USTB publication examples.
 %
 % The 'hybrid' model replaces spherical Tx delay with locally plane
-% propagation around the focal depth to avoid the focal-depth
-% discontinuity of the simple spherical virtual-source model.
+% propagation inside a hard focal-depth band. This removes the simple
+% spherical discontinuity at z = z_focus, but the hard switch can create
+% visible seams at the band boundaries.
+%
+% The newer USTB 'blended' model mixes spherical and plane delays
+% continuously and is therefore useful for testing whether such seams are
+% caused by the hard hybrid transition.
 
     if nargin < 1 || isempty(filename)
         filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
@@ -184,6 +190,7 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
             opts.tx_min_aperture*1e3);
         fprintf('Tx window           : %s\n',opts.tx_window);
         fprintf('PW margin           : %.3f mm\n',opts.pw_margin*1e3);
+        fprintf('Blending power      : %.3f\n',opts.blending_power);
         fprintf('Rx aperture         : %s\n',opts.rx_aperture_mode);
         if strcmpi(opts.rx_aperture_mode,'f_number')
             fprintf('Rx F-number         : %.3f\n',opts.rx_f_number);
@@ -375,6 +382,7 @@ function opts = apply_defaults(opts)
         'n_x',[], ...
         'tx_delay_model','hybrid', ...
         'pw_margin',1e-3, ...
+        'blending_power',0.5, ...
         'tx_f_number',2, ...
         'tx_min_aperture',3e-3, ...
         'tx_window','tukey25', ...
@@ -416,13 +424,16 @@ function opts = apply_defaults(opts)
     assert(opts.pw_margin >= 0, ...
         'pw_margin must be non-negative.');
 
+    assert(opts.blending_power > 0, ...
+        'blending_power must be positive.');
+
     assert(opts.wave_stride >= 1 && ...
            opts.wave_stride == round(opts.wave_stride), ...
         'wave_stride must be a positive integer.');
 
-    valid_models = {'spherical','hybrid'};
+    valid_models = {'spherical','hybrid','blended'};
     assert(any(strcmpi(opts.tx_delay_model,valid_models)), ...
-        'tx_delay_model must be spherical or hybrid.');
+        'tx_delay_model must be spherical, hybrid, or blended.');
 
     valid_tx_windows = {'boxcar','tukey25'};
     assert(any(strcmpi(opts.tx_window,valid_tx_windows)), ...
@@ -453,10 +464,13 @@ function tau_tx = focused_tx_delay_rtb(wave,x,z,opts)
 % HYBRID MODEL
 % ------------
 % Use spherical delay away from focus and locally plane propagation inside
+% a hard |z-source.z| <= pw_margin band. The hard transition may itself
+% create seams at the band boundaries.
 %
-%   |z-source.z| <= pw_margin.
-%
-% This follows the motivation of Rindal et al., IUS 2018.
+% BLENDED MODEL
+% -------------
+% Continuously mix spherical and plane paths using the current USTB
+% blended-model definition, avoiding a hard z-boundary switch.
 
     sx = wave.source.x;
     sy = wave.source.y;
@@ -473,19 +487,66 @@ function tau_tx = focused_tx_delay_rtb(wave,x,z,opts)
         signed_spherical = spherical_distance;
     end
 
-    path_length = wave.source.distance + signed_spherical;
+    spherical_path = ...
+        wave.source.distance + signed_spherical;
 
-    if strcmpi(opts.tx_delay_model,'hybrid') && ...
-            abs(z-sz) <= opts.pw_margin
+    % Plane propagation through the focal region for a linear scan.
+    % This is independent of x in the USTB hybrid/blended linear-scan
+    % convention.
+    signed_axial = z - sz;
 
-        % Plane propagation around focal depth.
-        % For this linear-array FI dataset the scanline axis is normal to
-        % the probe, so the local plane-wave delay is independent of x.
-        signed_axial = z - sz;
+    plane_path = ...
+        wave.source.distance + ...
+        signed_axial .* ones(size(x));
 
-        path_length = ...
-            wave.source.distance + ...
-            signed_axial .* ones(size(x));
+    switch lower(opts.tx_delay_model)
+
+        case 'spherical'
+            path_length = spherical_path;
+
+        case 'hybrid'
+            % Hard replacement inside a focal-depth band.
+            %
+            % IMPORTANT:
+            % spherical_path and plane_path are generally NOT equal at
+            % z = sz +/- pw_margin for off-axis pixels. Therefore this
+            % model can move the original focal discontinuity to the two
+            % band boundaries and create horizontal seams.
+            if abs(z-sz) <= opts.pw_margin
+                path_length = plane_path;
+            else
+                path_length = spherical_path;
+            end
+
+        case 'blended'
+            % Match current USTB blended model:
+            %
+            % normalized_distance =
+            %   min(abs(source.distance - |pixel_from_global_origin|)
+            %       / source.distance, 1)
+            %
+            % alpha = normalized_distance ^ blending_power
+            %
+            % path = alpha*spherical + (1-alpha)*plane
+            %
+            % Close to the focal spherical shell alpha -> 0, so the plane
+            % model dominates. Far away alpha -> 1, so spherical dominates.
+            pixel_radius = sqrt(x.^2 + z.^2);
+
+            normalized_distance = min( ...
+                abs(wave.source.distance - pixel_radius) ...
+                / wave.source.distance, ...
+                1);
+
+            alpha = normalized_distance .^ opts.blending_power;
+
+            path_length = ...
+                alpha .* spherical_path + ...
+                (1-alpha) .* plane_path;
+
+        otherwise
+            error('Unsupported tx_delay_model: %s', ...
+                opts.tx_delay_model);
     end
 
     tau_tx = path_length / wave.sound_speed - wave.delay;
