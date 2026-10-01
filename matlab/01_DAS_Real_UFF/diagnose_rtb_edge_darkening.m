@@ -15,9 +15,14 @@
 %      - dynamic F-number active Rx count map
 %      - compare F# Rx RTB against full-Rx RTB
 %
-%   C) Display / normalization effect
-%      - compare lateral background-level profiles after the SAME global
-%        normalization rule
+%   C) Is the lateral asymmetry RTB-specific?
+%      - reconstruct conventional FI-DAS with the SAME Rx F-number
+%      - interpolate only for plotting on the RTB x grid
+%      - compare lateral background-level roll-off
+%
+%   D) Display / normalization effect
+%      - compare lateral background-level profiles after the SAME
+%        center-referenced normalization rule
 %
 % IMPORTANT:
 %   This script does NOT "correct" the edge darkening.
@@ -105,7 +110,7 @@ base.verbose = true;
 % 2. RTB with dynamic Rx F-number
 % -------------------------------------------------------------------------
 fprintf('============================================================\n');
-fprintf(' A / B - BLENDED RTB WITH DYNAMIC RX F-NUMBER\n');
+fprintf(' A / C - BLENDED RTB WITH DYNAMIC RX F-NUMBER\n');
 fprintf('============================================================\n');
 
 opts_fnum = base;
@@ -118,7 +123,7 @@ rtb_fnum = reconstruct_fi_rtb_manual(filename,opts_fnum);
 % 3. RTB with full receive aperture
 % -------------------------------------------------------------------------
 fprintf('\n============================================================\n');
-fprintf(' B / B - BLENDED RTB WITH FULL RX APERTURE\n');
+fprintf(' B / C - BLENDED RTB WITH FULL RX APERTURE\n');
 fprintf('============================================================\n');
 
 opts_full = base;
@@ -138,6 +143,41 @@ assert(max(abs(rtb_fnum.z_axis(:)-rtb_full.z_axis(:))) < 1e-12, ...
 
 x_axis = rtb_fnum.x_axis;
 z_axis = rtb_fnum.z_axis;
+
+%% ------------------------------------------------------------------------
+% 3B. Conventional FI-DAS baseline with the SAME Rx F-number
+% -------------------------------------------------------------------------
+fprintf('\n============================================================\n');
+fprintf(' C / C - CONVENTIONAL FI-DAS WITH SAME RX F-NUMBER\n');
+fprintf('============================================================\n');
+
+opts_conv = struct();
+opts_conv.z_min = z_min;
+opts_conv.z_max = z_max;
+opts_conv.n_z = n_z;
+opts_conv.receive_aperture_mode = 'f_number';
+opts_conv.receive_f_number = rx_f_number;
+opts_conv.display_dynamic_range_db = display_dynamic_range_db;
+opts_conv.verbose = true;
+
+conv = reconstruct_fi_scanline_manual(filename,opts_conv);
+
+assert(max(abs(conv.z_axis(:)-z_axis(:))) < 1e-12, ...
+    'Conventional and RTB z axes differ.');
+
+% IMPORTANT:
+% This interpolation is ONLY for putting the conventional image on the
+% RTB x grid for visual/profile comparison. It is NOT RTB and does not
+% create new beamformed information.
+conv_interp_env = interp1( ...
+    conv.x_axis, ...
+    conv.envelope.', ...
+    x_axis, ...
+    'linear',0).';
+
+conv_interp_db = to_db( ...
+    conv_interp_env, ...
+    display_dynamic_range_db);
 
 %% ------------------------------------------------------------------------
 % 4. Read probe geometry and compute active Rx count map
@@ -163,7 +203,7 @@ fnum_db = to_db(rtb_fnum.envelope,display_dynamic_range_db);
 full_db = to_db(rtb_full.envelope,display_dynamic_range_db);
 
 %% ------------------------------------------------------------------------
-% 6. Lateral background-level profiles
+% 6. Lateral background-level profiles: RTB vs conventional
 % -------------------------------------------------------------------------
 z_mask = z_axis >= profile_z_min & z_axis <= profile_z_max;
 
@@ -173,6 +213,7 @@ assert(any(z_mask), ...
 % Median across depth reduces influence from isolated bright point targets.
 fnum_lateral_level = median(rtb_fnum.envelope(z_mask,:),1);
 full_lateral_level = median(rtb_full.envelope(z_mask,:),1);
+conv_lateral_level = median(conv_interp_env(z_mask,:),1);
 
 % Normalize BOTH curves to the same type of central-region reference:
 % the median of each curve in the central x region.
@@ -188,6 +229,7 @@ assert(any(center_mask), ...
 
 fnum_center_ref = median(fnum_lateral_level(center_mask));
 full_center_ref = median(full_lateral_level(center_mask));
+conv_center_ref = median(conv_lateral_level(center_mask));
 
 fnum_profile_db = 20*log10( ...
     fnum_lateral_level/(fnum_center_ref+eps) + eps);
@@ -195,12 +237,21 @@ fnum_profile_db = 20*log10( ...
 full_profile_db = 20*log10( ...
     full_lateral_level/(full_center_ref+eps) + eps);
 
+conv_profile_db = 20*log10( ...
+    conv_lateral_level/(conv_center_ref+eps) + eps);
+
 % A smoothed copy makes the slow lateral trend easier to see without
 % replacing the unsmoothed diagnostic curve.
 smooth_span = max(5,2*floor(Nx/50)+1);
 
 fnum_profile_smooth = movmean(fnum_profile_db,smooth_span);
 full_profile_smooth = movmean(full_profile_db,smooth_span);
+conv_profile_smooth = movmean(conv_profile_db,smooth_span);
+
+% RTB-specific lateral trend relative to conventional FI.
+% Positive: RTB relatively brighter than conventional at that x.
+% Negative: RTB relatively darker than conventional at that x.
+rtb_minus_conv_db = fnum_profile_smooth - conv_profile_smooth;
 
 %% ------------------------------------------------------------------------
 % 7. Left / center / right regional summaries
@@ -235,6 +286,14 @@ summary.fnum_level_db = summarize_regions( ...
 
 summary.full_level_db = summarize_regions( ...
     full_profile_db, ...
+    left_mask,center_mask,right_mask);
+
+summary.conv_level_db = summarize_regions( ...
+    conv_profile_db, ...
+    left_mask,center_mask,right_mask);
+
+summary.rtb_minus_conv_db = summarize_regions( ...
+    rtb_minus_conv_db, ...
     left_mask,center_mask,right_mask);
 
 %% ------------------------------------------------------------------------
@@ -276,11 +335,23 @@ fprintf('  left %.3f | center %.3f | right %.3f\n', ...
     summary.fnum_level_db.center, ...
     summary.fnum_level_db.right);
 
-fprintf('\nRelative median background level, FULL Rx [dB]:\n');
+fprintf('\nRelative median background level, FULL Rx RTB [dB]:\n');
 fprintf('  left %.3f | center %.3f | right %.3f\n', ...
     summary.full_level_db.left, ...
     summary.full_level_db.center, ...
     summary.full_level_db.right);
+
+fprintf('\nRelative median background level, CONVENTIONAL FI [dB]:\n');
+fprintf('  left %.3f | center %.3f | right %.3f\n', ...
+    summary.conv_level_db.left, ...
+    summary.conv_level_db.center, ...
+    summary.conv_level_db.right);
+
+fprintf('\nRTB(F#) minus conventional lateral trend [dB]:\n');
+fprintf('  left %.3f | center %.3f | right %.3f\n', ...
+    summary.rtb_minus_conv_db.left, ...
+    summary.rtb_minus_conv_db.center, ...
+    summary.rtb_minus_conv_db.right);
 
 fprintf('\nInterpretation guide:\n');
 fprintf(['  1) If Tx count / Tx weight sum drop toward the edges, finite Tx\n' ...
@@ -288,16 +359,22 @@ fprintf(['  1) If Tx count / Tx weight sum drop toward the edges, finite Tx\n' .
          '  2) If active Rx count also drops at the edges and FULL-Rx RTB\n' ...
          '     reduces the brightness roll-off, Rx aperture truncation is\n' ...
          '     also important.\n' ...
-         '  3) Tx-weight normalization removes simple overlap gain, but it\n' ...
+         '  3) If conventional FI shows the SAME left/right brightness\n' ...
+         '     asymmetry, the dominant cause is likely already present in\n' ...
+         '     the acquired data / phantom / probe / transmit sensitivity,\n' ...
+         '     rather than being created by RTB.\n' ...
+         '  4) If conventional FI is laterally uniform but RTB is not,\n' ...
+         '     continue investigating off-axis Tx modeling/apodization.\n' ...
+         '  5) Tx-weight normalization removes simple overlap gain, but it\n' ...
          '     cannot restore missing synthetic aperture or lost coherent\n' ...
          '     information at the physical FOV boundary.\n']);
 
 %% ------------------------------------------------------------------------
-% 9. Figure 1: F-number Rx vs full Rx
+% 9. Figure 1: RTB F-number Rx vs full Rx vs conventional
 % -------------------------------------------------------------------------
 figure('Color','w');
 
-subplot(1,2,1);
+subplot(1,3,1);
 imagesc(x_axis*1e3,z_axis*1e3,fnum_db);
 set(gca,'YDir','reverse');
 axis image;
@@ -307,13 +384,23 @@ title(sprintf('Blended RTB, Rx F# = %.2f',rx_f_number));
 caxis([-display_dynamic_range_db 0]);
 colorbar;
 
-subplot(1,2,2);
+subplot(1,3,2);
 imagesc(x_axis*1e3,z_axis*1e3,full_db);
 set(gca,'YDir','reverse');
 axis image;
 xlabel('x (mm)');
 ylabel('z (mm)');
 title('Blended RTB, full Rx aperture');
+caxis([-display_dynamic_range_db 0]);
+colorbar;
+
+subplot(1,3,3);
+imagesc(x_axis*1e3,z_axis*1e3,conv_interp_db);
+set(gca,'YDir','reverse');
+axis image;
+xlabel('x (mm)');
+ylabel('z (mm)');
+title(sprintf('Conventional FI, Rx F# = %.2f',rx_f_number));
 caxis([-display_dynamic_range_db 0]);
 colorbar;
 
@@ -356,12 +443,14 @@ colorbar;
 % -------------------------------------------------------------------------
 figure('Color','w');
 
-plot(x_axis*1e3,fnum_profile_db,'LineWidth',0.8);
+plot(x_axis*1e3,fnum_profile_db,'LineWidth',0.7);
 hold on;
-plot(x_axis*1e3,full_profile_db,'LineWidth',0.8);
+plot(x_axis*1e3,full_profile_db,'LineWidth',0.7);
+plot(x_axis*1e3,conv_profile_db,'LineWidth',0.7);
 
 plot(x_axis*1e3,fnum_profile_smooth,'LineWidth',2.0);
 plot(x_axis*1e3,full_profile_smooth,'LineWidth',2.0);
+plot(x_axis*1e3,conv_profile_smooth,'LineWidth',2.0);
 
 yline(0,':');
 
@@ -373,12 +462,28 @@ title(sprintf( ...
     profile_z_min*1e3,profile_z_max*1e3));
 
 legend( ...
-    sprintf('F# %.2f raw',rx_f_number), ...
-    'Full Rx raw', ...
-    sprintf('F# %.2f smoothed',rx_f_number), ...
-    'Full Rx smoothed', ...
+    sprintf('RTB F# %.2f raw',rx_f_number), ...
+    'RTB Full Rx raw', ...
+    'Conventional raw', ...
+    sprintf('RTB F# %.2f smoothed',rx_f_number), ...
+    'RTB Full Rx smoothed', ...
+    'Conventional smoothed', ...
     'Location','best');
 
+grid on;
+
+%% ------------------------------------------------------------------------
+% 11B. Figure 3B: RTB-specific lateral trend relative to conventional
+% -------------------------------------------------------------------------
+figure('Color','w');
+
+plot(x_axis*1e3,rtb_minus_conv_db,'LineWidth',2.0);
+hold on;
+yline(0,':');
+
+xlabel('x (mm)');
+ylabel('RTB F# - Conventional lateral trend (dB)');
+title('RTB-specific lateral brightness trend relative to conventional FI');
 grid on;
 
 %% ------------------------------------------------------------------------
