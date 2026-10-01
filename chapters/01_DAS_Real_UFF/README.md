@@ -1232,6 +1232,59 @@ Full Rx aperture
 4. 不应直接按 `tx_weight_sum` 或 `active_tx_count` 对 B-mode 做增益补偿并把它称为 RTB 本身，因为那会引入额外的 post-processing / display correction。
 
 ---
+### 16.16 实测暗边诊断：简单 Tx/Rx support 不能解释右侧约 4–5 dB 变暗
+
+在 Blended RTB 上运行 `diagnose_rtb_edge_darkening.m`，得到：
+
+~~~text
+Median active Tx count [left | center | right]
+14 | 15 | 14
+
+Median Tx weight sum [left | center | right]
+12.858 | 12.870 | 12.858
+
+Median active Rx count, F#=1.7 [left | center | right]
+37 | 54 | 37
+
+Relative median background, RTB F# Rx [dB]
++0.303 | 0 | -4.353
+
+Relative median background, RTB Full Rx [dB]
+-0.242 | 0 | -4.900
+~~~
+
+这些结果说明：
+
+1. Tx active-count 和 Tx weight-sum 的 left/right 几乎对称，因此不能解释当前明显的 **右侧单边变暗**；
+2. Dynamic F-number Rx 的 active-channel count 虽然在左右边缘都下降，但左右同样对称；
+3. 改成 Full Rx 后，右侧 roll-off 并没有减轻，反而仍约 `-4.9 dB`，因此 **Rx aperture truncation 不是当前右侧暗边的主因**；
+4. 当前 brightness roll-off 明显左右不对称，而几何 Tx/Rx support 基本左右对称，因此下一步必须检查：这种不对称是否已经存在于 conventional FI / acquired data 本身。
+
+为此诊断脚本已扩展为同时重建 matched conventional FI-DAS：
+
+~~~text
+RTB, Rx F#=1.7
+RTB, full Rx
+Conventional FI-DAS, Rx F#=1.7
+~~~
+
+Conventional 图像只在最终显示/统计时插值到 RTB x-grid，不会把该插值冒充 RTB。
+
+如果 conventional FI 也出现接近的右侧 `-4~-5 dB` roll-off，则更支持：
+
+- phantom lateral non-uniformity；
+- acquisition / probe element sensitivity；
+- actual transmit/receive directivity；
+- 或其它数据本身已存在的 lateral sensitivity variation。
+
+如果 conventional FI 相对均匀而 RTB 独有右侧 roll-off，则再继续追：
+
+- off-axis focused Tx field model；
+- Tx F-number / Tukey support；
+- element directivity 未建模；
+- synthetic-aperture coherence at the FOV boundary。
+
+---
 ## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
