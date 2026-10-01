@@ -1285,6 +1285,69 @@ Conventional 图像只在最终显示/统计时插值到 RTB x-grid，不会把�
 - synthetic-aperture coherence at the FOV boundary。
 
 ---
+### 16.17 Conventional 对照结果：右侧 roll-off 不是 RTB 独有
+
+将诊断扩展为 matched conventional FI-DAS 后，观察到：
+
+- RTB F#=1.7；
+- RTB full-Rx；
+- conventional FI-DAS F#=1.7；
+
+三者在右侧 `x≈14–18 mm` 都出现相似的亮度下降，smoothed lateral profile 的下降位置和量级基本一致。
+
+结合前一轮 support 结果：
+
+~~~text
+Tx count      : left / center / right ≈ 14 / 15 / 14
+Tx weight sum : 12.858 / 12.870 / 12.858
+Rx count      : 37 / 54 / 37
+~~~
+
+可以得到当前最重要的结论：
+
+> 当前明显的右侧 lateral roll-off **不是 Blended RTB 特有 artifact**，也不是由 RTB Tx-overlap normalization 或 dynamic Rx aperture truncation 单独造成；它已经存在于同一份 focused-acquisition 数据的 conventional reconstruction 中。
+
+因此后续若要追根因，应优先检查 acquisition / scene 本身，例如：
+
+- phantom lateral non-uniformity；
+- 实际 focused-transmit aperture 在边缘 scanlines 的截断或能量变化；
+- probe / channel sensitivity variation；
+- element / transmit beam directivity；
+- 其它 acquisition-side lateral sensitivity variation。
+
+这类因素会同时影响 conventional FI 和 RTB，因此不应再把当前右侧暗边作为 RTB 模型错误继续调参。
+
+#### 一个统计注意事项
+
+当前一次输出的 lateral-profile 标题仍为：
+
+~~~text
+z = 10 to 45 mm
+~~~
+
+说明 MATLAB 工作区中先前设置的 `profile_z_max=45e-3` 被 `clearvars -except` 保留下来，覆盖了脚本后来新增的默认 `27 mm`。
+
+而 `30 mm` 点靶群以及左下 `35–42 mm` 的大片亮结构会污染 lateral background statistic。
+
+若要做更干净的横向均匀性统计，应显式执行：
+
+~~~matlab
+profile_z_min = 10e-3;
+profile_z_max = 27e-3;
+diagnose_rtb_edge_darkening
+~~~
+
+或者先：
+
+~~~matlab
+clear profile_z_min profile_z_max
+~~~
+
+再运行脚本。
+
+这个重新统计主要用于更可靠地量化左右 roll-off，**不会改变“conventional 与 RTB 都具有相同右侧下降趋势”这一已观察到的定性结论**。
+
+---
 ## 17. 本章完成后的意义
 
 一旦第 1 章 DAS baseline 完成，后面的算法不再重复写一套完全不同的数据管线。
