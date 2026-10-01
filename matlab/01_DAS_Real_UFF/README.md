@@ -1,373 +1,116 @@
-# MATLAB / 第 1 章：Real UFF DAS
+# Chapter 1 MATLAB：Real UFF FI-DAS / RTB
 
-对应：
+本目录只保留第 1 章教学主线代码。
 
-**[第 1 章：在真实 UFF Channel Data 上实现 DAS](../../chapters/01_DAS_Real_UFF/README.md)**
-
----
-
-## 当前代码
-
-| 文件 | USTB | 作用 |
-|---|---:|---|
-| <code>inspect_uff_hdf5.m</code> | 否 | 使用 MATLAB HDF5 API 查看 UFF 文件结构 |
-| <code>inspect_uff_metadata_ustb.m</code> | 是 | 第 1 步：输出完整数据契约，检查 shape、RF/IQ、timing、probe、wavefront、source、origin 和 wave.delay |
-| <code>plot_raw_channel_overview_ustb.m</code> | 是 | 显示真实 channel data 的 time × channel 结构 |
-| <code>reconstruct_fi_scanline_manual.m</code> | 是（仅用于读取 UFF） | **可复用的 Manual FI-DAS 核心函数**；所有真实数据实验统一调用它，显式实现 Tx/Rx delay、analytic RF、插值、aperture、coherent sum、envelope/dB |
-| <code>das_fi_scanline_manual.m</code> | 是 | 面向学习者的直接运行入口；负责设置参数、调用核心函数、显示图像和 diagnostics，不再承载另一份算法实现 |
-| <code>validate_manual_vs_ustb.m</code> | 是 | 在相同 x/z grid、scanline Tx、full Rx aperture 下比较 Manual DAS 与 USTB MATLAB DAS reference，输出相关系数、误差、峰值位置和差分图 |
-| <code>analyze_point_target_psf.m</code> | 是（只用于重建前读取 UFF） | 交互选择孤立点靶，局部峰值细化，测量 lateral / axial -6 dB amplitude FWHM，并检查 FWHM 相对于 x/z sampling 的采样充分性 |
-| <code>compare_receive_aperture_full_vs_fnumber.m</code> | 是（调用已验证的 Manual DAS） | 在完全相同的 Tx/Rx delay 与成像 grid 下，仅改变 receive aperture，对比 full aperture 与 dynamic F-number boxcar aperture 的 PSF |
-| <code>reconstruct_fi_rtb_manual.m</code> | 是（仅用于读取 UFF） | **Manual RTB 核心**：pixel-based Tx/Rx delay、Tx F-number/Tukey weighting、single-Tx Rx-DAS、跨 Tx coherent sum 与 overlap normalization |
-| <code>compare_conventional_vs_rtb.m</code> | 是 | Conventional FI、纯 lateral interpolation、Hybrid RTB 三方对比，区分“采样变密”和“真正重新利用 RF/Tx dimension” |
-| <code>validate_manual_rtb_vs_ustb.m</code> | 是 | Manual Hybrid RTB vs USTB Hybrid RTB 数值交叉验证 |
-| <code>experiment_rtb_parameter_sweep.m</code> | 是 | 一次只改变一个 RTB 参数：delay model、x upsample、Tx/Rx F#、minimum aperture、PW margin、wave stride |
-| <code>diagnose_rtb_edge_darkening.m</code> | 是 | 诊断 RTB 左右暗边：Tx count / Tx weight sum / active Rx count / Full-Rx vs F#-Rx / 横向背景亮度趋势 |
-| <code>audit_fi_datasets_tx_timing.m</code> | 是 | **跨 FI 数据集 Tx timing 审计**：不施加任何 timing correction，比对 RTB/FI、Tx coherence 与 adjacent-Tx phase，判断 CIRS 右侧问题是数据特例还是可重复现象 |
-
----
-
-## 推荐数据
+默认数据：
 
 ~~~text
-../../data/L7_FI_Verasonics_CIRS_points.uff
+../../data/L7_FI_TheGB.uff
 ~~~
 
-如果文件放在其他位置，修改 <code>filename</code> 即可。
+USTB 用于 UFF 读取和 reference validation；Manual beamformer 的核心计算由本项目显式实现。
 
 ---
 
-## 没安装 USTB
+## 文件说明
 
-先运行：
+| 文件 | 作用 |
+|---|---|
+| `inspect_uff_hdf5.m` | 不依赖 USTB，只查看 UFF/HDF5 结构 |
+| `inspect_uff_metadata_ustb.m` | 检查 shape、RF/IQ、fs、initial_time、probe、sequence、wave.delay |
+| `plot_raw_channel_overview_ustb.m` | 查看一个 wave 的原始 channel data |
+| `reconstruct_fi_scanline_manual.m` | conventional FI-DAS 核心 |
+| `das_fi_scanline_manual.m` | conventional FI-DAS 直接运行入口 |
+| `validate_manual_vs_ustb.m` | Manual conventional DAS vs USTB reference |
+| `analyze_point_target_psf.m` | 交互选择 point target，测 lateral/axial FWHM |
+| `compare_receive_aperture_full_vs_fnumber.m` | Full Rx vs dynamic F-number |
+| `reconstruct_fi_rtb_manual.m` | Manual RTB 核心 |
+| `compare_conventional_vs_rtb.m` | Conventional / display interpolation / RTB 三方比较 |
+| `validate_manual_rtb_vs_ustb.m` | Manual RTB vs USTB reference |
+| `experiment_rtb_parameter_sweep.m` | RTB 单因素参数实验 |
+
+---
+
+## 最短运行路径
 
 ~~~matlab
-filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-inspect_uff_hdf5
-~~~
+addpath(genpath('D:/USTB'));  % 改成你的路径
+cd matlab/01_DAS_Real_UFF
 
-这只能做结构检查。
-
----
-
-## 已安装 USTB
-
-~~~matlab
-addpath(genpath('D:/USTB'));
-
-filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+filename = '../../data/L7_FI_TheGB.uff';
 
 inspect_uff_metadata_ustb
-plot_raw_channel_overview_ustb
-~~~
-
----
-
-## 在开始写 DAS 前必须确认
-
-- <code>size(channel_data.data)</code>；
-- samples / channels / waves / frames；
-- real RF or complex IQ；
-- sampling frequency；
-- initial time；
-- sound speed；
-- probe element coordinates；
-- sequence；
-- Focused Imaging 的 transmit geometry。
-
----
-
-## 本章原则
-
-USTB 用来读 UFF 和做 reference。
-
-真正的 DAS：
-
-~~~text
-delay
-interpolation
-aperture
-apodization
-coherent sum
-~~~
-
-由本项目自己实现并逐步验证。
-
-Conventional FI-DAS 已完成实现，并已在真实 UFF 数据上与 USTB reference 做过数值交叉验证；RTB 已完成首版实现，但在 `validate_manual_rtb_vs_ustb.m` 跑通并记录数值结果前，仍视为“待 reference 验证”。
-
-
----
-
-## 当前真正的 DAS 主线
-
-本项目不会把 `midprocess.das()` 当成教学主实现。
-
-运行顺序：
-
-```matlab
-inspect_uff_metadata_ustb
-plot_raw_channel_overview_ustb
 das_fi_scanline_manual
 validate_manual_vs_ustb
+
 analyze_point_target_psf
-```
-
-`reconstruct_fi_scanline_manual.m` 是唯一的 Manual DAS 算法核心。`das_fi_scanline_manual.m`、验证、PSF 和 aperture 对比脚本都调用这一核心。
-
-核心函数中，USTB 只负责：
-
-```matlab
-channel_data = uff.read_object(filename, '/channel_data');
-```
-
-之后的 beamforming 数学全部由仓库代码自己完成。
-
-默认先做：
-
-```text
-1 focused transmit -> 1 scanline
-```
-
-即 conventional FI-DAS。
-
-RTB 会在这套 baseline 完成并与 USTB reference 对齐之后再加入。
-
-
----
-
-## 关于 MATLAB workspace 的实现约定
-
-早期版本的 aperture-comparison 脚本曾在局部函数中通过：
-
-```matlab
-run('das_fi_scanline_manual.m')
-```
-
-调用脚本，再依赖 `envelope`、`x_axis` 等变量留在调用工作区。
-
-这种写法不稳定：脚本中的 `clearvars` 与函数 workspace 会导致变量丢失，MATLAB 还可能把丢失的变量名解析为同名函数，例如 `envelope()`。
-
-现在统一改为：
-
-```matlab
-result = reconstruct_fi_scanline_manual(filename, opts);
-```
-
-所有结果通过 `result.envelope`、`result.x_axis` 等显式返回。后续算法代码不再依赖脚本间共享 workspace。
-
-
----
-
-## RTB 推荐运行顺序
-
-先跑最重要的主对照：
-
-```matlab
-filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-
-target_x_mm = -4.917;
-target_z_mm = 20.21;
+compare_receive_aperture_full_vs_fnumber
 
 compare_conventional_vs_rtb
-```
 
-然后做 reference validation：
-
-```matlab
+delay_model = 'blended';
 validate_manual_rtb_vs_ustb
-```
-
-验证通过后再做参数实验，例如：
-
-```matlab
-experiment = 'delay_model';
-experiment_rtb_parameter_sweep
-```
-
-或：
-
-```matlab
-experiment = 'wave_stride';
-experiment_rtb_parameter_sweep
-```
-
-RTB 比 conventional FI-DAS 计算量大很多，因此参数探索默认使用较小的 `n_z`。确认趋势以后再提高到 512 / 1024。
-
+~~~
 
 ---
 
-## Hybrid focal-band seam 与 Blended model
+## Conventional core
 
-在当前真实 CIRS focused dataset 上，Manual Hybrid RTB 与 USTB Hybrid RTB 都观察到 focal region 的横向接缝。
+~~~matlab
+opts = struct();
+opts.z_min = 5e-3;
+opts.z_max = 45e-3;
+opts.n_z = 1024;
+opts.receive_aperture_mode = 'f_number';
+opts.receive_f_number = 1.7;
 
-原因是 Hybrid 使用固定 `pw_margin` 做 hard switch：
+result = reconstruct_fi_scanline_manual(filename,opts);
+~~~
 
-```text
-spherical -> plane -> spherical
-```
+主要输出：`das_analytic`、`envelope`、`image_db`、`x_axis`、`z_axis`、`active_channel_count`。
 
-切换边界处两种 path model 对 off-axis pixels 不一定严格相等。
+---
 
-当前 Manual RTB 已同步支持 USTB 的连续 `blended` model：
+## RTB core
 
-```matlab
+教学主线默认使用 continuous blended Tx-delay model：
+
+~~~matlab
+opts = struct();
+opts.z_min = 5e-3;
+opts.z_max = 45e-3;
+opts.n_z = 512;
+opts.x_upsample = 4;
+
 opts.tx_delay_model = 'blended';
 opts.blending_power = 0.5;
-```
+opts.tx_f_number = 2;
+opts.tx_min_aperture = 3e-3;
+opts.tx_window = 'tukey25';
 
-三方实验：
+opts.rx_aperture_mode = 'f_number';
+opts.rx_f_number = 1.7;
 
-```matlab
+result = reconstruct_fi_rtb_manual(filename,opts);
+~~~
+
+主要输出：`rtb_analytic`、`envelope`、`image_db`、`x_axis`、`z_axis`、`tx_weight_sum`、`active_tx_count`。
+
+---
+
+## 参数实验
+
+~~~matlab
 experiment = 'delay_model';
 experiment_rtb_parameter_sweep
-```
+~~~
 
-现在比较：
+也可测试 `x_upsample`、`tx_fnumber`、`tx_min_aperture`、`pw_margin`、`rx_fnumber`、`wave_stride`、`blending_power`。
 
-```text
-spherical
-hybrid
-blended
-```
-
-如果本地 USTB 版本也包含 `spherical_transmit_delay_model.blended`，还可以：
-
-```matlab
-delay_model = 'blended';
-blending_power = 0.5;
-validate_manual_rtb_vs_ustb
-```
-
-若本地 USTB 版本较旧、不包含该枚举，需要先更新 USTB，Manual blended 重建本身不依赖 USTB 的 DAS。
-
+一次只改一个因素。参数探索先用较低 `n_z`，确认趋势后再提高 grid density。
 
 ---
 
-## 诊断 RTB 左右暗边
+## 保持教学主线纯净
 
-运行：
-
-```matlab
-filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-diagnose_rtb_edge_darkening
-```
-
-脚本默认使用：
-
-```text
-Blended Tx delay
-blending_power = 0.5
-Tx F# = 2
-Tx minimum aperture = 3 mm
-Tx Tukey25
-x_upsample = 4
-```
-
-然后分别重建：
-
-```text
-Rx F# = 1.7
-Full Rx aperture
-```
-
-主要看四类结果：
-
-```text
-active_tx_count
-tx_weight_sum
-active_rx_count
-lateral median-envelope profile
-```
-
-这一步只用于定因，不自动做亮度补偿。
-
-### 右侧暗带：RF 时间参考的针对性检查
-
-2026-10-01 在本地 CIRS points 数据上复现了 RTB 特有的额外损失。
-Conventional 也有边缘 roll-off，不能据此排除 RTB 的跨 Tx 相干抵消。
-
-```matlab
-filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
-diagnose_rtb_tx_timing
-```
-
-这个脚本对比原始/修正的 RTB 和 Conventional，导出共享幅度参考图、
-绝对幅度比、Tx coherence，以及三个独立深度区间的相邻 Tx 相位。
-当前修正显式检验“右侧孔径截断改变末端阵元时间参考”的几何假设；
-使用 16 个 pitch 的半孔径，不会对其他文件自动启用。
-
-核心新增 `opts.tx_time_offsets`（秒，按原始 Tx 顺序），在 RF 插值前
-加到查询时间；两种重建均使用同一向量。默认空向量保持原行为。
-核心也可接收第三个 `channel_data` 参数，供这些对照复用同一份 UFF 数据。
-
-```matlab
-opts.tx_time_offsets = tx_time_offsets;  % 诊断脚本的输出，单位 s
-rtb = reconstruct_fi_rtb_manual(filename,opts);
-```
-
-`rtb_corrected` 是诊断脚本已经算出的修正结果，不需要再重建。
-`test_rtb_tx_timing` 用已知时间偏移的合成点靶检验偏移符号与相干恢复。
-详细实测与限制见 `../../artifacts/rtb_darkening/README.md`。
-
-
----
-
-## 跨 FI 数据集检查 Tx timing
-
-不要把 `right_edge_tx_time_offsets()` 直接套到其它数据。
-
-先运行：
-
-```matlab
-data_dir = '../../data';
-audit_fi_datasets_tx_timing
-```
-
-默认检查：
-
-```text
-L7_FI_Verasonics_CIRS_points.uff
-L7_FI_TheGB.uff
-L7_FI_carotid_cross_1.uff
-L7_FI_carotid_cross_2.uff
-Alpinion_L3-8_FI_hypoechoic.uff
-```
-
-其中：
-
-- `L7_FI_TheGB.uff` 是最重要的同平台/同类 focused acquisition 对照；
-- 两份 carotid 检查真实人体 acquisition 是否复现；
-- Alpinion 数据作为不同平台负对照。
-
-脚本默认使用较轻量的：
-
-```text
-n_z = 256
-x_upsample = 2
-```
-
-并且显式设置：
-
-```matlab
-tx_time_offsets = [];
-```
-
-即**不做任何 Tx timing 修正**。
-
-输出写入：
-
-```text
-artifacts/fi_timing_audit/
-```
-
-重点看：
-
-```text
-RTB_minus_FI_left/center/right
-RTB_coherence_left/center/right
-adj_phase_left/middle/right
-adj_corr_left/middle/right
-```
-
-如果只有 CIRS points 出现明显右侧异常，当前 correction 应继续视为该数据特例。
-如果多个 L7/Verasonics FI 数据出现相似右侧 onset / phase drift，再研究共享的采集或 UFF timing convention。
+本目录不保留针对某一异常数据集的 timing repair、edge-darkening diagnosis、acquisition-specific hypothesis 或临时 audit code。若以后遇到异常 acquisition，应放到独立研究分支处理，而不是污染通用教学实现。
