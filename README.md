@@ -13,8 +13,8 @@
 | 章节 | 内容 | 状态 |
 |---|---|---|
 | 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
-| 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | 进行中 |
-| 第 2 章 | CF / GCF | 计划中 |
+| 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
+| 第 2 章 | CF / GCF | **下一章** |
 | 第 3 章 | MV / MVDR / Capon | 计划中 |
 | 第 4 章 | DMAS / fDMAS | 计划中 |
 | 第 5 章 | SLSC | 计划中 |
@@ -72,6 +72,8 @@ analyze_point_target_psf
 compare_receive_aperture_full_vs_fnumber
 
 compare_conventional_vs_rtb
+compare_rtb_spherical_plane_blended
+
 delay_model = 'blended';
 validate_manual_rtb_vs_ustb
 
@@ -118,3 +120,17 @@ $$
 代码能运行不等于 beamforming 实现正确。真实数据实验至少检查：shape / axis、RF/IQ、fs / initial_time、probe geometry、transmit sequence、wave delay、Tx/Rx delay、interpolation、aperture、coherent/incoherent combination、amplitude/power/dB，以及 reference validation。
 
 原始 UFF 数据不提交到 GitHub。下载信息、MD5 和用途见 **[data/README.md](./data/README.md)**。
+
+---
+
+## 下一章
+
+第 1 章完成后，下一步进入：
+
+**第 2 章：Coherence Factor（CF）与 Generalized Coherence Factor（GCF）**
+
+第 0–1 章解决“如何把 channel data 按传播模型正确对齐”。
+
+从第 2 章开始，问题变成：
+
+> **已经对齐的 aperture data，怎样衡量通道间相干性，并利用这种相干性改善 DAS？**
