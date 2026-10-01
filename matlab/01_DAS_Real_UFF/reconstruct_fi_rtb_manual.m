@@ -40,7 +40,8 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
 %   x_upsample             default 4
 %   n_x                    [] -> N_waves*x_upsample
 %
-%   tx_delay_model         'spherical' / 'hybrid' / 'blended', default 'blended'
+%   tx_delay_model         'spherical' / 'plane' / 'hybrid' / 'blended', default 'blended'
+%                          'plane' is a teaching-only global plane model
 %   pw_margin              [m], default 1e-3 (hybrid only)
 %   blending_power         default 0.5 (blended only)
 %   tx_f_number            default 2
@@ -86,9 +87,12 @@ function out = reconstruct_fi_rtb_manual(filename, opts)
 % spherical discontinuity at z = z_focus, but the hard switch can create
 % visible seams at the band boundaries.
 %
-% The newer USTB 'blended' model mixes spherical and plane delays
-% continuously and is therefore useful for testing whether such seams are
-% caused by the hard hybrid transition.
+% The teaching-only 'plane' mode applies the local plane-path expression
+% everywhere. It is intentionally crude and exists only to show why the
+% plane approximation should not be used globally.
+%
+% The USTB-compatible 'blended' model mixes spherical and plane delays
+% continuously and is the Chapter 1 teaching baseline.
 
     if nargin < 1 || isempty(filename)
         filename = '../../data/L7_FI_TheGB.uff';
@@ -431,9 +435,10 @@ function opts = apply_defaults(opts)
            opts.wave_stride == round(opts.wave_stride), ...
         'wave_stride must be a positive integer.');
 
-    valid_models = {'spherical','hybrid','blended'};
+    valid_models = {'spherical','plane','hybrid','blended'};
     assert(any(strcmpi(opts.tx_delay_model,valid_models)), ...
-        'tx_delay_model must be spherical, hybrid, or blended.');
+        ['tx_delay_model must be spherical, plane, hybrid, ' ...
+         'or blended.']);
 
     valid_tx_windows = {'boxcar','tukey25'};
     assert(any(strcmpi(opts.tx_window,valid_tx_windows)), ...
@@ -466,6 +471,11 @@ function tau_tx = focused_tx_delay_rtb(wave,x,z,opts)
 % Use spherical delay away from focus and locally plane propagation inside
 % a hard |z-source.z| <= pw_margin band. The hard transition may itself
 % create seams at the band boundaries.
+%
+% PLANE MODEL (TEACHING ONLY)
+% ---------------------------
+% Apply the local plane-path approximation everywhere. This intentionally
+% ignores lateral path curvature and is NOT the recommended RTB model.
 %
 % BLENDED MODEL
 % -------------
@@ -503,6 +513,13 @@ function tau_tx = focused_tx_delay_rtb(wave,x,z,opts)
 
         case 'spherical'
             path_length = spherical_path;
+
+        case 'plane'
+            % Teaching-only experiment: use the local plane approximation
+            % globally. Because plane_path is independent of x for this
+            % linear-scan convention, this deliberately ignores the
+            % off-axis spherical curvature away from the focal region.
+            path_length = plane_path;
 
         case 'hybrid'
             % Hard replacement inside a focal-depth band.
