@@ -22,6 +22,7 @@
 | <code>compare_conventional_vs_rtb.m</code> | 是 | Conventional FI、纯 lateral interpolation、Hybrid RTB 三方对比，区分“采样变密”和“真正重新利用 RF/Tx dimension” |
 | <code>validate_manual_rtb_vs_ustb.m</code> | 是 | Manual Hybrid RTB vs USTB Hybrid RTB 数值交叉验证 |
 | <code>experiment_rtb_parameter_sweep.m</code> | 是 | 一次只改变一个 RTB 参数：delay model、x upsample、Tx/Rx F#、minimum aperture、PW margin、wave stride |
+| <code>diagnose_rtb_edge_darkening.m</code> | 是 | 诊断 RTB 左右暗边：Tx count / Tx weight sum / active Rx count / Full-Rx vs F#-Rx / 横向背景亮度趋势 |
 
 ---
 
@@ -237,3 +238,44 @@ validate_manual_rtb_vs_ustb
 ```
 
 若本地 USTB 版本较旧、不包含该枚举，需要先更新 USTB，Manual blended 重建本身不依赖 USTB 的 DAS。
+
+
+---
+
+## 诊断 RTB 左右暗边
+
+运行：
+
+```matlab
+filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+diagnose_rtb_edge_darkening
+```
+
+脚本默认使用：
+
+```text
+Blended Tx delay
+blending_power = 0.5
+Tx F# = 2
+Tx minimum aperture = 3 mm
+Tx Tukey25
+x_upsample = 4
+```
+
+然后分别重建：
+
+```text
+Rx F# = 1.7
+Full Rx aperture
+```
+
+主要看四类结果：
+
+```text
+active_tx_count
+tx_weight_sum
+active_rx_count
+lateral median-envelope profile
+```
+
+这一步只用于定因，不自动做亮度补偿。
