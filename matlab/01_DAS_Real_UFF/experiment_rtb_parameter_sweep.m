@@ -22,7 +22,7 @@
 % Example:
 %   addpath(genpath('D:/USTB'));
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+%   filename = '../../data/L7_FI_TheGB.uff';
 %   experiment = 'wave_stride';
 %   experiment_rtb_parameter_sweep
 
@@ -32,16 +32,10 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 if ~exist('experiment','var')
     experiment = 'delay_model';
-end
-if ~exist('target_x_mm','var')
-    target_x_mm = -4.917;
-end
-if ~exist('target_z_mm','var')
-    target_z_mm = 20.21;
 end
 if ~exist('z_min','var')
     z_min = 5e-3;
@@ -61,7 +55,7 @@ base.n_z = n_z;
 
 base.x_upsample = 4;
 
-base.tx_delay_model = 'hybrid';
+base.tx_delay_model = 'blended';
 base.pw_margin = 1e-3;
 base.blending_power = 0.5;
 
@@ -82,15 +76,18 @@ N = numel(cases);
 results = cell(N,1);
 metrics = repmat(struct(),N,1);
 
-x0 = target_x_mm*1e-3;
-z0 = target_z_mm*1e-3;
+target_is_set = exist('target_x_mm','var') && exist('target_z_mm','var');
 
 fprintf('============================================================\n');
 fprintf(' RTB PARAMETER SWEEP: %s\n',upper(experiment));
 fprintf('============================================================\n');
 fprintf('Cases: %d\n',N);
-fprintf('Target neighborhood: x %.3f mm, z %.3f mm\n\n', ...
-    target_x_mm,target_z_mm);
+if target_is_set
+    fprintf('Target neighborhood: x %.3f mm, z %.3f mm\n\n', ...
+        target_x_mm,target_z_mm);
+else
+    fprintf('Target neighborhood: select interactively from case 1.\n\n');
+end
 
 for k = 1:N
     fprintf('Case %d / %d: %s\n',k,N,labels{k});
@@ -98,6 +95,28 @@ for k = 1:N
     tic;
     results{k} = reconstruct_fi_rtb_manual(filename,cases{k});
     metrics(k).runtime_s = toc;
+
+    if k == 1 && ~target_is_set
+        figure('Color','w');
+        imagesc(results{k}.x_axis*1e3,results{k}.z_axis*1e3, ...
+            to_db(results{k}.envelope,60));
+        set(gca,'YDir','reverse');
+        axis image;
+        xlabel('x (mm)');
+        ylabel('z (mm)');
+        title('Select one isolated point target for all sweep cases');
+        caxis([-60 0]);
+        colorbar;
+        colormap gray;
+        [target_x_mm,target_z_mm] = ginput(1);
+        close(gcf);
+        target_is_set = true;
+        fprintf('Selected target: x %.3f mm, z %.3f mm\n\n', ...
+            target_x_mm,target_z_mm);
+    end
+
+    x0 = target_x_mm*1e-3;
+    z0 = target_z_mm*1e-3;
 
     peak = refine_local_peak( ...
         results{k}.envelope, ...
