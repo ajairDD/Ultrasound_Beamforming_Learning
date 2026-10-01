@@ -28,7 +28,7 @@ clearvars -except filename;
 clc;
 
 if ~exist('filename', 'var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 
 assert(exist(filename, 'file') == 2, 'File not found: %s', filename);
