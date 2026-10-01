@@ -16,7 +16,7 @@
 % Suggested use:
 %   addpath(genpath('D:/USTB'));  % change to your own path
 %   cd matlab/01_DAS_Real_UFF
-%   filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+%   filename = '../../data/L7_FI_TheGB.uff';
 %   das_fi_scanline_manual
 
 clearvars -except filename z_min z_max n_z frame_index ...
@@ -26,7 +26,7 @@ close all;
 
 %% User-facing parameters
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_Verasonics_CIRS_points.uff';
+    filename = '../../data/L7_FI_TheGB.uff';
 end
 
 if ~exist('z_min','var')
