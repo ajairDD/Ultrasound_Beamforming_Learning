@@ -11,12 +11,13 @@
 % definitions.
 %
 % Default:
-%   GCF M0 = 2
+%   GCF M0 = 1
 %
-% Under the USTB-compatible convention used here:
+% Scientific/teaching convention:
 %
-%   M0 <= 1 -> DC only -> ordinary CF
-%   M0 = 2  -> bins {-2,-1,0,+1,+2}
+%   M0 = 0 -> DC only -> ordinary CF
+%   M0 = 1 -> bins {-1,0,+1}
+%   M0 = 2 -> bins {-2,-1,0,+1,+2}
 %
 % Run:
 %   addpath(genpath('D:/USTB'));
@@ -43,7 +44,7 @@ if ~exist('receive_f_number','var')
     receive_f_number = 1.7;
 end
 if ~exist('M0','var')
-    M0 = 2;
+    M0 = 1;
 end
 
 common = struct();
@@ -87,7 +88,7 @@ assert(scaled_error < 1e-10, ...
 
 %% 4. Important identity: DC-only GCF must equal ordinary CF
 check_opts = common;
-check_opts.M0 = 1;
+check_opts.M0 = 0;
 check_opts.verbose = false;
 
 gcf_dc = reconstruct_fi_gcf_manual(filename,check_opts);
@@ -96,7 +97,7 @@ cf_gcf_dc_error = ...
     max(abs(cf.cf_map(:)-gcf_dc.gcf_map(:)));
 
 fprintf('\nIdentity check\n');
-fprintf('  max |CF - GCF(M0=1)| : %.6e\n', ...
+fprintf('  max |CF - GCF(M0=0)| : %.6e\n', ...
     cf_gcf_dc_error);
 
 assert(cf_gcf_dc_error < 1e-10, ...
