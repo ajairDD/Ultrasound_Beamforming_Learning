@@ -562,6 +562,7 @@ coherent_sum = sum(aligned_active_samples);
 
 如果 relative complex error 超过极小容差，脚本会直接报错。
 
+> **数值验证说明**：这一节与 Chapter 1 必须使用完全相同的 metadata 数值类型、delay 算法和 interpolation。主要校验使用 `|sum(s)-DAS| / sum(|s|)`；不要只除以 `|DAS|`，因为强相消 pixel 的 DAS complex sum 可能接近 0，导致所谓“relative error”被人为放大。
 ### 13.7 Shape 要牢牢记住
 
 ~~~text
