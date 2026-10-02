@@ -14,7 +14,7 @@
 |---|---|---|
 | 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
 | 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
-| 第 2 章 | CF / GCF | **下一章** |
+| 第 2 章 | CF / GCF | **进行中** |
 | 第 3 章 | MV / MVDR / Capon | 计划中 |
 | 第 4 章 | DMAS / fDMAS | 计划中 |
 | 第 5 章 | SLSC | 计划中 |
