@@ -172,3 +172,38 @@ aperture 完全随机不相干
 一个平滑 phase ramp 也可能让 DC 能量很低，但其能量仍集中在邻近 low spatial-frequency bins。
 
 后续正式 GCF 实现时，会再明确教学参数 K 与 USTB / 文献 M0 convention 的对应关系。
+---
+
+## 第六课：完整 Manual GCF
+
+核心：
+
+~~~text
+reconstruct_fi_gcf_manual.m
+~~~
+
+对比入口：
+
+~~~matlab
+M0 = 2;
+compare_manual_das_cf_gcf
+~~~
+
+正式 GCF 使用 USTB-compatible `M0` convention：
+
+~~~text
+M0 <= 1 -> DC only -> CF
+M0 = 2  -> bins -2...+2
+M0 = 4  -> bins -4...+4
+~~~
+
+注意：这和上一节纯教学 demo 的 `K=1 -> {-1,0,+1}` 不同。
+
+脚本会验证：
+
+~~~text
+CF core DAS == GCF core DAS
+GCF(M0=1) == CF
+~~~
+
+然后显示 DAS / CF / GCF 的 common-reference 图像和权重图。
