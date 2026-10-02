@@ -109,3 +109,29 @@ cf_db_common
 `cf_db_self` 使用 CF 图自己的 peak，用来看 morphology。
 
 脚本还会重新调用 Chapter 1 DAS，并验证 Chapter 2 内部的 DAS 没有发生变化。
+---
+
+## 第四课：DAS vs CF point-target profile
+
+运行：
+
+~~~matlab
+analyze_das_vs_cf_point_target
+~~~
+
+点击一个相对孤立的 point-like target。
+
+输出：
+
+~~~text
+peak location / shift
+target peak attenuation
+lateral -6 dB FWHM
+axial -6 dB FWHM
+lateral -20 dB width
+axial -20 dB width
+~~~
+
+注意：conventional FI lateral sampling 较粗；若 FWHM 跨少于 3 个 scanline intervals，只能把横向宽度当作 sampling-limited 粗估。
+
+-20 dB width 只用于观察 profile skirt，不作为严格 sidelobe metric。
