@@ -85,11 +85,11 @@ cd = uff.read_object(filename,'/channel_data');
 probe = cd.probe;
 sequence = cd.sequence;
 
-fs = double(cd.sampling_frequency);
-t0 = double(cd.initial_time);
-c = double(cd.sound_speed);
+fs = cd.sampling_frequency;
+t0 = cd.initial_time;
+c = cd.sound_speed;
 
-assert(abs(double(cd.modulation_frequency)) < eps, ...
+assert(abs(cd.modulation_frequency) < eps, ...
     'This teaching script currently expects real RF data.');
 assert(isreal(cd.data), ...
     'This teaching script currently expects real RF channel data.');
@@ -165,9 +165,9 @@ for k = 1:3
 
     % Rx delay: one value per receive element.
     rx_distance = sqrt( ...
-        (double(probe.x(:).') - x_pixel).^2 + ...
-        (double(probe.y(:).') - 0).^2 + ...
-        (double(probe.z(:).') - z_pixel).^2);
+        (probe.x(:).' - x_pixel).^2 + ...
+        (probe.y(:).' - 0).^2 + ...
+        (probe.z(:).' - z_pixel).^2);
 
     tau_rx = rx_distance / c;
 
@@ -179,7 +179,7 @@ for k = 1:3
             analytic_wave,t0,fs,query_time);
 
     rx_weights = receive_weights_local( ...
-        double(probe.x(:).'), ...
+        probe.x(:).', ...
         x_pixel, ...
         z_pixel, ...
         receive_f_number);
@@ -210,14 +210,26 @@ for k = 1:3
     % Verify this aperture vector reproduces the Chapter-1 DAS pixel.
     das_reference = das.das_analytic(iz,iw);
 
-    reconstruction_error = ...
-        abs(coherent_sum-das_reference) / ...
-        (abs(das_reference)+eps);
+    reconstruction_abs_error = ...
+        abs(coherent_sum-das_reference);
 
-    assert(reconstruction_error < 1e-10, ...
+    % A relative error normalized only by |DAS| is numerically unstable
+    % when the coherent sum is small because of channel cancellation.
+    % Use the total active-aperture magnitude as the primary scale.
+    aperture_scale = sum(abs(s));
+
+    reconstruction_scaled_error = ...
+        reconstruction_abs_error / ...
+        (aperture_scale + eps);
+
+    reconstruction_das_relative_error = ...
+        reconstruction_abs_error / ...
+        (abs(das_reference) + eps);
+
+    assert(reconstruction_scaled_error < 1e-10, ...
         ['Extracted aperture vector does not reproduce Chapter-1 DAS. ' ...
-         'Relative complex error = %.3e'], ...
-        reconstruction_error);
+         'Aperture-scaled complex error = %.3e'], ...
+        reconstruction_scaled_error);
 
     points(k).iw = iw;
     points(k).iz = iz;
@@ -240,7 +252,9 @@ for k = 1:3
     points(k).spectrum = spectrum;
 
     points(k).das_reference = das_reference;
-    points(k).relative_check_error = reconstruction_error;
+    points(k).absolute_check_error = reconstruction_abs_error;
+    points(k).aperture_scaled_check_error = reconstruction_scaled_error;
+    points(k).das_relative_check_error = reconstruction_das_relative_error;
 
     fprintf('P%d\n',k);
     fprintf('  clicked       : x %.3f mm, z %.3f mm\n', ...
@@ -251,7 +265,11 @@ for k = 1:3
     fprintf('  active Rx     : %d / %d\n',M,cd.N_channels);
     fprintf('  CF            : %.6f\n',CF);
     fprintf('  |DAS sum|     : %.6g\n',abs(coherent_sum));
-    fprintf('  DAS check err : %.3e\n\n',reconstruction_error);
+    fprintf('  DAS abs err   : %.3e\n',reconstruction_abs_error);
+    fprintf('  scaled err    : %.3e (primary check)\n', ...
+        reconstruction_scaled_error);
+    fprintf('  DAS-rel err   : %.3e (can inflate near cancellation)\n\n', ...
+        reconstruction_das_relative_error);
 end
 
 %% ------------------------------------------------------------------------
@@ -386,9 +404,9 @@ fprintf(['  4) coherent aperture vectors concentrate more spatial-spectrum\n' ..
 
 function tau_tx = focused_tx_delay_spherical_local(wave,x,y,z)
 
-    sx = double(wave.source.x);
-    sy = double(wave.source.y);
-    sz = double(wave.source.z);
+    sx = wave.source.x;
+    sy = wave.source.y;
+    sz = wave.source.z;
 
     d = sqrt( ...
         (sx-x).^2 + ...
@@ -401,10 +419,12 @@ function tau_tx = focused_tx_delay_spherical_local(wave,x,y,z)
         signed_d = d;
     end
 
+    source_reference_distance = wave.source.distance;
+
     tau_tx = ...
-        (signed_d + double(wave.source.distance)) ...
-        / double(wave.sound_speed) ...
-        - double(wave.delay);
+        (signed_d + source_reference_distance) ...
+        / wave.sound_speed ...
+        - wave.delay;
 end
 
 function [values,valid] = ...
