@@ -1086,14 +1086,15 @@ compare_manual_das_cf_gcf.m
 
 ### 22.1 正式代码中的 M0 convention
 
-为了后续能和 USTB 直接验证，正式 GCF core 不再使用上一节纯教学参数 K，而使用 USTB OMHR 风格的 `M0`。
-
-本项目当前定义：
+正式 Manual GCF 采用清晰的低频半宽定义：
 
 ~~~text
-M0 <= 1
+M0 = 0
     -> 只使用 DC
     -> GCF 退化为普通 CF
+
+M0 = 1
+    -> 使用 {-1,0,+1}
 
 M0 = 2
     -> 使用 {-2,-1,0,+1,+2}
@@ -1102,15 +1103,25 @@ M0 = 4
     -> 使用 {-4,...,0,...,+4}
 ~~~
 
-需要特别注意：USTB 当前 legacy implementation 对 `M0=1` 仍然只保留 DC，而不是 `{-1,0,+1}`。所以教程里上一节的 `K=1` 和正式代码里的 `M0=1` **不是同一个约定**。
+也就是说：
 
-默认正式实验使用：
+> **M0 就是以 DC 为中心的 low-spatial-frequency half-width。**
+
+这一约定和前面的教学参数 K 保持一致，因此不再让同一个整数在两处代表不同含义。
+
+需要单独说明 USTB：当前 `generalized_coherence_factor` 和 `generalized_coherence_factor_OMHR` 代码存在 legacy special case：`M0=1` 仍只取 DC，只有 `M0>1` 才展开成 `{-M0,...,+M0}`。
+
+因此：
+
+> **本项目不把 USTB 的这个 legacy special case 当成 GCF 主定义。以后做 USTB reference validation 时，会显式做参数映射。**
+
+本章当前推荐先从：
 
 ~~~text
-M0 = 2
+M0 = 1
 ~~~
 
-这样既已经是 generalized low-frequency band，又能和 USTB convention 清晰对应。
+开始，因为它是比 CF 最小幅度的 generalized low-frequency extension。
 
 ### 22.2 单个 pixel 的 GCF
 
@@ -1149,7 +1160,7 @@ GCF-weighted pixel = GCF × DAS
 程序会额外计算：
 
 ~~~text
-GCF(M0=1)
+GCF(M0=0)
 ~~~
 
 因为这时只保留 DC，根据 Parseval 关系它必须和 ordinary CF 完全等价。
@@ -1157,7 +1168,7 @@ GCF(M0=1)
 所以 `compare_manual_das_cf_gcf.m` 会检查：
 
 ~~~text
-max |CF - GCF(M0=1)|
+max |CF - GCF(M0=0)|
 ~~~
 
 应该接近浮点误差。
@@ -1169,7 +1180,7 @@ max |CF - GCF(M0=1)|
 ~~~matlab
 cd matlab/02_CF_GCF
 
-M0 = 2;
+M0 = 1;
 compare_manual_das_cf_gcf
 ~~~
 
@@ -1197,3 +1208,81 @@ GCF - CF weight map
 - M0 增大后背景也可能被更多保留。
 
 这些都必须以实际 TheGB 运行结果为准，不能提前当作已验证结论。
+---
+
+## 23. 已验证结果：M0=2 在 TheGB 上过于宽松
+
+真实 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 512` 下，已经验证：
+
+~~~text
+CF statistics
+  median = 0.178151
+  mean   = 0.237657
+  max    = 0.979233
+
+GCF statistics, M0=2
+  median = 0.748523
+  mean   = 0.706695
+  max    = 1.000000
+~~~
+
+同时：
+
+~~~text
+max |CF - legacy-DC GCF| ≈ 1e-15
+~~~
+
+说明上一版代码的 CF/GCF 数学连接本身没有问题；真正的问题是 `M0=2` 的 5-bin low-frequency band 对这份数据过于宽松。
+
+图像上表现为：
+
+- `DAS × CF` 对 background / speckle suppression 很强；
+- `DAS × GCF(M0=2)` 与原始 DAS 非常接近；
+- `GCF - CF` 在大片区域显著为正；
+- GCF map 大量 pixel 权重在 0.6～1 附近。
+
+因此当前数据支持的结论是：
+
+> **对于 TheGB 这组正常 focused-imaging phantom 数据，M0=2 会保留过多 low-spatial-frequency energy；如果评价目标是 point-target突出和强背景抑制，它明显比 CF 更宽松。**
+
+这不代表 GCF 普遍不如 CF。它说明 `M0` 必须和任务一起选择。
+
+---
+
+## 24. 第七小节：M0 参数扫描
+
+现在直接比较：
+
+~~~text
+M0 = 0  -> CF
+M0 = 1  -> 3-bin GCF
+M0 = 2  -> 5-bin GCF
+M0 = 4  -> 9-bin GCF
+~~~
+
+运行：
+
+~~~matlab
+experiment_gcf_m0_sweep
+~~~
+
+为了参数实验速度，默认使用：
+
+~~~text
+n_z = 256
+~~~
+
+确认趋势后，再把选中的 M0 用 `n_z=512` 重跑。
+
+脚本会输出：
+
+- 各 M0 的 common-reference GCF image；
+- 各 M0 的 coherence-weight map；
+- median / mean / min / max weight；
+- median/mean weight 随 M0 的变化。
+
+这一步的目的不是找一个“永远最好的 M0”，而是看清：
+
+> **M0 从 0 增大时，算法是怎样一步步从严格 CF 走向越来越宽松的 low-frequency coherence。**
+
+后续再根据 point target、contrast、speckle preservation 或 aberration robustness 决定评价标准。
