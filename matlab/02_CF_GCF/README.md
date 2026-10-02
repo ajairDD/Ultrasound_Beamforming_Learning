@@ -185,25 +185,54 @@ reconstruct_fi_gcf_manual.m
 对比入口：
 
 ~~~matlab
-M0 = 2;
+M0 = 1;
 compare_manual_das_cf_gcf
 ~~~
 
-正式 GCF 使用 USTB-compatible `M0` convention：
+正式 Manual GCF 使用统一的 low-frequency half-width `M0`：
 
 ~~~text
-M0 <= 1 -> DC only -> CF
-M0 = 2  -> bins -2...+2
-M0 = 4  -> bins -4...+4
+M0 = 0 -> DC only -> CF
+M0 = 1 -> bins -1,0,+1
+M0 = 2 -> bins -2...+2
+M0 = 4 -> bins -4...+4
 ~~~
 
-注意：这和上一节纯教学 demo 的 `K=1 -> {-1,0,+1}` 不同。
+USTB 当前实现对 `M0=1` 有 legacy special case；后续做 reference validation 时单独映射，不改变本项目主定义。
 
 脚本会验证：
 
 ~~~text
 CF core DAS == GCF core DAS
-GCF(M0=1) == CF
+GCF(M0=0) == CF
 ~~~
 
 然后显示 DAS / CF / GCF 的 common-reference 图像和权重图。
+---
+
+## 第七课：GCF M0 参数扫描
+
+运行：
+
+~~~matlab
+experiment_gcf_m0_sweep
+~~~
+
+默认比较：
+
+~~~text
+M0 = [0 1 2 4]
+~~~
+
+其中：
+
+~~~text
+M0=0 -> CF
+M0=1 -> 3-bin GCF
+M0=2 -> 5-bin GCF
+M0=4 -> 9-bin GCF
+~~~
+
+参数扫描默认 `n_z=256` 以缩短运行时间。
+
+先用它看趋势；确定感兴趣的 M0 后，再用 `compare_manual_das_cf_gcf` 以 `n_z=512` 做正式比较。
