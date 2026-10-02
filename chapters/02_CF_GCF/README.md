@@ -1042,3 +1042,158 @@ K = 0
 > **在保留低阶 coherent structure 与排除高 spatial-frequency incoherence 之间选择一个合理 low-frequency band。**
 
 下一小节才正式把这个概念放回 `L7_FI_TheGB.uff`，实现完整 Manual GCF 图像。
+---
+
+## 21. 已验证结果：CF 局限与 GCF 动机
+
+synthetic aperture-vector 实验得到：
+
+~~~text
+Perfect coherence
+  CF      = 1.000000
+  GCF K=1 = 1.000000
+
+Smooth 1-bin phase ramp
+  CF      = 0.000000
+  GCF K=1 = 1.000000
+
+Random phase
+  CF      = 0.026378
+  GCF K=1 = 0.039178
+  GCF K=2 = 0.102806
+  GCF K=4 = 0.206858
+~~~
+
+这组结果非常直接地说明：
+
+- CF 对 exact-DC coherence 很敏感；
+- 一个确定性的平滑 phase ramp 可以让 CF 变成 0，但它并不是随机不相干；
+- 把邻近 low-spatial-frequency bins 纳入后，GCF 可以恢复这种低阶结构；
+- low-frequency band 变宽时，随机相位也会被越来越多地计入，因此带宽不能无限增大。
+
+---
+
+## 22. 第六小节：完整 Manual GCF 图像
+
+现在把 GCF 放回真实 `L7_FI_TheGB.uff`。
+
+新增：
+
+~~~text
+reconstruct_fi_gcf_manual.m
+compare_manual_das_cf_gcf.m
+~~~
+
+### 22.1 正式代码中的 M0 convention
+
+为了后续能和 USTB 直接验证，正式 GCF core 不再使用上一节纯教学参数 K，而使用 USTB OMHR 风格的 `M0`。
+
+本项目当前定义：
+
+~~~text
+M0 <= 1
+    -> 只使用 DC
+    -> GCF 退化为普通 CF
+
+M0 = 2
+    -> 使用 {-2,-1,0,+1,+2}
+
+M0 = 4
+    -> 使用 {-4,...,0,...,+4}
+~~~
+
+需要特别注意：USTB 当前 legacy implementation 对 `M0=1` 仍然只保留 DC，而不是 `{-1,0,+1}`。所以教程里上一节的 `K=1` 和正式代码里的 `M0=1` **不是同一个约定**。
+
+默认正式实验使用：
+
+~~~text
+M0 = 2
+~~~
+
+这样既已经是 generalized low-frequency band，又能和 USTB convention 清晰对应。
+
+### 22.2 单个 pixel 的 GCF
+
+对 active aligned aperture vector：
+
+~~~text
+s = [s1, s2, ... , sM]
+~~~
+
+先做 receive-channel FFT：
+
+~~~matlab
+X = fft(s);
+~~~
+
+然后：
+
+~~~text
+GCF
+=
+low-spatial-frequency spectral energy
+-------------------------------------
+total aperture spectral energy
+~~~
+
+最后：
+
+~~~text
+GCF-weighted pixel = GCF × DAS
+~~~
+
+和 CF 一样，GCF 不重新计算 Tx/Rx delay；改变的是 aligned aperture data 的 coherence weighting。
+
+### 22.3 一个必须通过的 identity check
+
+程序会额外计算：
+
+~~~text
+GCF(M0=1)
+~~~
+
+因为这时只保留 DC，根据 Parseval 关系它必须和 ordinary CF 完全等价。
+
+所以 `compare_manual_das_cf_gcf.m` 会检查：
+
+~~~text
+max |CF - GCF(M0=1)|
+~~~
+
+应该接近浮点误差。
+
+这个验证比“图看起来差不多”更重要，因为它直接检查了 CF 与 GCF 数学定义的连接。
+
+### 22.4 运行
+
+~~~matlab
+cd matlab/02_CF_GCF
+
+M0 = 2;
+compare_manual_das_cf_gcf
+~~~
+
+输出重点包括：
+
+~~~text
+DAS
+DAS × CF
+DAS × GCF
+
+CF map
+GCF map
+
+GCF - CF weight map
+~~~
+
+前三张图共用 DAS peak 作为 amplitude reference，所以可以直接观察真实 suppression 强弱。
+
+### 22.5 预期但尚未验证的现象
+
+在真实数据运行之前，只能提出工作预期：
+
+- GCF 通常会比 CF less aggressive，因为它允许邻近 low-frequency energy；
+- 某些 CF 很低但存在 smooth phase structure 的区域，GCF weight 可能明显升高；
+- M0 增大后背景也可能被更多保留。
+
+这些都必须以实际 TheGB 运行结果为准，不能提前当作已验证结论。
