@@ -780,3 +780,87 @@ DAS × CF (same DAS amplitude reference)
 下一小节将专门分析：
 
 > **DAS 与 CF 在 point target 上到底改变了什么：mainlobe、FWHM、sidelobe 还是背景 suppression？**
+---
+
+## 17. 已验证结果：整张 Manual CF 图像
+
+在 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 512` 下，本章 Manual CF 已完成一次真实运行验证。
+
+Chapter 2 内部 DAS 与 Chapter 1 baseline 的 complex consistency：
+
+~~~text
+max abs complex error : 1.136868e-13
+max-peak scaled error : 5.332858e-18
+~~~
+
+这说明本章在加入 CF 时没有改变原来的 Tx/Rx delay、interpolation 或 receive aperture 路径。
+
+本次 CF map：
+
+~~~text
+min    = 0.000006
+median = 0.178151
+mean   = 0.237657
+max    = 0.979233
+~~~
+
+其中 median CF = 0.178 对应每个 pixel 乘权后约 -15 dB 的 amplitude attenuation；而 max CF = 0.979 对应不到 -0.2 dB 的衰减。
+
+图像上可直接看到：
+
+- 高 coherence 的亮点基本保留；
+- 大量低 coherence speckle / background 被明显压低；
+- CF map 本身呈现的是 coherence distribution，而不是回波幅度；
+- CF-weighted 图像的 speckle texture 被明显改变，因此“更黑、更干净”不能自动等价为“组织信息更真实”。
+
+还要注意：dynamic receive F-number 使不同 pixel 的 active channel count M 不完全相同，因此跨深度直接比较 CF 数值时需要保留这个条件。
+
+---
+
+## 18. 第四小节：point-target profile，CF 到底改变了什么？
+
+这一小节不再只看整张图视觉效果，而是选一个相对孤立的 point-like target，定量比较：
+
+~~~text
+DAS
+vs
+DAS × CF
+~~~
+
+新增脚本：
+
+~~~text
+analyze_das_vs_cf_point_target.m
+~~~
+
+它会独立寻找 DAS 和 CF 在同一局部 ROI 内的 local peak，并报告：
+
+- peak location shift；
+- common-reference target peak change；
+- lateral -6 dB FWHM；
+- axial -6 dB FWHM；
+- lateral / axial -20 dB width；
+- 每个 FWHM 跨多少实际 image samples。
+
+其中：
+
+> **-6 dB FWHM 用于描述主峰宽度；-20 dB width 主要用于观察 profile skirt suppression，不把它包装成正式 sidelobe 指标。**
+
+另外，conventional FI 的 lateral spacing 仍然是一发一线，所以如果 lateral FWHM 只跨 1～2 个 scanline intervals，必须明确认为它受到 sampling 限制。
+
+运行：
+
+~~~matlab
+cd matlab/02_CF_GCF
+analyze_das_vs_cf_point_target
+~~~
+
+建议点击 z≈20 mm 附近那个相对孤立、明显的 point-like target。
+
+下一步根据实际 profile 再判断：
+
+~~~text
+CF 主要做了主瓣 narrowing？
+还是主要压了 profile skirt / background？
+还是两者都有？
+~~~
