@@ -17,17 +17,21 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
 %
 % IMPORTANT PARAMETER CONVENTION
 % ------------------------------
-% opts.M0 follows the USTB OMHR-style convention used for validation:
+% opts.M0 is the low-spatial-frequency half-width in FFT bins:
 %
-%   M0 <= 1 : only DC is included -> this reduces to ordinary CF
-%   M0 = 2  : FFT bins {-2,-1,0,+1,+2}
-%   M0 = 4  : FFT bins {-4,...,0,...,+4}
+%   M0 = 0  : {0}                    -> ordinary CF
+%   M0 = 1  : {-1,0,+1}
+%   M0 = 2  : {-2,-1,0,+1,+2}
+%   M0 = 4  : {-4,...,0,...,+4}
 %
-% Thus for M0 >= 2, M0 is the low-spatial-frequency half-width in bins.
+% This is the main scientific/teaching convention used in this repository.
 %
-% This differs slightly from the previous pure teaching demo, where K=1
-% meant {-1,0,+1}. The production teaching core keeps the USTB-compatible
-% convention so that later reference validation is unambiguous.
+% NOTE ABOUT USTB
+% ---------------
+% Current USTB generalized_coherence_factor(_OMHR) has a legacy special
+% case in which M0=1 still selects DC only, and only M0>1 expands the band.
+% We do NOT copy that special case into the teaching definition. A later
+% validation script will map conventions explicitly when comparing to USTB.
 %
 % INPUT
 % -----
@@ -40,7 +44,7 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
 %   frame_index              default 1
 %   receive_aperture_mode    'full' or 'f_number', default 'f_number'
 %   receive_f_number         default 1.7
-%   M0                       default 2
+%   M0                       default 1
 %   display_dynamic_range_db default 60
 %   verbose                  true/false, default false
 %
@@ -189,14 +193,9 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
             coherent_sum = sum(s);
             das_analytic(iz,iw) = coherent_sum;
 
-            % USTB OMHR-style behavior:
-            % if the active aperture is too small for the requested low-
-            % frequency region, set the GCF weight to zero.
-            if opts.M0 <= 1
-                min_required_channels = 1;
-            else
-                min_required_channels = 2*opts.M0 + 1;
-            end
+            % The requested low-frequency band contains 2*M0+1 bins.
+            % If the active aperture is too short, do not invent a band.
+            min_required_channels = 2*opts.M0 + 1;
 
             if M < min_required_channels
                 gcf_value = 0;
@@ -289,7 +288,7 @@ function opts = apply_defaults(opts)
         'frame_index',1, ...
         'receive_aperture_mode','f_number', ...
         'receive_f_number',1.7, ...
-        'M0',2, ...
+        'M0',1, ...
         'display_dynamic_range_db',60, ...
         'verbose',false);
 
@@ -318,14 +317,13 @@ end
 
 function idx = low_frequency_indices(M,M0)
 
-    if M0 <= 1
-        % USTB legacy convention: M0 <= 1 -> DC only.
+    assert(2*M0+1 <= M, ...
+        'Requested M0=%d is too large for active aperture M=%d.',M0,M);
+
+    if M0 == 0
         idx = 1;
         return;
     end
-
-    assert(2*M0+1 <= M, ...
-        'Requested M0=%d is too large for active aperture M=%d.',M0,M);
 
     % MATLAB FFT ordering:
     %   index 1       -> DC
