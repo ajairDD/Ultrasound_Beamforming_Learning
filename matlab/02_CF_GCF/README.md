@@ -135,3 +135,40 @@ axial -20 dB width
 注意：conventional FI lateral sampling 较粗；若 FWHM 跨少于 3 个 scanline intervals，只能把横向宽度当作 sampling-limited 粗估。
 
 -20 dB width 只用于观察 profile skirt，不作为严格 sidelobe metric。
+---
+
+## 第五课：CF 的局限与 GCF 动机
+
+运行：
+
+~~~matlab
+demo_cf_failure_and_gcf_motivation
+~~~
+
+比较：
+
+~~~text
+Perfect coherence
+Smooth 1-bin phase ramp
+Random phase
+~~~
+
+教学版 GCF 使用：
+
+~~~text
+K = 0  -> only DC -> CF
+K = 1  -> bins -1, 0, +1
+K = 2  -> bins -2 ... +2
+~~~
+
+重点理解：
+
+~~~text
+CF 低
+并不一定等于
+aperture 完全随机不相干
+~~~
+
+一个平滑 phase ramp 也可能让 DC 能量很低，但其能量仍集中在邻近 low spatial-frequency bins。
+
+后续正式 GCF 实现时，会再明确教学参数 K 与 USTB / 文献 M0 convention 的对应关系。
