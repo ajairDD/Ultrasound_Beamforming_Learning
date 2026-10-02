@@ -602,3 +602,181 @@ CF = coherence(s)
 下一小节开始，我们不再只看三个点，而是：
 
 > **对整张 conventional FI 图的每一个 pixel 都计算 CF，得到第一张完整的 Manual CF 图像。**
+---
+
+## 15. 第三小节：整张 Manual CF 图像
+
+前两小节只看单个 aperture vector。
+
+现在对 conventional FI 图像中的每一个 pixel 都做同样的事情：
+
+~~~text
+pixel P
+    ↓
+Tx/Rx delay + interpolation
+    ↓
+aligned active Rx vector s
+    ↓
+DAS = sum(s)
+    ↓
+CF = |sum(s)|^2 / (M · sum(|s|^2))
+    ↓
+CF-weighted pixel = CF × DAS
+~~~
+
+这一节新增两个文件：
+
+~~~text
+reconstruct_fi_cf_manual.m
+compare_manual_das_vs_cf.m
+~~~
+
+### 15.1 `reconstruct_fi_cf_manual.m` 做什么？
+
+它完整重走 Chapter 1 的 conventional FI 路径，但在 DAS 求和之前保留当前 pixel 的 active aperture vector。
+
+对每个 pixel：
+
+~~~matlab
+s = focused_samples(active);
+
+coherent_sum = sum(s);
+channel_energy = sum(abs(s).^2);
+
+CF = abs(coherent_sum).^2 / ...
+    (M*channel_energy);
+
+cf_pixel = CF * coherent_sum;
+~~~
+
+因此它同时输出三类核心结果：
+
+~~~text
+DAS complex image
+CF map
+CF-weighted complex image
+~~~
+
+### 15.2 Shape
+
+~~~text
+das_analytic       [Nz, Nscanline] complex
+cf_map             [Nz, Nscanline] real
+cf_analytic        [Nz, Nscanline] complex
+active_channel_count [Nz, Nscanline]
+~~~
+
+每一个 `cf_map(z,x)` 都来自这个 pixel 自己的 active receive aperture。
+
+### 15.3 为什么 CF map 不是 B-mode？
+
+`cf_map` 表示的是 coherence weight，而不是回波 amplitude。
+
+~~~text
+0   → 很低的 receive coherence
+1   → 很高的 receive coherence
+~~~
+
+所以它不能直接当作超声灰阶图解释。
+
+真正的 CF-weighted image 是：
+
+~~~text
+DAS complex image × CF map
+~~~
+
+### 15.4 为什么必须画两种 CF 图？
+
+脚本会同时提供两种显示方式。
+
+第一种使用 **DAS 的同一个 amplitude reference**：
+
+~~~text
+DAS
+vs
+DAS × CF
+~~~
+
+这种图可以真实看到 CF 把哪些区域压低了多少。
+
+第二种是 DAS 和 CF 图各自 self-normalize。
+
+它更适合看 morphology / apparent PSF，但会隐藏整体 attenuation。
+
+所以：
+
+> **判断 suppression 要看 common-reference 图；判断形态可以看 self-normalized 图。**
+
+### 15.5 为什么不能看到 CF 图更“尖”就直接说 resolution 提高？
+
+CF 是 nonlinear / adaptive weighting。
+
+它可能把主瓣边缘、旁瓣和低相干背景压得更厉害，于是显示出来的亮结构会变窄。
+
+这可以叫：
+
+~~~text
+apparent PSF narrowing
+或
+adaptive mainlobe narrowing
+~~~
+
+但不能仅凭这一点就直接说：
+
+~~~text
+系统物理 diffraction-limited resolution 提高了
+~~~
+
+后面需要把 point-target profile、FWHM、sidelobe 和 contrast 分开分析。
+
+### 15.6 与 Chapter 1 的一致性检查
+
+`compare_manual_das_vs_cf.m` 会独立调用 Chapter 1 的 `reconstruct_fi_scanline_manual.m`。
+
+然后检查：
+
+~~~text
+Chapter-2 内部 DAS
+vs
+Chapter-1 DAS baseline
+~~~
+
+两条路径必须一致。
+
+这保证：
+
+> **这一节真正只增加了 CF weighting，没有悄悄改变 delay、interpolation 或 aperture。**
+
+### 15.7 运行
+
+~~~matlab
+addpath(genpath('D:/USTB'));
+addpath('../01_DAS_Real_UFF');
+
+cd matlab/02_CF_GCF
+compare_manual_das_vs_cf
+~~~
+
+重点看第一张图：
+
+~~~text
+Manual DAS
+Receive-domain CF map
+DAS × CF (same DAS amplitude reference)
+~~~
+
+然后再看第二张 self-normalized 对比。
+
+---
+
+## 16. 第三小节总结
+
+这一节只需要记住：
+
+1. **CF 是对每一个 pixel 的 aligned receive aperture vector 独立计算的。**
+2. **CF map 是权重图，不是 B-mode；真正成像结果是 `CF × DAS`。**
+3. **CF 改善视觉锐度并不自动等于物理 resolution 提升，后面必须把 mainlobe、sidelobe、contrast 分开验证。**
+
+下一小节将专门分析：
+
+> **DAS 与 CF 在 point target 上到底改变了什么：mainlobe、FWHM、sidelobe 还是背景 suppression？**
