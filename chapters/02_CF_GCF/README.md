@@ -402,3 +402,202 @@ demo_cf_aperture_vectors
 1. **DAS 解决“怎么对齐并相加”，CF 解决“对齐以后这些通道到底有多一致”。**
 2. **CF 高：通道能量大部分形成了 coherent sum；CF 低：很多能量在相互抵消。**
 3. **GCF 把 CF 从“主要看 DC coherence”推广到“一段低 spatial-frequency energy”。**
+
+---
+
+## 13. 第二小节：从真实 UFF 中拿出 aligned aperture vector
+
+前一小节里的箭头是人工构造的。
+
+现在进入真实数据：
+
+~~~text
+L7_FI_TheGB.uff
+~~~
+
+但这一小节仍然故意使用 conventional FI，而不是 RTB。
+
+原因是我们当前只想研究 **receive-domain coherence**：
+
+~~~text
+一个 pixel
+    ↓
+一个 focused Tx / scanline
+    ↓
+多个 receive channels
+    ↓
+CF
+~~~
+
+这样可以把 Tx 维度先固定住，不把 RTB 的 cross-Tx coherent combination 混进来。
+
+### 13.1 一个真实 pixel 的数据流
+
+第 1 章已经做过：
+
+~~~text
+pixel P
+    ↓
+计算 Tx delay
+    ↓
+计算每个 Rx element 的 Rx delay
+    ↓
+Tx delay + Rx delay
+    ↓
+每个 channel 得到自己的 RF query time
+    ↓
+fractional interpolation
+    ↓
+得到 aligned receive samples
+~~~
+
+这一小节只是：
+
+> **在 DAS 求和之前停下来，把这组 samples 拿出来看。**
+
+对于一个 pixel：
+
+~~~text
+focused_samples
+shape = [1, N_channels]
+~~~
+
+应用 receive F-number 后只保留 active channels：
+
+~~~text
+s = focused_samples(active_channels)
+shape = [1, M_active]
+~~~
+
+这个 s 就是第 2 章真正研究的对象。
+
+### 13.2 为什么每个 Rx channel 的 query time 不一样？
+
+因为同一个 pixel 到不同阵元的距离不同。
+
+~~~text
+E1   E2   E3   E4   E5
+======================== probe
+ \    \    |    /    /
+  \    \   |   /    /
+         pixel
+~~~
+
+中间阵元离 pixel 较近，边缘阵元传播路径更长。
+
+所以每个 receive channel 都有自己的 tau_rx 和 query time。
+
+真正的 delay alignment 就是：
+
+> **每个通道不要在同一个 sample index 取值，而是在属于自己的 query time 上取值。**
+
+### 13.3 对齐之后，才得到 CF 的输入
+
+假设 active Rx 有 40 个：
+
+~~~text
+s1 s2 s3 ... s40
+~~~
+
+这些并不是原始 RF 在同一个 sample index 上的 40 个数。
+
+它们是分别在 40 个不同 query times 上经过插值得到的 complex samples。
+
+所以：
+
+> **CF 的输入必须是 delay-aligned aperture vector，而不能直接拿原始 RF 某一个固定 sample index 的所有通道来算。**
+
+### 13.4 本节脚本
+
+运行：
+
+~~~matlab
+addpath(genpath('D:/USTB'));
+addpath('../01_DAS_Real_UFF');
+
+cd matlab/02_CF_GCF
+inspect_real_cf_aperture_vectors
+~~~
+
+脚本先调用第 1 章已经验证过的 conventional FI-DAS，形成图像，然后让你点击 3 个位置。
+
+建议：
+
+~~~text
+P1：bright / point-like target
+P2：ordinary speckle
+P3：weak / clutter / suspicious region
+~~~
+
+点击以后，x 会吸附到最近的真实 FI scanline，z 也吸附到第 1 章相同的 z-grid。
+
+### 13.5 每个点会显示什么？
+
+第一列是 Tx+Rx query-time curve，用来重新连接第 1 章的 delay 概念。
+
+第二列同时显示 aligned sample 的幅度和 phase。
+
+第三列显示 normalized complex phasors：箭头方向越集中，通常 coherence 越高。
+
+第四列显示 aperture spatial spectrum：越相干的 aperture vector，能量通常越集中在 DC / low spatial frequency，这会直接连接到后面的 GCF。
+
+### 13.6 一个非常重要的数值验证
+
+脚本会重新计算：
+
+~~~matlab
+coherent_sum = sum(aligned_active_samples);
+~~~
+
+然后和第 1 章同一个 pixel 的 complex DAS 值比较。
+
+也就是说明确验证：
+
+~~~text
+这一小节取出来的 aperture vector
+        ↓ sum
+确实就是
+第 1 章 DAS 使用的那组数据
+~~~
+
+如果 relative complex error 超过极小容差，脚本会直接报错。
+
+### 13.7 Shape 要牢牢记住
+
+~~~text
+rf_wave
+[N_samples, N_channels]
+        ↓
+
+query_time
+[1, N_channels]
+        ↓
+
+focused_samples
+[1, N_channels] complex
+        ↓ receive aperture
+
+s
+[1, M_active] complex
+        ↓
+
+DAS = sum(s)
+
+CF = coherence(s)
+~~~
+
+以后 CF、GCF、SLSC、DMAS 等算法，本质上都会围绕这个 aligned aperture vector 展开。
+
+---
+
+## 14. 第二小节总结
+
+这一节只需要记住：
+
+1. **CF 的输入不是原始 RF，而是完成 Tx/Rx delay 和 interpolation 之后的 aperture samples。**
+2. **Conventional FI 下，一个 pixel 对应一个 Tx，再沿 receive-channel 维计算 CF；这样最容易先把 receive coherence 学清楚。**
+3. **如果把真实 aligned aperture vector 再做一次 sum，它必须回到第 1 章同一个 DAS pixel。**
+
+下一小节开始，我们不再只看三个点，而是：
+
+> **对整张 conventional FI 图的每一个 pixel 都计算 CF，得到第一张完整的 Manual CF 图像。**
