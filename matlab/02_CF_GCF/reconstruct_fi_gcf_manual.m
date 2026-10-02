@@ -192,7 +192,13 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
             % USTB OMHR-style behavior:
             % if the active aperture is too small for the requested low-
             % frequency region, set the GCF weight to zero.
-            if M <= opts.M0
+            if opts.M0 <= 1
+                min_required_channels = 1;
+            else
+                min_required_channels = 2*opts.M0 + 1;
+            end
+
+            if M < min_required_channels
                 gcf_value = 0;
             else
                 X = fft(s);
