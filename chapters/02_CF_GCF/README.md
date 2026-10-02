@@ -864,3 +864,181 @@ CF 主要做了主瓣 narrowing？
 还是主要压了 profile skirt / background？
 还是两者都有？
 ~~~
+---
+
+## 19. 已验证结果：point target 上 CF 到底改变了什么？
+
+在同一个 point-like target 上，实测：
+
+~~~text
+DAS peak : x = -0.7450 mm, z = 20.1076 mm
+CF peak  : x = -0.7450 mm, z = 20.1076 mm
+peak shift = 0
+
+CF weight at DAS peak = 0.978733
+CF peak attenuation   = -0.187 dB
+~~~
+
+说明这个高相干目标的峰值几乎被完整保留。
+
+### 19.1 -6 dB 主峰宽度
+
+~~~text
+lateral DAS = 0.708410 mm
+lateral CF  = 0.420344 mm
+
+axial DAS   = 0.446485 mm
+axial CF    = 0.442143 mm
+~~~
+
+按数值比例看，横向 FWHM 约缩小 40.7%，而轴向只变化约 1.0%。
+
+但横向必须谨慎解释：
+
+~~~text
+DAS lateral FWHM = 2.377 scanline intervals
+CF  lateral FWHM = 1.411 scanline intervals
+~~~
+
+两者都少于 3 个 conventional-FI lateral samples，因此：
+
+> **不能把 0.708 mm → 0.420 mm 当成高精度的“物理分辨率提高 40%”结论。**
+
+更准确的表述是：
+
+> **CF weighting 让 conventional-FI 点目标的显示主峰出现明显的 adaptive / apparent lateral narrowing，但该数值受到 scanline sampling 强烈限制。**
+
+### 19.2 轴向结果更有解释力
+
+轴向 FWHM：
+
+~~~text
+0.446485 mm → 0.442143 mm
+~~~
+
+只变化约 1%。
+
+这与算法结构一致：当前 CF 是 receive-aperture coherence weighting，不改变发射脉冲带宽，也没有改变 axial delay model。
+
+所以当前数据不支持“CF 明显改善 axial resolution”的说法。
+
+### 19.3 -20 dB profile width
+
+~~~text
+lateral : 1.158868 mm → 0.982194 mm   (~15.2% reduction)
+axial   : 1.020281 mm → 0.957728 mm   (~6.1% reduction)
+~~~
+
+这说明 CF 不只是改变 -6 dB 主峰显示宽度，也在压低 target profile 的外围 skirt。
+
+但由于真实 phantom profile 中混有周围 speckle / scatterers，这里的 -20 dB width 只用于描述 profile skirt，不能直接等同于严格的 peak-sidelobe-level。
+
+### 19.4 这一组结果真正支持的结论
+
+当前数据支持：
+
+1. 高相干 point target peak 基本保留（仅约 -0.19 dB）；
+2. lateral displayed profile 明显变窄，但 conventional-FI lateral sampling 不足以支持高精度 resolution 数值结论；
+3. axial FWHM 几乎不变；
+4. lateral / axial profile skirts 都有一定 suppression，其中 lateral 更明显。
+
+因此目前最稳妥的总结是：
+
+> **在这组数据上，receive-domain CF 的主要可见效果是强烈的横向自适应收窄与背景/外侧响应抑制，而不是明显改变轴向主瓣。**
+
+---
+
+## 20. 第五小节：CF 的一个局限，以及 GCF 为什么出现
+
+前面 P3 的真实 aperture vector 已经给了一个很重要的线索：
+
+~~~text
+CF 很低
+但 aperture spectrum 并不是完全随机铺开
+而是有大量能量落在 DC 附近的低 spatial-frequency bin
+~~~
+
+这说明普通 CF 有时会过于严格。
+
+CF 基本只奖励：
+
+~~~text
+exact DC coherence
+~~~
+
+而一个平滑、确定性的 phase ramp：
+
+~~~text
+0°, 10°, 20°, 30°, 40°, ...
+~~~
+
+虽然不是随机噪声，却会把 aperture spectrum 的峰从 DC 移到旁边一个低频 bin。
+
+这时：
+
+~~~text
+CF 可能很低
+但 aperture 仍然具有很强的低阶结构
+~~~
+
+这正是 GCF 的出发点。
+
+### 20.1 新实验
+
+运行：
+
+~~~matlab
+demo_cf_failure_and_gcf_motivation
+~~~
+
+它比较三种 aperture vector：
+
+~~~text
+A. perfect coherence
+B. smooth 1-bin phase ramp
+C. random phase
+~~~
+
+并定义一个教学版 GCF：
+
+~~~text
+GCF(K)
+=
+FFT bins [-K ... 0 ... +K] 的能量
+--------------------------------
+全部 aperture FFT 能量
+~~~
+
+因此：
+
+~~~text
+K = 0
+↓
+只保留 DC
+↓
+正好退化为 CF
+~~~
+
+而 K = 1 时允许：
+
+~~~text
+-1, 0, +1
+~~~
+
+这些低空间频率一起作为 coherent energy。
+
+### 20.2 为什么不能把 K 越调越大？
+
+如果 K 不断增大：
+
+~~~text
+允许的 spatial-frequency band 越来越宽
+~~~
+
+最终连真正的高频不相干成分也会被计入 coherent energy。
+
+所以 GCF 的核心不是“比 CF 更宽松就一定更好”，而是：
+
+> **在保留低阶 coherent structure 与排除高 spatial-frequency incoherence 之间选择一个合理 low-frequency band。**
+
+下一小节才正式把这个概念放回 `L7_FI_TheGB.uff`，实现完整 Manual GCF 图像。
