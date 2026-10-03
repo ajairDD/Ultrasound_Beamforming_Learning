@@ -1373,3 +1373,107 @@ analyze_gcf_m0_point_target
 > **从 CF 放宽到 GCF 后，究竟保留了多少目标峰值，又牺牲了多少 profile / background suppression？**
 
 这比仅比较整张 B-mode 图更能说明 M0 的代价与收益。
+---
+
+## 27. 已验证结果：point target 上的 M0 trade-off
+
+在同一个 point-like target 上，得到：
+
+~~~text
+M0  target weight  peak change   lateral FWHM  axial FWHM  lateral -20 dB  axial -20 dB
+0   0.97648        -0.2067 dB    0.4241 mm     0.4458 mm   0.9871 mm       0.9623 mm
+1   0.98076        -0.1687 dB    0.6490 mm     0.4479 mm   1.1504 mm       0.9880 mm
+2   0.98323        -0.1469 dB    0.6802 mm     0.4494 mm   1.1530 mm       1.0279 mm
+4   0.98695        -0.1141 dB    0.7032 mm     0.4506 mm   1.1552 mm       1.0375 mm
+~~~
+
+lateral spacing = 0.297981 mm；axial spacing = 0.156863 mm。
+
+### 27.1 目标中心几乎不受 M0 影响
+
+target weight 从 0.9765 增加到 0.9870，对应 peak attenuation 仅从约 -0.21 dB 变化到 -0.11 dB。
+
+说明这个高相干点目标中心无论 CF 还是 GCF 都基本被保留。
+
+### 27.2 真正被 M0 改变的是横向 profile
+
+lateral FWHM：
+
+~~~text
+M0=0 : 0.424 mm
+M0=1 : 0.649 mm
+M0=2 : 0.680 mm
+M0=4 : 0.703 mm
+~~~
+
+前面 DAS 的 lateral FWHM 约为 0.708 mm，因此 `M0=4` 已几乎回到 DAS。
+
+这说明：
+
+> **CF 的强 lateral narrowing 主要来自对主峰中心以外 aperture structure 的严格抑制；一旦把邻近 low-spatial-frequency bins 纳入，横向 profile 会迅速恢复。**
+
+尤其是 `M0=1`，只加入 ±1 两个 bins，就已经从 0.424 mm 回到 0.649 mm。
+
+### 27.3 轴向几乎不变
+
+~~~text
+0.446 ~ 0.451 mm
+~~~
+
+不同 M0 的 axial FWHM 基本一致，再次说明 CF/GCF 主要改变 receive-aperture 横向相干加权，而不是 axial pulse response。
+
+### 27.4 -20 dB width 也说明同样趋势
+
+lateral -20 dB width：
+
+~~~text
+0.987 mm → 1.150 → 1.153 → 1.155 mm
+~~~
+
+说明 `M0=1` 已经恢复了大部分 CF 原先压掉的 lateral profile skirt。
+
+因此目前对 TheGB 的 point-target 结论是：
+
+> **M0 增大带来的主要收益不是“更保留点目标峰值”——峰值本来就几乎完整；它主要是在恢复 CF 原本强烈压制的横向外围和低阶 aperture structure。**
+
+这也说明为什么必须继续看 homogeneous speckle：GCF 的价值更可能体现在 diffuse scattering / texture preservation，而不是这个高相干点目标中心。
+
+---
+
+## 28. 第九小节：homogeneous speckle preservation
+
+新增：
+
+~~~text
+analyze_gcf_speckle_roi.m
+~~~
+
+运行：
+
+~~~matlab
+analyze_gcf_speckle_roi
+~~~
+
+在 DAS 图上选择一个尽量均匀的 speckle ROI，两次点击给出矩形对角点。
+
+避开：
+
+- point target；
+- 强边界；
+- 明显 lesion / cyst 边缘；
+- probe lateral edge。
+
+脚本比较 DAS、CF 与不同 M0 GCF 的：
+
+- ROI mean envelope 相对 DAS 的衰减；
+- envelope standard deviation；
+- speckle SNR = mean/std；
+- coefficient of variation；
+- 与原始 DAS envelope texture 的 Pearson correlation；
+- mean-normalized envelope histogram。
+
+这一节要回答的核心问题是：
+
+> **CF 把背景压得更黑时，到底是在去除“不相干 clutter”，还是也在强烈重塑正常 diffuse speckle？而 GCF 又保留了多少原始 speckle texture？**
+
+这些统计只描述当前 ROI 的 texture 变化，不自动证明理想 Rayleigh speckle，也不构成临床图像质量结论。
