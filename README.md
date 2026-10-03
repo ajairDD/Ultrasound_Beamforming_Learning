@@ -14,7 +14,7 @@
 |---|---|---|
 | 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
 | 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
-| 第 2 章 | CF / GCF | **进行中** |
+| 第 2 章 | CF / GCF | **已完成** |
 | 第 3 章 | MV / MVDR / Capon | 计划中 |
 | 第 4 章 | DMAS / fDMAS | 计划中 |
 | 第 5 章 | SLSC | 计划中 |
@@ -125,12 +125,12 @@ $$
 
 ## 下一章
 
-第 1 章完成后，下一步进入：
+第 2 章完成后，下一步进入：
 
-**第 2 章：Coherence Factor（CF）与 Generalized Coherence Factor（GCF）**
+**第 3 章：MV / MVDR / Capon**
 
-第 0–1 章解决“如何把 channel data 按传播模型正确对齐”。
+第 0–1 章解决“如何把 channel data 按传播模型正确对齐”，第 2 章进一步学习了“如何利用对齐后 aperture data 的相干性进行自适应加权”。
 
-从第 2 章开始，问题变成：
+第 3 章开始进入真正的 adaptive array beamforming：
 
-> **已经对齐的 aperture data，怎样衡量通道间相干性，并利用这种相干性改善 DAS？**
+> **不再只给 DAS 乘一个 coherence weight，而是根据 aperture covariance 自适应求取通道权重。**
