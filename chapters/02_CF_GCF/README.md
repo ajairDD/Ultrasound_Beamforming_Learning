@@ -1588,3 +1588,217 @@ analyze_carotid_cf_gcf_depth_dependence
 外侧 10% scanlines 被排除，以尽量减少 probe-edge aperture truncation 的影响。
 
 这一步只用于识别 depth trend，不能单独证明趋势来自 attenuation、aberration 或其它某一种机制。
+---
+
+## 31. 已验证结果：真实 carotid 的 depth dependence
+
+在两个独立 carotid focused-imaging acquisition 上，central 80% lateral field 的 coherence weight 都随深度明显下降。
+
+### carotid cross 1
+
+~~~text
+depth      CF median   GCF median   DAS median level   active Rx median
+5–15 mm      0.1056      0.3878        -18.94 dB           19.0
+15–25 mm     0.0529      0.2103         -6.16 dB           39.0
+25–35 mm     0.0230      0.0927        -14.35 dB           59.0
+35–45 mm     0.0162      0.0601        -21.01 dB           77.5
+~~~
+
+### carotid cross 2
+
+~~~text
+depth      CF median   GCF median   DAS median level   active Rx median
+5–15 mm      0.0968      0.3651        -16.53 dB           19.0
+15–25 mm     0.0421      0.1853        -16.38 dB           39.0
+25–35 mm     0.0191      0.0760        -21.41 dB           59.0
+35–45 mm     0.0151      0.0560        -25.02 dB           77.5
+~~~
+
+### 31.1 可以确认的事实
+
+两个独立 acquisition 都出现：
+
+~~~text
+depth ↑
+CF median ↓
+GCF median ↓
+active receive aperture ↑
+~~~
+
+而 DAS median level 与 coherence weight 并不是简单一一对应。
+
+例如 cross 1 中：
+
+~~~text
+5–15 mm  DAS = -18.94 dB, CF = 0.1056
+15–25 mm DAS =  -6.16 dB, CF = 0.0529
+~~~
+
+DAS amplitude 明显更强，但 CF 反而约减半。
+
+cross 2 中 5–15 mm 与 15–25 mm 的 DAS median level 几乎相同，但 CF / GCF 同样明显下降。
+
+因此：
+
+> **人体数据中的 coherence depth trend 不能仅用“深部信号更弱 / SNR 更低”解释。**
+
+### 31.2 当前最重要的混杂因素
+
+dynamic receive F-number 使 active Rx count 随深度系统性增加：
+
+~~~text
+约 19 → 39 → 59 → 77.5 channels
+~~~
+
+更大的 aperture 会采样更宽的横向范围，因此可能暴露更多：
+
+- phase variation；
+- sound-speed mismatch / aberration；
+- off-axis / diffuse-scattering differences；
+- clutter / reverberation。
+
+所以目前不能把 coherence 下降唯一归因于深度、attenuation 或某一种物理机制。
+
+如果未来专门研究这个问题，应该做 fixed-aperture / fixed-M 对照实验。
+
+---
+
+# 32. 第 2 章总结：CF / GCF
+
+第 2 章到这里结束。
+
+## 32.1 从 DAS 到 CF
+
+Chapter 1 的 DAS：
+
+~~~text
+delay-aligned aperture vector
+s = [s1, s2, ... , sM]
+        ↓
+sum(s)
+        ↓
+DAS
+~~~
+
+Chapter 2 增加的问题是：
+
+> **这些已经对齐的 receive channels 到底有多一致？**
+
+普通 CF 可以理解为 coherent energy 相对于总 channel energy 的归一化，也可以从 aperture spatial spectrum 理解为 DC energy fraction。
+
+CF 高意味着 channel energy 大部分成功形成 coherent sum；CF 低意味着大量能量发生相消。
+
+## 32.2 CF 的真实效果
+
+在 TheGB point target 上：
+
+- target peak 基本保留；
+- lateral displayed profile 明显变窄；
+- axial FWHM 基本不变；
+- lateral profile skirt / background suppression 明显增强。
+
+因此更准确的表述是：
+
+> **CF 主要带来 adaptive lateral narrowing 与 low-coherence suppression，而不是改变 axial pulse response。**
+
+同时 conventional-FI lateral sampling 较粗，因此不能把测得的 FWHM 缩小直接解释成高精度物理分辨率提升。
+
+## 32.3 为什么需要 GCF
+
+CF 只严格奖励 exact-DC coherence。
+
+一个平滑 phase ramp 可能不是随机噪声，但能量会从 DC 移到邻近 low-spatial-frequency bins，这时 CF 可以很低。
+
+GCF 因此使用 low-spatial-frequency spectral energy / total aperture spectral energy。
+
+本项目统一 convention：
+
+~~~text
+M0=0 -> DC only -> CF
+M0=1 -> {-1,0,+1}
+M0=2 -> {-2,...,+2}
+...
+~~~
+
+M0 越大，算法越宽松。
+
+## 32.4 M0 的代价与收益
+
+TheGB 上：
+
+~~~text
+M0=0 median ≈ 0.178
+M0=1 median ≈ 0.565
+M0=2 median ≈ 0.748
+~~~
+
+说明大量 aperture energy 分布在 DC 邻近低频 bins。
+
+point target 上，M0 增大几乎不改变目标峰值，却快速恢复 CF 原本压掉的 lateral profile。
+
+所以：
+
+> **GCF 不是“更强的 CF”，而是主动放宽 CF 的 coherence criterion。**
+
+## 32.5 phantom 与 in-vivo 差异
+
+TheGB phantom：
+
+~~~text
+CF median ≈ 0.178
+GCF(M0=1) median ≈ 0.565
+~~~
+
+真实 carotid：
+
+~~~text
+CF median ≈ 0.034–0.037
+GCF(M0=1) median ≈ 0.131–0.138
+~~~
+
+说明相同 coherence weighting 在人体数据上明显更加 aggressive。
+
+这也提醒：
+
+> **算法在 point-target phantom 上表现漂亮，并不代表在真实组织上会同样合理。**
+
+必须关注 speckle preservation、结构连续性、depth dependence 和 acquisition conditions。
+
+## 32.6 本章最终应该记住的五句话
+
+1. **CF / GCF 都建立在正确 delay-aligned aperture data 之上，不重新定义 Tx/Rx propagation。**
+2. **CF 本质上衡量 exact coherent sum，也可理解为 aperture spectrum 的 DC energy fraction。**
+3. **GCF 把 coherence 从 DC 推广到一段 low spatial-frequency band；M0 控制这个带宽。**
+4. **更强 suppression 不自动代表更好的成像；CF 可能同时强烈重塑正常 diffuse speckle。**
+5. **phantom、point target 与真实人体的 coherence statistics 可以显著不同，因此参数和结论必须结合数据类型与任务解释。**
+
+---
+
+## 33. 下一章
+
+下一章进入：
+
+> **MV / MVDR / Capon adaptive beamforming**
+
+CF/GCF 仍然是：
+
+~~~text
+先做 DAS
+再根据 coherence 乘一个 pixel-wise weight
+~~~
+
+MVDR 开始真正改变 aperture combination：
+
+~~~text
+aligned aperture data
+        ↓
+estimate covariance
+        ↓
+solve adaptive channel weights
+        ↓
+weighted coherent combination
+~~~
+
+也就是说，下一章从“判断通道是否一致”进一步进入：
+
+> **根据数据本身，自适应决定每个阵元应该给多大权重。**
