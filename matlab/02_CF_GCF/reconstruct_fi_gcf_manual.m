@@ -328,7 +328,7 @@ end
 
 function idx = low_frequency_indices(M,M0)
 
-    assert(2*M0+1 <= M, ...
+    assert(M0 <= floor(M/2), ...
         'Requested M0=%d is too large for active aperture M=%d.',M0,M);
 
     if M0 == 0
@@ -342,8 +342,12 @@ function idx = low_frequency_indices(M,M0)
     %   ...end        -> negative spatial frequencies
     %
     % Include {-M0,...,-1,0,+1,...,+M0}.
-    % unique() prevents double-counting the Nyquist bin when M is even
-    % and M0 = M/2.
+    %
+    % For odd M, this gives 2*M0+1 unique bins.
+    %
+    % For even M and M0=M/2, the +Nyquist and -Nyquist labels refer to
+    % the same physical FFT bin. unique() therefore returns exactly M
+    % bins, i.e. the complete spectrum, which is the correct behavior.
     idx = unique([1:(M0+1), (M-M0+1):M]);
 end
 
