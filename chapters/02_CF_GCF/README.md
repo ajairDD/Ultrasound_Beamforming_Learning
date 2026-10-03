@@ -1286,3 +1286,90 @@ n_z = 256
 > **M0 从 0 增大时，算法是怎样一步步从严格 CF 走向越来越宽松的 low-frequency coherence。**
 
 后续再根据 point target、contrast、speckle preservation 或 aberration robustness 决定评价标准。
+---
+
+## 25. 已验证结果：M0 sweep
+
+在 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 256` 下，得到：
+
+~~~text
+M0    min          median      mean        max
+0     6.46e-7      0.17847     0.23755     0.97648
+1     0.00315      0.56509     0.54686     0.98889
+2     0.01209      0.74785     0.70652     1.00000
+4     0*           0.89553     0.86755     1.00000
+~~~
+
+`M0=4` 的 `min=0` 已确认不是物理结果，而是旧版代码对短 active aperture 直接置零造成的人工边界效应；该逻辑已经修正为自动裁剪 effective M0，不再制造假黑点。
+
+因此本次可以直接信任 `M0=0/1/2` 的统计趋势；`M0=4` 的精确 minimum / mean 建议在修正版上重跑后再作为最终数值。
+
+### 25.1 最重要的定量现象
+
+从 mean weight 看：
+
+~~~text
+M0=0 : 0.23755
+M0=1 : 0.54686
+M0=2 : 0.70652
+~~~
+
+因为 GCF 分子只是逐步加入更多非负 spectral energy，所以这些差值可以直观理解为：
+
+~~~text
+DC 本身平均贡献                    ≈ 23.8%
+加入 ±1 bins 后累计               ≈ 54.7%
+再加入 ±2 bins 后累计             ≈ 70.7%
+~~~
+
+这说明 TheGB 的 delay-aligned receive-aperture spectrum 中，大量能量并不严格停留在 DC，而是分布在 DC 附近几个低 spatial-frequency bins。
+
+这正是为什么：
+
+- CF 对这份数据非常 aggressive；
+- `M0=1` 已经明显比 CF 宽松；
+- `M0=2` 更接近原始 DAS。
+
+### 25.2 当前不能得出的结论
+
+不能仅凭“CF 图更黑”就说 CF 比 GCF 更正确。
+
+当前只能说：
+
+> **如果目标是强 point-target / background suppression，CF 更符合当前视觉目标；如果目标包括保留 diffuse speckle 或容忍低阶 phase variation，GCF 可能更合理。**
+
+最终 M0 应该由任务指标决定，而不是由“看起来最干净”决定。
+
+---
+
+## 26. 第八小节：point target 上比较 M0=0 / 1 / 2
+
+下一步只比较：
+
+~~~text
+M0=0  -> CF
+M0=1  -> 3-bin GCF
+M0=2  -> 5-bin GCF
+~~~
+
+运行：
+
+~~~matlab
+analyze_gcf_m0_point_target
+~~~
+
+建议继续点击前面已经使用过的 z≈20 mm 孤立 point-like target。
+
+脚本会输出：
+
+- target coherence weight；
+- target peak attenuation；
+- lateral / axial -6 dB FWHM；
+- lateral / axial -20 dB width；
+- 三种 M0 的 lateral / axial profile。
+
+这一节要回答的是：
+
+> **从 CF 放宽到 GCF 后，究竟保留了多少目标峰值，又牺牲了多少 profile / background suppression？**
+
+这比仅比较整张 B-mode 图更能说明 M0 的代价与收益。
