@@ -48,8 +48,13 @@
 %   z_min = 5e-3;
 %   z_max = 45e-3;
 %   receive_f_number = 1.7;
+%   run_identity_check = false;
+%
+% run_identity_check=true adds an extra GCF(M0=0) reconstruction per
+% dataset. Keep it false for normal one-click comparison because the
+% CF==GCF(M0=0) identity is already tested elsewhere in Chapter 2.
 
-clearvars -except M0 n_z z_min z_max receive_f_number;
+clearvars -except M0 n_z z_min z_max receive_f_number run_identity_check;
 clc;
 close all;
 
@@ -70,6 +75,9 @@ if ~exist('z_max','var')
 end
 if ~exist('receive_f_number','var')
     receive_f_number = 1.7;
+end
+if ~exist('run_identity_check','var')
+    run_identity_check = false;
 end
 
 datasets = { ...
@@ -218,20 +226,23 @@ for k = 1:N
          '%s. Scaled error = %.3e'], ...
         filename,scaled_error);
 
-    % CF is the M0=0 special case: check it once per dataset.
-    dc_opts = common;
-    dc_opts.M0 = 0;
+    % Optional identity check. Disabled by default to avoid a third full
+    % reconstruction for each in-vivo acquisition.
+    if run_identity_check
+        dc_opts = common;
+        dc_opts.M0 = 0;
 
-    fprintf('Checking GCF(M0=0) == CF ... ');
-    GCF0 = reconstruct_fi_gcf_manual(filename,dc_opts);
+        fprintf('Checking GCF(M0=0) == CF ... ');
+        GCF0 = reconstruct_fi_gcf_manual(filename,dc_opts);
 
-    identity_error = ...
-        max(abs(CF{k}.cf_map(:)-GCF0.gcf_map(:)));
+        identity_error = ...
+            max(abs(CF{k}.cf_map(:)-GCF0.gcf_map(:)));
 
-    fprintf('max error %.3e\n',identity_error);
+        fprintf('max error %.3e\n',identity_error);
 
-    assert(identity_error < 1e-10, ...
-        'GCF(M0=0) does not reproduce CF for %s.',filename);
+        assert(identity_error < 1e-10, ...
+            'GCF(M0=0) does not reproduce CF for %s.',filename);
+    end
 
     summary.dataset(k) = string(dataset_names{k});
     summary.N_samples(k) = meta{k}.N_samples;
