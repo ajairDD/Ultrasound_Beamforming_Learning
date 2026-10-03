@@ -1477,3 +1477,114 @@ analyze_gcf_speckle_roi
 > **CF 把背景压得更黑时，到底是在去除“不相干 clutter”，还是也在强烈重塑正常 diffuse speckle？而 GCF 又保留了多少原始 speckle texture？**
 
 这些统计只描述当前 ROI 的 texture 变化，不自动证明理想 Rayleigh speckle，也不构成临床图像质量结论。
+---
+
+## 29. 已验证结果：真实颈动脉上的 CF / GCF
+
+对两个独立 focused-imaging carotid acquisition：
+
+~~~text
+L7_FI_carotid_cross_1.uff
+L7_FI_carotid_cross_2.uff
+~~~
+
+使用同一套 Manual DAS / CF / GCF(M0=1) 代码，得到：
+
+~~~text
+cross 1
+  CF median  = 0.037282
+  CF mean    = 0.092375
+  GCF median = 0.13792
+  GCF mean   = 0.23105
+
+cross 2
+  CF median  = 0.034348
+  CF mean    = 0.088520
+  GCF median = 0.13131
+  GCF mean   = 0.22724
+~~~
+
+并且 CF core 与 GCF core 的 DAS baseline 完全一致：
+
+~~~text
+DAS_core_scaled_error = 0
+~~~
+
+### 29.1 与 TheGB phantom 相比
+
+TheGB 上此前约为：
+
+~~~text
+CF median      ≈ 0.178
+GCF M0=1 median ≈ 0.565
+~~~
+
+而真实 carotid 上只有：
+
+~~~text
+CF median      ≈ 0.034 ~ 0.037
+GCF M0=1 median ≈ 0.131 ~ 0.138
+~~~
+
+因此同一算法在人体数据上明显更 aggressive。
+
+两个独立 acquisition 给出非常接近的统计值，说明这个现象具有一定重复性，不像是单次采集偶然。
+
+### 29.2 图像上的共同现象
+
+两个 carotid acquisition 都表现出：
+
+- CF 把大量组织 speckle / 深部回波强烈压低；
+- GCF(M0=1) 比 CF 保留更多组织纹理和结构连续性；
+- GCF 仍然比 DAS 明显更暗；
+- lumen 内部和周围低 coherence 区域都被显著抑制；
+- 深部区域的 CF/GCF 权重整体偏低。
+
+当前不能简单解释为“人体数据更差”或“GCF 更正确”。可能贡献因素包括：
+
+- attenuation / SNR 随深度下降；
+- sound-speed mismatch / phase aberration；
+- diffuse scattering statistics；
+- reverberation / clutter；
+- dynamic receive aperture 随深度变化；
+- 真实组织几何和 out-of-plane effects。
+
+这些机制当前没有被单独控制，因此只能作为候选解释。
+
+### 29.3 当前最重要的新问题
+
+真实 carotid 上 CF/GCF 的强 suppression 看起来存在明显 depth dependence。
+
+所以在继续做 ROI 评价之前，先需要确认：
+
+> **coherence weight 是否随深度系统性下降，以及这个趋势与 DAS signal level、active Rx count 是否同时变化。**
+
+---
+
+## 30. 第十小节：真实 carotid 的 depth dependence
+
+新增：
+
+~~~text
+analyze_carotid_cf_gcf_depth_dependence.m
+~~~
+
+运行：
+
+~~~matlab
+analyze_carotid_cf_gcf_depth_dependence
+~~~
+
+无需手工选 ROI。
+
+脚本自动对两个 carotid acquisition 计算：
+
+- central 80% lateral field 的 CF median / IQR；
+- GCF(M0=1) median / IQR；
+- median DAS envelope 随深度变化；
+- median active Rx count 随深度变化；
+- 5–15 / 15–25 / 25–35 / 35–45 mm 四个深度段的统计。
+
+外侧 10% scanlines 被排除，以尽量减少 probe-edge aperture truncation 的影响。
+
+这一步只用于识别 depth trend，不能单独证明趋势来自 attenuation、aberration 或其它某一种机制。
