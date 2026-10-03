@@ -289,3 +289,54 @@ corr_with_DAS
 以及 common-reference ROI 图和 mean-normalized envelope histogram。
 
 目的：定量观察 CF / GCF 在 suppress background 的同时，改变了多少原始 speckle texture。
+
+---
+
+## 人体 FI 颈动脉：一键 DAS / CF / GCF 对比
+
+运行：
+
+~~~matlab
+compare_carotid_fi_cf_gcf_oneclick
+~~~
+
+自动处理：
+
+~~~text
+L7_FI_carotid_cross_1.uff
+L7_FI_carotid_cross_2.uff
+~~~
+
+默认比较：
+
+~~~text
+DAS
+CF
+GCF, M0=1
+~~~
+
+无需手工选 pixel / ROI。
+
+脚本会自动：
+
+- 检查当前 UFF 是否满足本章 RF + spherical FI 假设；
+- 对两个 acquisition 分别重建 DAS / CF / GCF；
+- 验证 CF core 与 GCF core 的 DAS baseline 一致；
+- 打印 sampling frequency、channel / wave 数和 CF/GCF statistics；
+- 生成两行三列的 DAS / CF / GCF common-reference 对比；
+- 生成 CF / GCF weight maps；
+- 生成 GCF-CF difference maps。
+
+注意：两个 carotid 文件是独立 acquisition，因此每一行使用各自的 DAS peak 作为 0 dB reference。不要根据两行之间的绝对亮度做定量比较。
+
+正常使用无需额外设置；如需覆盖默认参数，可以在运行前设置：
+
+~~~matlab
+M0 = 1;
+n_z = 512;
+z_min = 5e-3;
+z_max = 45e-3;
+receive_f_number = 1.7;
+
+compare_carotid_fi_cf_gcf_oneclick
+~~~
