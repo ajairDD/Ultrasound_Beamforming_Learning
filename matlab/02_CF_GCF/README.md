@@ -340,3 +340,27 @@ receive_f_number = 1.7;
 
 compare_carotid_fi_cf_gcf_oneclick
 ~~~
+
+---
+
+## 第十课：carotid CF/GCF depth dependence
+
+运行：
+
+~~~matlab
+analyze_carotid_cf_gcf_depth_dependence
+~~~
+
+自动处理两个 carotid focused-imaging 数据，不需要选择 ROI。
+
+输出：
+
+~~~text
+CF / GCF median vs depth
+CF / GCF IQR vs depth
+median DAS envelope vs depth
+median active Rx count vs depth
+4 个 depth bands 的 summary
+~~~
+
+用途：判断人体数据中 CF/GCF 的强 suppression 是否存在系统性 depth dependence，并同时检查 signal level 和 dynamic aperture 这两个重要混杂因素。
