@@ -236,3 +236,31 @@ M0=4 -> 9-bin GCF
 参数扫描默认 `n_z=256` 以缩短运行时间。
 
 先用它看趋势；确定感兴趣的 M0 后，再用 `compare_manual_das_cf_gcf` 以 `n_z=512` 做正式比较。
+---
+
+## 第八课：point target 上比较 M0
+
+运行：
+
+~~~matlab
+analyze_gcf_m0_point_target
+~~~
+
+默认：
+
+~~~text
+M0 = [0 1 2]
+n_z = 512
+~~~
+
+对应：
+
+~~~text
+M0=0 -> CF
+M0=1 -> 3-bin GCF
+M0=2 -> 5-bin GCF
+~~~
+
+输出 point-target peak、FWHM 和 -20 dB profile width，用来量化从严格 CF 到更宽松 GCF 的变化。
+
+另外，`reconstruct_fi_gcf_manual.m` 已修正短 active aperture 的边界处理：requested M0 过大时会裁剪到当前 aperture 能支持的最大 unique symmetric FFT band，而不是把 GCF 权重直接设成 0。
