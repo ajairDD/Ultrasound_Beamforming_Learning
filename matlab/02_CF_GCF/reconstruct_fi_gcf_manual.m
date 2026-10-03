@@ -137,6 +137,8 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
     das_analytic = complex(zeros(opts.n_z,N_waves));
     gcf_map = zeros(opts.n_z,N_waves);
     active_channel_count = zeros(opts.n_z,N_waves);
+    effective_M0_map = zeros(opts.n_z,N_waves);
+    band_clipped_mask = false(opts.n_z,N_waves);
 
     %% 4. Pixel-by-pixel GCF
     for iw = 1:N_waves
@@ -193,26 +195,32 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
             coherent_sum = sum(s);
             das_analytic(iz,iw) = coherent_sum;
 
-            % The requested low-frequency band contains 2*M0+1 bins.
-            % If the active aperture is too short, do not invent a band.
-            min_required_channels = 2*opts.M0 + 1;
+            % A very small active aperture may not contain enough unique
+            % FFT bins for the requested symmetric band. Do NOT force the
+            % GCF weight to zero; that would create an artificial dark edge.
+            %
+            % Instead, clip the effective half-width to the widest unique
+            % symmetric band available for this aperture. For even M, the
+            % largest value includes the Nyquist bin once and therefore can
+            % span the entire spectrum.
+            max_M0 = floor(M/2);
+            effective_M0 = min(opts.M0,max_M0);
 
-            if M < min_required_channels
+            effective_M0_map(iz,iw) = effective_M0;
+            band_clipped_mask(iz,iw) = effective_M0 < opts.M0;
+
+            X = fft(s);
+            spectral_energy = abs(X).^2;
+            total_energy = sum(spectral_energy);
+
+            if total_energy <= 0
                 gcf_value = 0;
             else
-                X = fft(s);
-                spectral_energy = abs(X).^2;
-                total_energy = sum(spectral_energy);
+                idx = low_frequency_indices(M,effective_M0);
 
-                if total_energy <= 0
-                    gcf_value = 0;
-                else
-                    idx = low_frequency_indices(M,opts.M0);
-
-                    gcf_value = ...
-                        sum(spectral_energy(idx)) / ...
-                        total_energy;
-                end
+                gcf_value = ...
+                    sum(spectral_energy(idx)) / ...
+                    total_energy;
             end
 
             assert(gcf_value >= -1e-12 && gcf_value <= 1+1e-10, ...
@@ -258,6 +266,9 @@ function out = reconstruct_fi_gcf_manual(filename,opts)
     out.gcf_db_common = gcf_db_common;
 
     out.active_channel_count = active_channel_count;
+    out.effective_M0_map = effective_M0_map;
+    out.band_clipped_mask = band_clipped_mask;
+    out.band_clipped_fraction = nnz(band_clipped_mask) / numel(band_clipped_mask);
 
     out.x_axis = x_axis;
     out.z_axis = z_axis;
@@ -331,7 +342,9 @@ function idx = low_frequency_indices(M,M0)
     %   ...end        -> negative spatial frequencies
     %
     % Include {-M0,...,-1,0,+1,...,+M0}.
-    idx = [1:(M0+1), (M-M0+1):M];
+    % unique() prevents double-counting the Nyquist bin when M is even
+    % and M0 = M/2.
+    idx = unique([1:(M0+1), (M-M0+1):M]);
 end
 
 function tau_tx = focused_tx_delay_spherical(wave,x,y,z)
