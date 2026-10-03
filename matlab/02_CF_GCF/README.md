@@ -264,3 +264,28 @@ M0=2 -> 5-bin GCF
 输出 point-target peak、FWHM 和 -20 dB profile width，用来量化从严格 CF 到更宽松 GCF 的变化。
 
 另外，`reconstruct_fi_gcf_manual.m` 已修正短 active aperture 的边界处理：requested M0 过大时会裁剪到当前 aperture 能支持的最大 unique symmetric FFT band，而不是把 GCF 权重直接设成 0。
+---
+
+## 第九课：homogeneous speckle ROI
+
+运行：
+
+~~~matlab
+analyze_gcf_speckle_roi
+~~~
+
+在 DAS 图上点击两个对角点选择一块均匀 speckle 区域。
+
+输出：
+
+~~~text
+mean_vs_DAS_dB
+std_vs_DAS
+speckle_SNR
+CV
+corr_with_DAS
+~~~
+
+以及 common-reference ROI 图和 mean-normalized envelope histogram。
+
+目的：定量观察 CF / GCF 在 suppress background 的同时，改变了多少原始 speckle texture。
