@@ -198,21 +198,24 @@ for k = 1:N
     % -------------------------------------------------------------
     subplot(N,2,(k-1)*2+2);
 
+    % yyaxis shares x. Put depth on that common axis; otherwise an x-limit
+    % suitable for negative dB values hides the positive active-Rx counts.
     yyaxis left;
-    plot(p.das_median_db,p.z*1e3,'LineWidth',1.5);
-    xlabel('Median DAS envelope (dB, depth-profile normalized)');
-    ylabel('z (mm)');
-    xlim([-60 0]);
+    level_curve = plot(p.z*1e3,p.das_median_db,'LineWidth',1.5);
+    ylabel('Median DAS envelope (dB, profile normalized)');
+    ylim([-60 0]);
 
     yyaxis right;
-    plot(p.active_M_median,p.z*1e3,'LineWidth',1.5);
-    xlabel('Median DAS level / active Rx count');
-    ylabel('z (mm)');
+    aperture_curve = plot(p.z*1e3,p.active_M_median,'LineWidth',1.5);
+    ylabel('Median active Rx count');
+    ylim([0 CF{k}.N_channels]);
 
-    set(gca,'YDir','reverse');
-    ylim([z_min z_max]*1e3);
+    xlabel('Depth z (mm)');
+    xlim([z_min z_max]*1e3);
 
     title(sprintf('%s | signal level and active aperture',dataset_names{k}));
+    legend([level_curve aperture_curve],{'DAS level','Active Rx'}, ...
+        'Location','best');
     grid on;
 end
 

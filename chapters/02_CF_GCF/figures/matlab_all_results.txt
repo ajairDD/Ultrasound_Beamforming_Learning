@@ -1,0 +1,521 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Phantom: L7_FI_TheGB.uff; carotid: cross_1 and cross_2.
+Frame 1; depth 5--45 mm; binary Rx F-number 1.7.
+Target seed [x,z]=[-0.75,20.05] mm.
+Aperture-vector seeds: [-0.75,20.05;8,22;10,10] mm.
+Speckle demonstration ROI corners: [5,18;11,24] mm.
+Full-image M0=1; sweep [0,1,2,4]; target M0 [0,1,2].
+Common-reference images use the corresponding dataset DAS peak.
+The selected ROI has no verified ideal-speckle ground truth.
+
+--- demo_cf_aperture_vectors | n_z=0 ---
+============================================================
+ CF APERTURE-VECTOR DEMO
+============================================================
+Fully coherent         : CF = 1.000000 | |DAS sum| = 32.000000
+Partially coherent     : CF = 0.905494 | |DAS sum| = 30.450376
+Random phase           : CF = 0.031249 | |DAS sum| = 5.656757
+One strong outlier     : CF = 0.612500 | |DAS sum| = 28.000000
+
+Interpretation:
+  CF near 1: most channel energy contributes coherently to the sum.
+  CF near 0: channels contain energy, but much of it cancels.
+  A coherent aperture vector concentrates spectrum near DC.
+  GCF generalizes this by integrating a low-frequency band.
+
+Exported 1 figures; elapsed 4.0 s.
+
+--- demo_cf_failure_and_gcf_motivation | n_z=0 ---
+============================================================
+ CF LIMITATION AND GCF MOTIVATION
+============================================================
+
+Perfect coherence
+  CF          : 1.000000
+  GCF K=0     : 1.000000
+  GCF K=1     : 1.000000
+  GCF K=2     : 1.000000
+  GCF K=4     : 1.000000
+
+Smooth 1-bin phase ramp
+  CF          : 0.000000
+  GCF K=0     : 0.000000
+  GCF K=1     : 1.000000
+  GCF K=2     : 1.000000
+  GCF K=4     : 1.000000
+
+Random phase
+  CF          : 0.026378
+  GCF K=0     : 0.026378
+  GCF K=1     : 0.039178
+  GCF K=2     : 0.102806
+  GCF K=4     : 0.206858
+
+Interpretation:
+  Perfect coherence stays near 1 even for K=0 because its spectrum
+  is concentrated exactly at DC.
+  A smooth phase ramp can have CF near 0 because its spectral peak
+  moved from DC to a neighboring low-frequency bin.
+  GCF with a small K can recognize that low-order structure.
+  Increasing K too far is not automatically better: eventually more
+  incoherent / high-frequency energy is also admitted.
+
+Exported 2 figures; elapsed 3.3 s.
+
+--- inspect_real_cf_aperture_vectors | n_z=512 ---
+============================================================
+ REAL RECEIVE-APERTURE CF INSPECTION
+============================================================
+Reconstructing Chapter-1 conventional FI-DAS image ...
+
+Select three pixels on the DAS image.
+Suggested order:
+  1) bright / point-like target
+  2) ordinary speckle
+  3) weak / clutter / suspicious region
+
+P1
+  clicked       : x -0.750 mm, z 20.050 mm
+  snapped pixel : x -0.745 mm, z 20.029 mm
+  Tx / scanline : 62
+  active Rx     : 39 / 128
+  CF            : 0.978040
+  |DAS sum|     : 18191.3
+  DAS abs err   : 0.000e+00
+  scaled err    : 0.000e+00 (primary check)
+  DAS-rel err   : 0.000e+00 (can inflate near cancellation)
+
+P2
+  clicked       : x 8.000 mm, z 22.000 mm
+  snapped pixel : x 7.896 mm, z 21.986 mm
+  Tx / scanline : 91
+  active Rx     : 43 / 128
+  CF            : 0.046026
+  |DAS sum|     : 244.779
+  DAS abs err   : 0.000e+00
+  scaled err    : 0.000e+00 (primary check)
+  DAS-rel err   : 0.000e+00 (can inflate near cancellation)
+
+P3
+  clicked       : x 10.000 mm, z 10.000 mm
+  snapped pixel : x 9.982 mm, z 10.010 mm
+  Tx / scanline : 98
+  active Rx     : 19 / 128
+  CF            : 0.097147
+  |DAS sum|     : 252.22
+  DAS abs err   : 0.000e+00
+  scaled err    : 0.000e+00 (primary check)
+  DAS-rel err   : 0.000e+00 (can inflate near cancellation)
+
+============================================================
+ SUMMARY
+============================================================
+P1: x= -0.745 mm, z= 20.029 mm, Tx= 62, active Rx= 39, CF=0.9780
+P2: x=  7.896 mm, z= 21.986 mm, Tx= 91, active Rx= 43, CF=0.0460
+P3: x=  9.982 mm, z= 10.010 mm, Tx= 98, active Rx= 19, CF=0.0971
+
+What to inspect:
+  1) query-time curves differ across Rx elements because each element
+     has a different receive propagation distance.
+  2) after those delays are applied, a well-focused pixel should show
+     more consistent complex phase across the active aperture.
+  3) CF measures that consistency; it is not simply signal amplitude.
+  4) coherent aperture vectors concentrate more spatial-spectrum
+     energy near DC; this will lead directly to GCF.
+
+Exported 2 figures; elapsed 42.1 s.
+
+--- compare_manual_das_vs_cf | n_z=512 ---
+============================================================
+ MANUAL DAS vs RECEIVE-DOMAIN CF
+============================================================
+CF reconstruction wave 1 / 128 ...
+CF reconstruction wave 13 / 128 ...
+CF reconstruction wave 25 / 128 ...
+CF reconstruction wave 37 / 128 ...
+CF reconstruction wave 49 / 128 ...
+CF reconstruction wave 61 / 128 ...
+CF reconstruction wave 73 / 128 ...
+CF reconstruction wave 85 / 128 ...
+CF reconstruction wave 97 / 128 ...
+CF reconstruction wave 109 / 128 ...
+CF reconstruction wave 121 / 128 ...
+
+DAS consistency check
+  max abs complex error : 1.136868e-13
+  max-peak scaled error : 5.332858e-18
+
+Runtime
+  Chapter-2 DAS+CF : 21.17 s
+  Chapter-1 DAS    : 20.33 s
+
+CF map statistics
+  min    : 0.000006
+  median : 0.178151
+  mean   : 0.237657
+  max    : 0.979233
+
+Interpretation:
+  - The CF map is NOT a B-mode image; it is a per-pixel coherence weight.
+  - The common-reference figure shows how much CF suppresses each pixel.
+  - The self-normalized figure emphasizes morphology but hides global attenuation.
+  - A visually narrower bright structure after CF is an apparent/adaptive
+    narrowing; it is not automatically proof of improved physical resolution.
+
+Exported 2 figures; elapsed 42.9 s.
+
+--- compare_manual_das_cf_gcf | n_z=512 ---
+============================================================
+ MANUAL DAS vs CF vs GCF
+============================================================
+GCF M0 = 1
+
+CF reconstruction wave 1 / 128 ...
+CF reconstruction wave 13 / 128 ...
+CF reconstruction wave 25 / 128 ...
+CF reconstruction wave 37 / 128 ...
+CF reconstruction wave 49 / 128 ...
+CF reconstruction wave 61 / 128 ...
+CF reconstruction wave 73 / 128 ...
+CF reconstruction wave 85 / 128 ...
+CF reconstruction wave 97 / 128 ...
+CF reconstruction wave 109 / 128 ...
+CF reconstruction wave 121 / 128 ...
+GCF reconstruction wave 1 / 128 ...
+GCF reconstruction wave 13 / 128 ...
+GCF reconstruction wave 25 / 128 ...
+GCF reconstruction wave 37 / 128 ...
+GCF reconstruction wave 49 / 128 ...
+GCF reconstruction wave 61 / 128 ...
+GCF reconstruction wave 73 / 128 ...
+GCF reconstruction wave 85 / 128 ...
+GCF reconstruction wave 97 / 128 ...
+GCF reconstruction wave 109 / 128 ...
+GCF reconstruction wave 121 / 128 ...
+DAS consistency check: CF core vs GCF core
+  max abs complex error : 0.000000e+00
+  max-peak scaled error : 0.000000e+00
+
+Identity check
+  max |CF - GCF(M0=0)| : 9.992007e-16
+
+CF statistics
+  median : 0.178151
+  mean   : 0.237657
+  max    : 0.979233
+
+GCF statistics, M0=1
+  median : 0.564431
+  mean   : 0.547076
+  max    : 0.987204
+
+Interpretation:
+  CF is the strict DC-only coherence weight.
+  GCF admits a small low-spatial-frequency band.
+  Therefore GCF is usually less aggressive than CF, but the
+  amount depends on M0 and the actual aperture spectra.
+  Larger M0 is not automatically better: it also admits more
+  incoherent / high-spatial-frequency energy.
+
+Exported 3 figures; elapsed 63.6 s.
+
+--- experiment_gcf_m0_sweep | n_z=256 ---
+============================================================
+ GCF M0 SWEEP
+============================================================
+n_z = 256
+Rx F# = 1.700
+
+M0 = 0 ... UFF: reading channel_data [uff.channel_data]
+20.64 s
+M0 = 1 ... UFF: reading channel_data [uff.channel_data]
+19.53 s
+M0 = 2 ... UFF: reading channel_data [uff.channel_data]
+19.58 s
+M0 = 4 ... UFF: reading channel_data [uff.channel_data]
+19.38 s
+    M0    min_weight    median_weight    mean_weight    max_weight
+    __    __________    _____________    ___________    __________
+
+    0     6.4608e-07       0.17847         0.23755       0.97648
+    1      0.0031513       0.56509         0.54686       0.98889
+    2       0.012092       0.74785         0.70652             1
+    4        0.13447       0.89595         0.87012             1
+
+
+Interpretation:
+  M0=0 is ordinary CF.
+  Increasing M0 admits more neighboring spatial-frequency energy.
+  Therefore GCF weights should be non-decreasing for a fixed pixel.
+  A visually cleaner image at smaller M0 is not automatically a
+  universally better image: larger M0 intentionally preserves more
+  low-order aperture structure and diffuse speckle.
+  Choose M0 only after deciding what metric matters: point-target
+  suppression, contrast, speckle preservation, aberration robustness,
+  or another task-specific criterion.
+
+Verified every sweep pixel: weights non-decreasing with M0; DAS unchanged.
+
+Exported 3 figures; elapsed 81.5 s.
+
+--- analyze_das_vs_cf_point_target | n_z=1024 ---
+============================================================
+ DAS vs CF POINT-TARGET ANALYSIS
+============================================================
+CF reconstruction wave 1 / 128 ...
+CF reconstruction wave 13 / 128 ...
+CF reconstruction wave 25 / 128 ...
+CF reconstruction wave 37 / 128 ...
+CF reconstruction wave 49 / 128 ...
+CF reconstruction wave 61 / 128 ...
+CF reconstruction wave 73 / 128 ...
+CF reconstruction wave 85 / 128 ...
+CF reconstruction wave 97 / 128 ...
+CF reconstruction wave 109 / 128 ...
+CF reconstruction wave 121 / 128 ...
+
+Local peak positions
+  DAS : x -0.7450 mm, z 20.0538 mm
+  CF  : x -0.7450 mm, z 20.0538 mm
+  shift: dx 0.0000 mm, dz 0.0000 mm
+
+Target peak amplitude
+  CF vs DAS local peak, common linear scale: -0.221 dB
+  CF weight at DAS peak: 0.974856
+
+-6 dB amplitude FWHM
+  lateral DAS : 0.732243 mm  (2.457 scanline intervals)
+  lateral CF  : 0.430447 mm  (1.445 scanline intervals)
+  axial DAS   : 0.447879 mm  (11.455 z samples)
+  axial CF    : 0.445167 mm  (11.385 z samples)
+
+-20 dB amplitude width
+  lateral DAS : 1.167559 mm
+  lateral CF  : 0.994396 mm
+  axial DAS   : 1.015686 mm
+  axial CF    : 0.960285 mm
+[警告: At least one lateral FWHM spans fewer than 3 conventional FI scanline intervals. Treat the lateral-width comparison as
+sampling-limited, not high-precision resolution metrology.]
+
+Interpretation boundary
+  A reduced FWHM after CF means the adaptive weighting has narrowed
+  the displayed target profile. Do not automatically reinterpret
+  this as a change in the acquisition's diffraction limit.
+  The -20 dB width is included to show profile-skirt suppression;
+  it is not a standalone formal sidelobe metric.
+
+Exported 4 figures; elapsed 24.6 s.
+
+--- analyze_gcf_m0_point_target | n_z=512 ---
+============================================================
+ GCF M0 POINT-TARGET COMPARISON
+============================================================
+Reconstructing M0=0 ... UFF: reading channel_data [uff.channel_data]
+21.88 s
+Reconstructing M0=1 ... UFF: reading channel_data [uff.channel_data]
+21.02 s
+Reconstructing M0=2 ... UFF: reading channel_data [uff.channel_data]
+20.80 s
+
+DAS local peak
+  x = -0.7450 mm
+  z = 20.1076 mm
+    M0    target_weight    peak_change_db    lateral_fwhm_mm    axial_fwhm_mm    lateral_w20_mm    axial_w20_mm
+    __    _____________    ______________    _______________    _____________    ______________    ____________
+
+    0        0.97873          -0.18671           0.42034           0.44214          0.98219          0.95773
+    1        0.98222          -0.15586           0.62051           0.44359           1.1501          0.98306
+    2        0.98362          -0.14349           0.65177           0.44489           1.1529            1.004
+
+
+Sampling context
+  lateral spacing : 0.297981 mm
+  axial spacing   : 0.078278 mm
+
+Interpretation:
+  M0=0 is ordinary CF.
+  If M0 increases, target peak attenuation should generally weaken
+  because more low-frequency aperture energy is accepted.
+  Compare this benefit against the loss of background / skirt
+  suppression seen in the full-image sweep.
+  Lateral FWHM remains sampling-limited in conventional FI whenever
+  it spans only a few scanline intervals.
+
+Exported 3 figures; elapsed 64.8 s.
+
+--- analyze_gcf_speckle_roi | n_z=512 ---
+============================================================
+ GCF SPECKLE-ROI ANALYSIS
+============================================================
+Reconstructing M0=0 ... UFF: reading channel_data [uff.channel_data]
+21.17 s
+Reconstructing M0=1 ... UFF: reading channel_data [uff.channel_data]
+20.94 s
+Reconstructing M0=2 ... UFF: reading channel_data [uff.channel_data]
+21.36 s
+Reconstructing M0=4 ... UFF: reading channel_data [uff.channel_data]
+20.96 s
+
+Selected ROI
+  x: 5.215 to 10.876 mm
+  z: 18.072 to 23.943 mm
+  size: 76 z samples x 20 scanlines = 1520 pixels
+     method     mean_vs_DAS_dB    std_vs_DAS    speckle_SNR      CV       corr_with_DAS
+    ________    ______________    __________    ___________    _______    _____________
+
+    {'DAS' }              0              1         1.8405      0.54332             1
+    {'M0=0'}        -10.794        0.64344        0.82549       1.2114       0.91476
+    {'M0=1'}        -4.3992        0.82919         1.3376       0.7476       0.94643
+    {'M0=2'}        -2.0198        0.91485         1.5944      0.62718       0.98104
+    {'M0=4'}       -0.81044        0.95267         1.7599      0.56822       0.99643
+
+
+Interpretation:
+  mean_vs_DAS_dB quantifies how strongly each method suppresses the
+  average envelope in the selected diffuse ROI.
+  corr_with_DAS describes how much of the original DAS speckle texture
+  is preserved after adaptive weighting.
+  speckle_SNR and CV describe ROI statistics, but do not by themselves
+  prove ideal Rayleigh speckle or diagnostic superiority.
+
+Exported 3 figures; elapsed 86.5 s.
+
+--- compare_carotid_fi_cf_gcf_oneclick | n_z=512 ---
+============================================================
+ ONE-CLICK IN-VIVO CAROTID: DAS vs CF vs GCF
+============================================================
+GCF M0       : 1
+Rx F-number  : 1.700
+z range      : 5.0 to 45.0 mm
+n_z          : 512
+
+------------------------------------------------------------
+L7 FI carotid cross 1
+------------------------------------------------------------
+Metadata check passed
+  RF size      : [1920 samples x 128 channels x 128 waves ...]
+  fs           : 20.834665 MHz
+  sound speed  : 1540.000 m/s
+  Tx mode      : spherical focused imaging
+Reconstructing CF ... UFF: reading channel_data [uff.channel_data]
+10.94 s
+Reconstructing GCF(M0=1) ... UFF: reading channel_data [uff.channel_data]
+11.78 s
+CF  median / mean : 0.0374 / 0.0923
+GCF median / mean : 0.1377 / 0.2310
+
+------------------------------------------------------------
+L7 FI carotid cross 2
+------------------------------------------------------------
+Metadata check passed
+  RF size      : [1920 samples x 128 channels x 128 waves ...]
+  fs           : 20.834665 MHz
+  sound speed  : 1540.000 m/s
+  Tx mode      : spherical focused imaging
+Reconstructing CF ... UFF: reading channel_data [uff.channel_data]
+10.61 s
+Reconstructing GCF(M0=1) ... UFF: reading channel_data [uff.channel_data]
+11.65 s
+CF  median / mean : 0.0342 / 0.0885
+GCF median / mean : 0.1315 / 0.2271
+
+============================================================
+ SUMMARY TABLE
+============================================================
+            dataset            N_samples    N_channels    N_waves    fs_MHz    CF_median    CF_mean     GCF_median    GCF_mean    DAS_core_scaled_error
+    _______________________    _________    __________    _______    ______    _________    ________    __________    ________    _____________________
+
+    "L7 FI carotid cross 1"      1920          128          128      20.835    0.037359     0.092288     0.13767        0.231               0
+    "L7 FI carotid cross 2"      1920          128          128      20.835    0.034161     0.088464      0.1315      0.22712               0
+
+
+============================================================
+ WHAT TO INSPECT VISUALLY
+============================================================
+1) Lumen:
+   Does CF reduce residual lumen clutter more strongly than GCF?
+
+2) Vessel wall:
+   Does aggressive CF weighting break or thin wall continuity?
+
+3) Tissue speckle:
+   Does CF strongly reshape normal tissue texture?
+   Does GCF(M0=1) preserve more of that texture?
+
+4) Cross-acquisition repeatability:
+   Are the same qualitative CF/GCF differences visible in BOTH
+   carotid_cross_1 and carotid_cross_2?
+
+Do not compare absolute brightness between the two rows. They are
+independent acquisitions and each row uses its own DAS reference.
+
+Exported 3 figures; elapsed 66.9 s.
+
+--- analyze_carotid_cf_gcf_depth_dependence | n_z=512 ---
+============================================================
+ CAROTID CF/GCF DEPTH DEPENDENCE
+============================================================
+GCF M0 = 1
+Rx F#  = 1.700
+
+carotid cross 1
+carotid cross 2
+
+============================================================
+carotid cross 1
+central lateral x range: -15.35 to 15.35 mm
+============================================================
+ 5-15 mm:
+  CF median across depth profile  : 0.1045
+  GCF median across depth profile : 0.3799
+  DAS median level                : -19.49 dB
+  active Rx median                : 19.0
+15-25 mm:
+  CF median across depth profile  : 0.0539
+  GCF median across depth profile : 0.2102
+  DAS median level                : -7.15 dB
+  active Rx median                : 39.0
+25-35 mm:
+  CF median across depth profile  : 0.0229
+  GCF median across depth profile : 0.0905
+  DAS median level                : -14.88 dB
+  active Rx median                : 59.0
+35-45 mm:
+  CF median across depth profile  : 0.0161
+  GCF median across depth profile : 0.0597
+  DAS median level                : -22.16 dB
+  active Rx median                : 77.5
+
+============================================================
+carotid cross 2
+central lateral x range: -15.35 to 15.35 mm
+============================================================
+ 5-15 mm:
+  CF median across depth profile  : 0.0956
+  GCF median across depth profile : 0.3693
+  DAS median level                : -16.04 dB
+  active Rx median                : 19.0
+15-25 mm:
+  CF median across depth profile  : 0.0429
+  GCF median across depth profile : 0.1814
+  DAS median level                : -16.00 dB
+  active Rx median                : 39.0
+25-35 mm:
+  CF median across depth profile  : 0.0195
+  GCF median across depth profile : 0.0778
+  DAS median level                : -20.64 dB
+  active Rx median                : 59.0
+35-45 mm:
+  CF median across depth profile  : 0.0149
+  GCF median across depth profile : 0.0558
+  DAS median level                : -24.40 dB
+  active Rx median                : 77.5
+
+Interpretation boundary:
+  If CF/GCF fall with depth while DAS level also falls, lower SNR /
+  attenuation is a plausible contributor, but not a proven cause.
+  If active-channel count changes strongly with depth, aperture size is
+  another confound. Do not attribute the trend to one mechanism
+  without a controlled experiment.
+
+Exported 1 figures; elapsed 46.3 s.

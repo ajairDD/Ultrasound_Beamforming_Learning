@@ -35,7 +35,7 @@
 %   cd matlab/02_CF_GCF
 %   inspect_real_cf_aperture_vectors
 
-clearvars -except filename z_min z_max n_z receive_f_number;
+clearvars -except filename z_min z_max n_z receive_f_number selected_pixels_mm;
 clc;
 close all;
 
@@ -123,7 +123,16 @@ fprintf('  1) bright / point-like target\n');
 fprintf('  2) ordinary speckle\n');
 fprintf('  3) weak / clutter / suspicious region\n\n');
 
-[x_click_mm,z_click_mm] = ginput(3);
+% For lecture export, use three reproducible [x,z] rows instead of clicks.
+if exist('selected_pixels_mm','var')
+    assert(isequal(size(selected_pixels_mm),[3 2]) && ...
+        all(isfinite(selected_pixels_mm(:))), ...
+        'selected_pixels_mm must contain three finite [x,z] rows in mm.');
+    x_click_mm = selected_pixels_mm(:,1);
+    z_click_mm = selected_pixels_mm(:,2);
+else
+    [x_click_mm,z_click_mm] = ginput(3);
+end
 
 hold on;
 plot(x_click_mm,z_click_mm,'o','MarkerSize',10,'LineWidth',1.5);

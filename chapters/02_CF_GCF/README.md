@@ -1,1804 +1,740 @@
-# 第 2 章：Coherence Factor（CF）与 Generalized Coherence Factor（GCF）
+# 第 2 章：从 DAS 到 CF，再到 GCF
 
-第 0～1 章解决的是：
+本章围绕一个问题展开：**第一章已经把回波对齐了，为什么还要检查接收通道是否一致？这种检查又怎样改变最终图像？**
 
-> **如何根据传播模型，把不同接收阵元的数据正确对齐。**
+主线只有一条：**对齐后的通道向量 → DAS 相干和 → CF 权重 → 通道空间频谱 → GCF 权重 → 加权图像**。先完整理解这条链，再去看参数、实验结果与实现细节。
 
-第 2 章开始问一个新的问题：
+本章继续使用 conventional FI：一个像素对应一次聚焦 Tx，再沿 Rx 计算相干性。第一章的传播时间与插值仍然负责“在哪里取样”；本章在取样后增加“这些观测怎样相加、给予多大权重”。RTB 的跨 Tx 组合可在学清接收维度以后再研究。
 
-> **已经完成 delay alignment 的 aperture data，到底有多“相干”？**
+| 阅读阶段 | 内容 | 读完后应能解释 |
+|---|---|---|
+| [第一部分：完整理论，第 1–6 节](#theory) | 单像素输入、CF、空间 FFT、GCF 与完整成像流程 | 两种权重从哪里来，为什么这样计算 |
+| [第二部分：MATLAB 实践，第 7–11 节](#practice) | 人工向量 → 真实通道 → 整张图 → 参数与目标 → 组织纹理 | 把公式对应到代码、图和观测 |
+| [第三部分：实现与读图注意事项，第 12–15 节](#implementation-notes) | 孔径、索引、显示、采样、深度与验证 | 哪些差异来自算法，哪些还不能下结论 |
 
-本章第一阶段只研究 receive-domain coherence。对每一个 candidate pixel，我们已经有：
+第一次阅读先读第一部分。配套代码见 [MATLAB 第二章说明](../../matlab/02_CF_GCF/README.md)，课件原图、参数和提示词见 [配图索引](figures/README.md)。
 
-~~~text
-s1, s2, s3, ... , sM
+<a id="theory"></a>
+
+## 第一部分：先讲清完整算法
+
+### 1. 接上第一章：一个像素对应一组复数观测
+
+第一章重建候选位置 $P=(x,z)$ 时，先计算当前 Tx 到 $P$、再从 $P$ 到各接收阵元的时间，在每个通道各自的预测时刻插值。现在先固定这个像素和这次 Tx，把求和之前的数据拿出来：
+
+$$ \mathbf{s}(P)=[s_1(P),s_2(P),\ldots,s_M(P)]. $$
+
+这里 $M$ 是这个像素的有效接收通道数，$s_m$ 是完成延时对齐的**复数解析 RF 样本**。它既有幅值，也有相位；不是原始 RF 在同一个样本序号上的一行数据，也不是已经形成的灰阶图。
+
+![一个像素怎样得到对齐后的接收通道向量](figures/aligned_aperture_concept.png)
+
+**图 1｜固定同一像素，各通道在不同记录时刻取样。** 中间的线表示时间轴，橙点表示查询位置；右侧箭头表示取出的复数观测。图示采用理想相干情形，真实对齐后的箭头未必同向。AI 概念图不按比例，组织背景也是插画，不是本章数据。
+
+用复数箭头理解最直观：箭头长度代表幅值，方向代表相位。方向接近时，相加容易变大；方向相反时，相加会相消。Conventional DAS 已经做了：
+
+$$ S(P)=\sum_{m=1}^{M}s_m(P). $$
+
+于是新的问题是：**最终的和很大，是多数通道共同支持它，还是少数很强的通道主导它？和很小，又是因为本来就弱，还是有能量但在相消？**
+
+CF 与 GCF 都从这组 $\mathbf{s}$ 出发，为当前像素计算一个实数权重。权重需要求和前的通道数据；只拿一张 DAS B-mode 图，无法还原这些信息。
+
+### 2. CF：把相干和与通道能量放在一起看
+
+**Coherence Factor（CF，相干因子）** 的本章定义是：
+
+$$ \mathrm{CF}(P)=\frac{|S(P)|^2}{M\sum_{m=1}^{M}|s_m(P)|^2}. $$
+
+先把式子拆成三个量：
+
+| 量 | 怎样得到 | 在问什么 |
+|---|---|---|
+| $S=\sum_m s_m$ | 保留相位，相干相加 | 不同通道相加后留下多少响应？ |
+| $E=\sum_m\lvert s_m\rvert^2$ | 各自取幅值平方，再相加 | 通道本来一共有多少样本能量？ |
+| $ME$ | 用有效通道数作尺度归一化 | 在同样能量下，相干和功率最多能有多大？ |
+
+分母里的 $M$ 不能漏。由 Cauchy–Schwarz 不等式，$|S|^2\le ME$，所以非零能量时 $0\le\mathrm{CF}\le1$。通道全部为零时，本章实现将权重置零，避免除以零。
+
+#### 2.1 用四个数算一遍
+
+下面都取 $M=4$。即使某个有效通道的样本值恰好为零，它仍是这四个通道之一。
+
+| 对齐后的 $\mathbf{s}$ | $S$ | $E$ | CF | 解释 |
+|---|---:|---:|---:|---|
+| $[1,1,1,1]$ | 4 | 4 | 1 | 幅值、相位都相同 |
+| $[1,1,-1,-1]$ | 0 | 4 | 0 | 每个通道都有能量，求和却完全相消 |
+| $[1,1,1,4]$ | 7 | 19 | $49/76\approx0.645$ | 都同相，但幅值分布不均 |
+| $[1,0,0,0]$ | 1 | 1 | $1/4$ | 一个通道主导，缺乏多通道共同支持 |
+
+**CF 不只检查相位。** 在这个定义下，CF 等于 1 要求有效复数样本全部相等：幅值与相位都相同。“所有通道同相”本身不够。
+
+![相位相消与幅值分布怎样影响 CF](figures/cf_phasor_intuition.png)
+
+**图 2｜八通道的三个数学例子。** 左图样本完全一致；中图成对反向而相消；右图仍有八个有效通道，但只有一个非零贡献，所以 CF 为 $1/8$。箭头与合力长度仅示意。AI 图不代表真实组织的分类结果。
+
+#### 2.2 CF 衡量的是一致性，不是“目标真假”
+
+正确聚焦的点状回波往往能形成较一致的通道观测，因此可能获得较高权重；离轴贡献、像差、混响或噪声等可能降低一致性。但真实散射、通道幅值变化和孔径也会影响 CF。
+
+因此不能直接把“高 CF”翻译为“真目标”，把“低 CF”翻译为“噪声”。CF 是一个数值判据，不是组织或杂波的标签。
+
+### 3. 从一个 CF 数字到一整张加权图像
+
+CF 的输出用来乘同一个像素的复数 DAS 值：
+
+$$ Y_{\mathrm{CF}}(P)=\mathrm{CF}(P)\,S(P). $$
+
+非负实数 CF 只改变该复数像素的幅值，不校正相位。它也不重新计算 Tx/Rx delay、重新选聚焦位置或恢复已相消的信号。
+
+![CF 和 GCF 在成像流程中的位置](figures/cf_processing_pipeline.png)
+
+**图 3｜同一通道向量分成两路，再汇合。** 上路沿 Rx 求和得到复数 DAS；下路从求和前的向量计算实数权重；乘权后才取包络和 dB。AI 概念图中的 W 指 CF 或 GCF，不是第一章 RTB 的 Tx 权重和。
+
+对整张图重复同一个操作：
+
+1. 按 conventional FI 的方式选当前 Tx、扫描线与深度。
+2. 保持第一章的几何与插值，取得有效接收向量 $\mathbf{s}(P)$。
+3. 一路求 $S(P)$，另一路求 $\mathrm{CF}(P)$。
+4. 保存 $Y_{\mathrm{CF}}=\mathrm{CF}\,S$。
+5. 遍历所有像素，再取包络并转换为 dB。
+
+一个像素的 CF 为 0.2 时，它的包络变成原来的 0.2；在共同幅值参考下，变化约为 $20\log_{10}(0.2)=-14.0$ dB。CF 为 1 时保留原 DAS 值。
+
+这已经解释了为什么 CF 图可能更暗、亮结构边缘更窄：不同位置被乘上了不同权重。到底压低了旁瓣、正常组织纹理还是某种混合贡献，要在后面的实验中分开观察。
+
+### 4. 换一个视角：接收通道向量也是一个“空间信号”
+
+先区分两条轴。沿 RF 的**时间样本**做 FFT，可以看时间频率；沿 $\mathbf{s}$ 的**接收阵元序号**做 FFT，可以看通道观测沿孔径变化得快不快。
+
+本章 GCF 用第二种：
+
+- 各通道复数值相同：沿阵元方向不变化，频谱能量在 DC（零空间频率）。
+- 相位随通道平滑旋转：存在有规律的空间变化，能量可移到邻近 DC 的 bin。
+- 相位变化不规则：能量可能分散到更宽的空间频带。
+
+![常量、相位坡与不规则相位的孔径频谱](figures/aperture_spatial_spectrum.png)
+
+**图 4｜FFT 沿 Rx，而不是沿时间。** 中间一行用八通道、每通道旋转 45° 的数学向量，频谱移到 +1 bin。右侧是频谱幅值示意；真正计算能量时要用幅值平方。第三行仅示意频谱分散，不是某个随机向量的精确计算。AI 图中的频率不以 Hz 表示。
+
+这里的 bin 是离散频谱格点。对通道向量作未归一化 DFT：
+
+$$ X[k]=\sum_{m=1}^{M}s_m\,e^{-j2\pi k(m-1)/M},\qquad k=0,\ldots,M-1. $$
+
+先只看最容易理解的 $k=0$。指数项全为 1，因此：
+
+$$ X[0]=\sum_m s_m=S,\qquad \sum_k|X[k]|^2=M\sum_m|s_m|^2. $$
+
+第二个等式是 Parseval 关系。把两式放进 CF，得到：
+
+$$ \mathrm{CF}=\frac{|X[0]|^2}{\sum_k|X[k]|^2}. $$
+
+**普通 CF 恰好等于孔径频谱的 DC 能量占比。** 这不是另一个算法，而是同一公式换一种看法。它自然引出下一步：如果有用的通道结构没有严格停在 DC，是否应该容许邻近的低空间频率？
+
+### 5. GCF：把 DC 扩展成一个低空间频率带
+
+**Generalized Coherence Factor（GCF，广义相干因子）** 保留 CF 的“能量占比”思想，把分子从 DC 一个 bin 扩展为一段低空间频率带。[Li 与 Li，2003](https://pubmed.ncbi.nlm.nih.gov/12625586/)给出了这一思路，以及只保留 DC 时退化为 CF 的关系。
+
+本项目用 $M_0$ 表示以 DC 为中心的**低频半宽，单位为 FFT bin**：
+
+| 本项目参数 | 纳入分子的 signed bins | 理解 |
+|---|---|---|
+| $M_0=0$ | $\{0\}$ | DC only，正好是 CF |
+| $M_0=1$ | $\{-1,0,+1\}$ | 最小的相邻低频扩展 |
+| $M_0=2$ | $\{-2,-1,0,+1,+2\}$ | 再放宽一层 |
+| $M_0=4$ | $\{-4,\ldots,0,\ldots,+4\}$ | 接受更多孔径变化 |
+
+表格假设当前孔径有足够的独立 bins；小孔径的截断在第 12 节说明。记实际选中的独立 bins 为 $\mathcal K(M_0)$：
+
+$$ \mathrm{GCF}(P;M_0)=\frac{\sum_{k\in\mathcal K(M_0)}|X[k]|^2}{\sum_k|X[k]|^2},\qquad Y_{\mathrm{GCF}}(P)=\mathrm{GCF}(P;M_0)\,S(P). $$
+
+![GCF 怎样随低频带宽放宽判据](figures/gcf_bandwidth_tradeoff.png)
+
+**图 5｜频谱相同，改变的只是纳入分子的范围。** 橙色 bins 计入分子，全部 bins 始终计入分母。该图解释比值的计算，没有把频谱裁掉再逆变换。AI 示意图不提供数值性能结论。
+
+#### 5.1 M0 越大，意味着什么？
+
+对同一个非零通道向量，扩大频带只会向分子加入非负能量，所以：
+
+$$ \mathrm{CF}=\mathrm{GCF}(0)\le\mathrm{GCF}(1)\le\mathrm{GCF}(2)\le\cdots\le1. $$
+
+在同一 DAS 和共同幅值参考下，权重更大表示抑制更弱。这样可能保留更多平滑空间结构，也可能保留更多本来希望压低的贡献。**M0 控制取舍，不代表算法等级，也不存在由这个公式保证的通用最优值。**
+
+如果选到全部频谱，GCF 为 1，输出回到原 DAS。
+
+#### 5.2 一个关键例子：较高 GCF 不等于信号被修复
+
+取等幅的一 bin 相位坡：
+
+$$ s_m=e^{j2\pi(m-1)/M}. $$
+
+这些箭头绕复平面完整一圈，$S\approx0$；频谱却集中在 +1 bin。因此 CF 约为 0，GCF$(M_0=1)$ 约为 1。
+
+但最终仍是 $\mathrm{GCF}\times S\approx0$。**GCF 认可了这个向量的低频结构，却没有把它重新调成同相。** 这个例子用于解释权重判据，不证明相位坡对应真实目标，更不意味着 GCF 修正了延时误差。
+
+### 6. 把 CF 与 GCF 放回同一条成像主线
+
+| 环节 | 第一章 DAS | 本章 CF | 本章 GCF |
+|---|---|---|---|
+| 传播时间与通道取样 | 按 Tx/Rx 几何与插值 | 保持相同 | 保持相同 |
+| 单像素输入 | 有效复数 Rx 向量 $\mathbf{s}$ | 同一向量 | 同一向量 |
+| 接收相干和 | $S=\sum_m s_m$ | 同一 $S$ | 同一 $S$ |
+| 新增判据 | 无 | DC 能量比例 | 低频带能量比例 |
+| 复数输出 | $S$ | $\mathrm{CF}\,S$ | $\mathrm{GCF}\,S$ |
+| 最后显示 | 包络 → dB | 包络 → dB | 包络 → dB |
+
+~~~mermaid
+flowchart LR
+    A[一次 Tx 的复数解析 RF] --> B[按像素计算 Tx 和 Rx 时间]
+    B --> C[插值并选择有效 Rx]
+    C --> D[通道向量 s]
+    D --> E[沿 Rx 求和 S]
+    D --> F[CF 或 aperture FFT 后的 GCF]
+    E --> G[权重乘复数 DAS]
+    F --> G
+    G --> H[遍历像素后取包络与 dB]
 ~~~
 
-其中 sm 是第 m 个接收阵元在正确 Tx/Rx delay 后取出的 complex sample。
+读到这里，应能连贯讲出：**CF/GCF 用第一章已经对齐的数据，计算逐像素的一致性权重，再对同一个 DAS 结果乘权。GCF 将 CF 的 DC 判据放宽到低空间频率带。**
 
-第 1 章的 DAS 直接做：
+然后再打开 MATLAB，从可控的人工向量走向真实图像。
 
-~~~text
-s1 + s2 + ... + sM
-~~~
+<a id="practice"></a>
 
-而第 2 章开始问：
+## 第二部分：从 MATLAB 向量走到真实图像
 
-> 这些通道真的都支持“这里有一个正确聚焦的 echo”吗？
+### 7. 先用人工向量验证“公式到底在看什么”
 
----
-
-## 1. 为什么 DAS 后面还要看 coherence？
-
-如果一个 pixel 真的是正确聚焦位置，delay alignment 后各通道应该大致：
-
-~~~text
-Ch1   ↑
-Ch2   ↑
-Ch3   ↑
-Ch4   ↑
-...
-~~~
-
-相加时会互相加强。
-
-但如果这个 pixel 主要来自旁瓣、off-axis echo、reverberation、错误聚焦或噪声，delay 后各通道可能更像：
-
-~~~text
-Ch1   ↑
-Ch2   ↗
-Ch3   ↓
-Ch4   ←
-Ch5   ↘
-...
-~~~
-
-DAS 仍然会机械地把它们全部加起来。
-
-CF 的核心思想就是：
-
-> **先估计这些已经对齐的通道到底有多一致，再用这个一致程度去给 DAS pixel 加权。**
-
----
-
-## 2. CF 不修改 Tx/Rx delay
-
-这点要和 RTB 分清。
-
-CF 不重新计算传播路径，也不修改：
-
-~~~text
-Tx delay
-Rx delay
-interpolation
-receive aperture
-~~~
-
-它拿到第 1 章已经形成的 aligned aperture vector：
-
-~~~text
-s = [s1, s2, ... , sM]
-~~~
-
-计算一个 0～1 左右的 coherence weight，然后：
-
-~~~text
-CF-weighted image
-=
-CF weight × DAS image
-~~~
-
-所以：
-
-> **CF 是对 DAS 结果的自适应 coherence weighting，不是新的传播模型。**
-
----
-
-## 3. 三种最直观状态
-
-### 3.1 完全相干
-
-~~~text
-s = [↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑]
-~~~
-
-所有通道方向一致。
-
-CF 接近 1。
-
-含义：
-
-> 大部分通道能量都成功形成了 coherent sum。
-
-### 3.2 部分相干
-
-~~~text
-s = [↑ ↑ ↗ ↑ → ↑ ↘ ↑]
-~~~
-
-大部分一致，但存在一定 phase error。
-
-CF 在 0 和 1 之间。
-
-### 3.3 不相干
-
-~~~text
-s = [↑ ↓ → ↙ ↗ ← ↓ ↑]
-~~~
-
-各通道方向比较随机。
-
-虽然每个通道都可能有明显能量，但相干相加时会互相抵消。
-
-CF 接近 0。
-
----
-
-## 4. CF 的核心计算
-
-对一个 pixel 的 M 个 active receive channels：
-
-$$
-S = \sum_{m=1}^{M}s_m
-$$
-
-CF：
-
-$$
-CF
-=
-\frac{
-|S|^2
-}{
-M\sum_{m=1}^{M}|s_m|^2
-}
-$$
-
-先不要背公式。
-
-### 分子
-
-~~~text
-所有通道先相干相加
-再看最终有多强
-~~~
-
-通道越同相，分子越大。
-
-### 分母
-
-~~~text
-各通道原本一共有多少能量
-~~~
-
-所以 CF 实际在问：
-
-> **你原来有这么多通道能量，最后到底有多少成功形成了 coherent sum？**
-
-完全同相时 CF 接近 1。
-
-相位混乱时，分子因相消而变小，但分母仍然保留每个通道本来的能量，因此 CF 下降。
-
----
-
-## 5. CF 图像怎么形成？
-
-~~~text
-aligned aperture data
-        ├──────────────→ CF weight
-        │
-        ↓
-sum over Rx channels
-        ↓
-DAS complex signal
-        │
-        × CF
-        ↓
-CF-weighted complex image
-~~~
-
-即：
-
-$$
-y_{CF}(P)=CF(P)\,y_{DAS}(P)
-$$
-
-CF 本身不重新 beamform。
-
----
-
-## 6. 为什么 CF 可能压低旁瓣和 clutter？
-
-正确聚焦：
-
-~~~text
-↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑
-CF 高
-~~~
-
-错误聚焦或 off-axis contribution：
-
-~~~text
-↑ ↗ ↓ ← ↑ ↘ → ...
-CF 低
-~~~
-
-所以 CF 倾向于：
-
-~~~text
-保留高相干区域
-压低低相干区域
-~~~
-
-但必须注意：
-
-> **CF 高不等于一定是真目标，CF 低也不等于一定是噪声。**
-
-它衡量的是 aperture coherence，不是目标真假的分类器。
-
----
-
-## 7. 历史位置
-
-USTB 当前 coherence_factor 实现把 Mallart 和 Fink 1994 年关于 scattering media、sound-speed inhomogeneity 和 focusing criterion 的工作作为主要参考：
-
-~~~text
-Raoul Mallart, Mathias Fink
-Adaptive focusing in scattering media through sound-speed inhomogeneities:
-The van Cittert-Zernike approach and focusing criterion
-JASA, 1994
-DOI: 10.1121/1.410562
-~~~
-
-原论文的背景主要是 phase aberration、adaptive focusing 与 focusing criterion。
-
-因此本教程使用更谨慎的表述：
-
-> **现代 ultrasound coherence-factor weighting 的核心 focusing/coherence criterion 可以追溯到 Mallart–Fink 这条工作。**
-
----
-
-## 8. GCF 为什么会出现？
-
-把 aperture vector：
-
-~~~text
-s1, s2, ... , sM
-~~~
-
-看成一个沿阵元方向变化的“空间信号”。
-
-如果所有阵元都很一致：
-
-~~~text
-↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑
-~~~
-
-沿 aperture 几乎不变化，因此能量主要集中在很低的 spatial frequency，尤其是 DC。
-
-如果阵元之间快速乱跳：
-
-~~~text
-↑ ↓ ↑ → ↓ ← ↑ ...
-~~~
-
-沿 aperture 变化很快，会出现更多高 spatial-frequency energy。
-
-普通 CF 可以从 aperture spatial spectrum 的 DC coherence 来理解。
-
-Li 和 Li 2003 提出的 GCF 把这个想法推广为：
-
-> **不只看 DC，而是把一小段低空间频率区域都看成 coherent energy。**
-
-GCF：
-
-~~~text
-低空间频率能量
-----------------
-全部空间频率能量
-~~~
-
-原论文：
-
-~~~text
-Pai-Chi Li, Meng-Lin Li
-Adaptive imaging using the generalized coherence factor
-IEEE TUFFC, 2003, 50(2):128-141
-DOI: 10.1109/TUFFC.2003.1182117
-~~~
-
-原论文明确说明：当低频范围只保留 DC 时，GCF 会退化为文献中的 CF。
-
----
-
-## 9. CF 和 GCF 一句话区别
-
-CF：
-
-> **这些通道是不是非常接近同相？**
-
-GCF：
-
-> **这些通道沿 aperture 的变化，有多少能量集中在低空间频率？**
-
-GCF 因此多一个重要参数：
-
-~~~text
-M0
-~~~
-
-它控制多宽的 low-spatial-frequency region 被认为属于 coherent portion。
-
----
-
-## 10. 第 2 章教学路线
-
-~~~text
-1. aperture vector 到底什么叫“相干”
-        ↓
-2. CF numerator / denominator
-        ↓
-3. synthetic aperture-vector 实验
-        ↓
-4. 从第 1 章 DAS 中拿真实 aligned aperture data
-        ↓
-5. Manual CF reconstruction
-        ↓
-6. DAS vs CF：PSF / sidelobe / contrast
-        ↓
-7. CF 的失败场景
-        ↓
-8. aperture FFT 的物理含义
-        ↓
-9. GCF
-        ↓
-10. M0 参数实验
-        ↓
-11. Manual vs USTB reference validation
-~~~
-
-真实数据阶段继续使用：
-
-~~~text
-data/L7_FI_TheGB.uff
-~~~
-
-这样 acquisition 不变，只改变 receive-channel combination / weighting。
-
----
-
-## 11. 第一小节实验
-
-运行：
+在仓库根目录打开 MATLAB：
 
 ~~~matlab
 cd matlab/02_CF_GCF
 demo_cf_aperture_vectors
-~~~
-
-它不需要 USTB。
-
-构造四种 complex aperture vector：
-
-~~~text
-完全相干
-部分相干
-随机相位
-单个强异常通道
-~~~
-
-同时观察：
-
-- 每个 channel 的 phase；
-- complex phasor；
-- DAS coherent sum；
-- CF；
-- aperture spatial spectrum。
-
----
-
-## 12. 这一小节只记三句话
-
-1. **DAS 解决“怎么对齐并相加”，CF 解决“对齐以后这些通道到底有多一致”。**
-2. **CF 高：通道能量大部分形成了 coherent sum；CF 低：很多能量在相互抵消。**
-3. **GCF 把 CF 从“主要看 DC coherence”推广到“一段低 spatial-frequency energy”。**
-
----
-
-## 13. 第二小节：从真实 UFF 中拿出 aligned aperture vector
-
-前一小节里的箭头是人工构造的。
-
-现在进入真实数据：
-
-~~~text
-L7_FI_TheGB.uff
-~~~
-
-但这一小节仍然故意使用 conventional FI，而不是 RTB。
-
-原因是我们当前只想研究 **receive-domain coherence**：
-
-~~~text
-一个 pixel
-    ↓
-一个 focused Tx / scanline
-    ↓
-多个 receive channels
-    ↓
-CF
-~~~
-
-这样可以把 Tx 维度先固定住，不把 RTB 的 cross-Tx coherent combination 混进来。
-
-### 13.1 一个真实 pixel 的数据流
-
-第 1 章已经做过：
-
-~~~text
-pixel P
-    ↓
-计算 Tx delay
-    ↓
-计算每个 Rx element 的 Rx delay
-    ↓
-Tx delay + Rx delay
-    ↓
-每个 channel 得到自己的 RF query time
-    ↓
-fractional interpolation
-    ↓
-得到 aligned receive samples
-~~~
-
-这一小节只是：
-
-> **在 DAS 求和之前停下来，把这组 samples 拿出来看。**
-
-对于一个 pixel：
-
-~~~text
-focused_samples
-shape = [1, N_channels]
-~~~
-
-应用 receive F-number 后只保留 active channels：
-
-~~~text
-s = focused_samples(active_channels)
-shape = [1, M_active]
-~~~
-
-这个 s 就是第 2 章真正研究的对象。
-
-### 13.2 为什么每个 Rx channel 的 query time 不一样？
-
-因为同一个 pixel 到不同阵元的距离不同。
-
-~~~text
-E1   E2   E3   E4   E5
-======================== probe
- \    \    |    /    /
-  \    \   |   /    /
-         pixel
-~~~
-
-中间阵元离 pixel 较近，边缘阵元传播路径更长。
-
-所以每个 receive channel 都有自己的 tau_rx 和 query time。
-
-真正的 delay alignment 就是：
-
-> **每个通道不要在同一个 sample index 取值，而是在属于自己的 query time 上取值。**
-
-### 13.3 对齐之后，才得到 CF 的输入
-
-假设 active Rx 有 40 个：
-
-~~~text
-s1 s2 s3 ... s40
-~~~
-
-这些并不是原始 RF 在同一个 sample index 上的 40 个数。
-
-它们是分别在 40 个不同 query times 上经过插值得到的 complex samples。
-
-所以：
-
-> **CF 的输入必须是 delay-aligned aperture vector，而不能直接拿原始 RF 某一个固定 sample index 的所有通道来算。**
-
-### 13.4 本节脚本
-
-运行：
-
-~~~matlab
-addpath(genpath('D:/USTB'));
-addpath('../01_DAS_Real_UFF');
-
-cd matlab/02_CF_GCF
-inspect_real_cf_aperture_vectors
-~~~
-
-脚本先调用第 1 章已经验证过的 conventional FI-DAS，形成图像，然后让你点击 3 个位置。
-
-建议：
-
-~~~text
-P1：bright / point-like target
-P2：ordinary speckle
-P3：weak / clutter / suspicious region
-~~~
-
-点击以后，x 会吸附到最近的真实 FI scanline，z 也吸附到第 1 章相同的 z-grid。
-
-### 13.5 每个点会显示什么？
-
-第一列是 Tx+Rx query-time curve，用来重新连接第 1 章的 delay 概念。
-
-第二列同时显示 aligned sample 的幅度和 phase。
-
-第三列显示 normalized complex phasors：箭头方向越集中，通常 coherence 越高。
-
-第四列显示 aperture spatial spectrum：越相干的 aperture vector，能量通常越集中在 DC / low spatial frequency，这会直接连接到后面的 GCF。
-
-### 13.6 一个非常重要的数值验证
-
-脚本会重新计算：
-
-~~~matlab
-coherent_sum = sum(aligned_active_samples);
-~~~
-
-然后和第 1 章同一个 pixel 的 complex DAS 值比较。
-
-也就是说明确验证：
-
-~~~text
-这一小节取出来的 aperture vector
-        ↓ sum
-确实就是
-第 1 章 DAS 使用的那组数据
-~~~
-
-如果 relative complex error 超过极小容差，脚本会直接报错。
-
-> **数值验证说明**：这一节与 Chapter 1 必须使用完全相同的 metadata 数值类型、delay 算法和 interpolation。主要校验使用 `|sum(s)-DAS| / sum(|s|)`；不要只除以 `|DAS|`，因为强相消 pixel 的 DAS complex sum 可能接近 0，导致所谓“relative error”被人为放大。
-### 13.7 Shape 要牢牢记住
-
-~~~text
-rf_wave
-[N_samples, N_channels]
-        ↓
-
-query_time
-[1, N_channels]
-        ↓
-
-focused_samples
-[1, N_channels] complex
-        ↓ receive aperture
-
-s
-[1, M_active] complex
-        ↓
-
-DAS = sum(s)
-
-CF = coherence(s)
-~~~
-
-以后 CF、GCF、SLSC、DMAS 等算法，本质上都会围绕这个 aligned aperture vector 展开。
-
----
-
-## 14. 第二小节总结
-
-这一节只需要记住：
-
-1. **CF 的输入不是原始 RF，而是完成 Tx/Rx delay 和 interpolation 之后的 aperture samples。**
-2. **Conventional FI 下，一个 pixel 对应一个 Tx，再沿 receive-channel 维计算 CF；这样最容易先把 receive coherence 学清楚。**
-3. **如果把真实 aligned aperture vector 再做一次 sum，它必须回到第 1 章同一个 DAS pixel。**
-
-下一小节开始，我们不再只看三个点，而是：
-
-> **对整张 conventional FI 图的每一个 pixel 都计算 CF，得到第一张完整的 Manual CF 图像。**
----
-
-## 15. 第三小节：整张 Manual CF 图像
-
-前两小节只看单个 aperture vector。
-
-现在对 conventional FI 图像中的每一个 pixel 都做同样的事情：
-
-~~~text
-pixel P
-    ↓
-Tx/Rx delay + interpolation
-    ↓
-aligned active Rx vector s
-    ↓
-DAS = sum(s)
-    ↓
-CF = |sum(s)|^2 / (M · sum(|s|^2))
-    ↓
-CF-weighted pixel = CF × DAS
-~~~
-
-这一节新增两个文件：
-
-~~~text
-reconstruct_fi_cf_manual.m
-compare_manual_das_vs_cf.m
-~~~
-
-### 15.1 `reconstruct_fi_cf_manual.m` 做什么？
-
-它完整重走 Chapter 1 的 conventional FI 路径，但在 DAS 求和之前保留当前 pixel 的 active aperture vector。
-
-对每个 pixel：
-
-~~~matlab
-s = focused_samples(active);
-
-coherent_sum = sum(s);
-channel_energy = sum(abs(s).^2);
-
-CF = abs(coherent_sum).^2 / ...
-    (M*channel_energy);
-
-cf_pixel = CF * coherent_sum;
-~~~
-
-因此它同时输出三类核心结果：
-
-~~~text
-DAS complex image
-CF map
-CF-weighted complex image
-~~~
-
-### 15.2 Shape
-
-~~~text
-das_analytic       [Nz, Nscanline] complex
-cf_map             [Nz, Nscanline] real
-cf_analytic        [Nz, Nscanline] complex
-active_channel_count [Nz, Nscanline]
-~~~
-
-每一个 `cf_map(z,x)` 都来自这个 pixel 自己的 active receive aperture。
-
-### 15.3 为什么 CF map 不是 B-mode？
-
-`cf_map` 表示的是 coherence weight，而不是回波 amplitude。
-
-~~~text
-0   → 很低的 receive coherence
-1   → 很高的 receive coherence
-~~~
-
-所以它不能直接当作超声灰阶图解释。
-
-真正的 CF-weighted image 是：
-
-~~~text
-DAS complex image × CF map
-~~~
-
-### 15.4 为什么必须画两种 CF 图？
-
-脚本会同时提供两种显示方式。
-
-第一种使用 **DAS 的同一个 amplitude reference**：
-
-~~~text
-DAS
-vs
-DAS × CF
-~~~
-
-这种图可以真实看到 CF 把哪些区域压低了多少。
-
-第二种是 DAS 和 CF 图各自 self-normalize。
-
-它更适合看 morphology / apparent PSF，但会隐藏整体 attenuation。
-
-所以：
-
-> **判断 suppression 要看 common-reference 图；判断形态可以看 self-normalized 图。**
-
-### 15.5 为什么不能看到 CF 图更“尖”就直接说 resolution 提高？
-
-CF 是 nonlinear / adaptive weighting。
-
-它可能把主瓣边缘、旁瓣和低相干背景压得更厉害，于是显示出来的亮结构会变窄。
-
-这可以叫：
-
-~~~text
-apparent PSF narrowing
-或
-adaptive mainlobe narrowing
-~~~
-
-但不能仅凭这一点就直接说：
-
-~~~text
-系统物理 diffraction-limited resolution 提高了
-~~~
-
-后面需要把 point-target profile、FWHM、sidelobe 和 contrast 分开分析。
-
-### 15.6 与 Chapter 1 的一致性检查
-
-`compare_manual_das_vs_cf.m` 会独立调用 Chapter 1 的 `reconstruct_fi_scanline_manual.m`。
-
-然后检查：
-
-~~~text
-Chapter-2 内部 DAS
-vs
-Chapter-1 DAS baseline
-~~~
-
-两条路径必须一致。
-
-这保证：
-
-> **这一节真正只增加了 CF weighting，没有悄悄改变 delay、interpolation 或 aperture。**
-
-### 15.7 运行
-
-~~~matlab
-addpath(genpath('D:/USTB'));
-addpath('../01_DAS_Real_UFF');
-
-cd matlab/02_CF_GCF
-compare_manual_das_vs_cf
-~~~
-
-重点看第一张图：
-
-~~~text
-Manual DAS
-Receive-domain CF map
-DAS × CF (same DAS amplitude reference)
-~~~
-
-然后再看第二张 self-normalized 对比。
-
----
-
-## 16. 第三小节总结
-
-这一节只需要记住：
-
-1. **CF 是对每一个 pixel 的 aligned receive aperture vector 独立计算的。**
-2. **CF map 是权重图，不是 B-mode；真正成像结果是 `CF × DAS`。**
-3. **CF 改善视觉锐度并不自动等于物理 resolution 提升，后面必须把 mainlobe、sidelobe、contrast 分开验证。**
-
-下一小节将专门分析：
-
-> **DAS 与 CF 在 point target 上到底改变了什么：mainlobe、FWHM、sidelobe 还是背景 suppression？**
----
-
-## 17. 已验证结果：整张 Manual CF 图像
-
-在 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 512` 下，本章 Manual CF 已完成一次真实运行验证。
-
-Chapter 2 内部 DAS 与 Chapter 1 baseline 的 complex consistency：
-
-~~~text
-max abs complex error : 1.136868e-13
-max-peak scaled error : 5.332858e-18
-~~~
-
-这说明本章在加入 CF 时没有改变原来的 Tx/Rx delay、interpolation 或 receive aperture 路径。
-
-本次 CF map：
-
-~~~text
-min    = 0.000006
-median = 0.178151
-mean   = 0.237657
-max    = 0.979233
-~~~
-
-其中 median CF = 0.178 对应每个 pixel 乘权后约 -15 dB 的 amplitude attenuation；而 max CF = 0.979 对应不到 -0.2 dB 的衰减。
-
-图像上可直接看到：
-
-- 高 coherence 的亮点基本保留；
-- 大量低 coherence speckle / background 被明显压低；
-- CF map 本身呈现的是 coherence distribution，而不是回波幅度；
-- CF-weighted 图像的 speckle texture 被明显改变，因此“更黑、更干净”不能自动等价为“组织信息更真实”。
-
-还要注意：dynamic receive F-number 使不同 pixel 的 active channel count M 不完全相同，因此跨深度直接比较 CF 数值时需要保留这个条件。
-
----
-
-## 18. 第四小节：point-target profile，CF 到底改变了什么？
-
-这一小节不再只看整张图视觉效果，而是选一个相对孤立的 point-like target，定量比较：
-
-~~~text
-DAS
-vs
-DAS × CF
-~~~
-
-新增脚本：
-
-~~~text
-analyze_das_vs_cf_point_target.m
-~~~
-
-它会独立寻找 DAS 和 CF 在同一局部 ROI 内的 local peak，并报告：
-
-- peak location shift；
-- common-reference target peak change；
-- lateral -6 dB FWHM；
-- axial -6 dB FWHM；
-- lateral / axial -20 dB width；
-- 每个 FWHM 跨多少实际 image samples。
-
-其中：
-
-> **-6 dB FWHM 用于描述主峰宽度；-20 dB width 主要用于观察 profile skirt suppression，不把它包装成正式 sidelobe 指标。**
-
-另外，conventional FI 的 lateral spacing 仍然是一发一线，所以如果 lateral FWHM 只跨 1～2 个 scanline intervals，必须明确认为它受到 sampling 限制。
-
-运行：
-
-~~~matlab
-cd matlab/02_CF_GCF
-analyze_das_vs_cf_point_target
-~~~
-
-建议点击 z≈20 mm 附近那个相对孤立、明显的 point-like target。
-
-下一步根据实际 profile 再判断：
-
-~~~text
-CF 主要做了主瓣 narrowing？
-还是主要压了 profile skirt / background？
-还是两者都有？
-~~~
----
-
-## 19. 已验证结果：point target 上 CF 到底改变了什么？
-
-在同一个 point-like target 上，实测：
-
-~~~text
-DAS peak : x = -0.7450 mm, z = 20.1076 mm
-CF peak  : x = -0.7450 mm, z = 20.1076 mm
-peak shift = 0
-
-CF weight at DAS peak = 0.978733
-CF peak attenuation   = -0.187 dB
-~~~
-
-说明这个高相干目标的峰值几乎被完整保留。
-
-### 19.1 -6 dB 主峰宽度
-
-~~~text
-lateral DAS = 0.708410 mm
-lateral CF  = 0.420344 mm
-
-axial DAS   = 0.446485 mm
-axial CF    = 0.442143 mm
-~~~
-
-按数值比例看，横向 FWHM 约缩小 40.7%，而轴向只变化约 1.0%。
-
-但横向必须谨慎解释：
-
-~~~text
-DAS lateral FWHM = 2.377 scanline intervals
-CF  lateral FWHM = 1.411 scanline intervals
-~~~
-
-两者都少于 3 个 conventional-FI lateral samples，因此：
-
-> **不能把 0.708 mm → 0.420 mm 当成高精度的“物理分辨率提高 40%”结论。**
-
-更准确的表述是：
-
-> **CF weighting 让 conventional-FI 点目标的显示主峰出现明显的 adaptive / apparent lateral narrowing，但该数值受到 scanline sampling 强烈限制。**
-
-### 19.2 轴向结果更有解释力
-
-轴向 FWHM：
-
-~~~text
-0.446485 mm → 0.442143 mm
-~~~
-
-只变化约 1%。
-
-这与算法结构一致：当前 CF 是 receive-aperture coherence weighting，不改变发射脉冲带宽，也没有改变 axial delay model。
-
-所以当前数据不支持“CF 明显改善 axial resolution”的说法。
-
-### 19.3 -20 dB profile width
-
-~~~text
-lateral : 1.158868 mm → 0.982194 mm   (~15.2% reduction)
-axial   : 1.020281 mm → 0.957728 mm   (~6.1% reduction)
-~~~
-
-这说明 CF 不只是改变 -6 dB 主峰显示宽度，也在压低 target profile 的外围 skirt。
-
-但由于真实 phantom profile 中混有周围 speckle / scatterers，这里的 -20 dB width 只用于描述 profile skirt，不能直接等同于严格的 peak-sidelobe-level。
-
-### 19.4 这一组结果真正支持的结论
-
-当前数据支持：
-
-1. 高相干 point target peak 基本保留（仅约 -0.19 dB）；
-2. lateral displayed profile 明显变窄，但 conventional-FI lateral sampling 不足以支持高精度 resolution 数值结论；
-3. axial FWHM 几乎不变；
-4. lateral / axial profile skirts 都有一定 suppression，其中 lateral 更明显。
-
-因此目前最稳妥的总结是：
-
-> **在这组数据上，receive-domain CF 的主要可见效果是强烈的横向自适应收窄与背景/外侧响应抑制，而不是明显改变轴向主瓣。**
-
----
-
-## 20. 第五小节：CF 的一个局限，以及 GCF 为什么出现
-
-前面 P3 的真实 aperture vector 已经给了一个很重要的线索：
-
-~~~text
-CF 很低
-但 aperture spectrum 并不是完全随机铺开
-而是有大量能量落在 DC 附近的低 spatial-frequency bin
-~~~
-
-这说明普通 CF 有时会过于严格。
-
-CF 基本只奖励：
-
-~~~text
-exact DC coherence
-~~~
-
-而一个平滑、确定性的 phase ramp：
-
-~~~text
-0°, 10°, 20°, 30°, 40°, ...
-~~~
-
-虽然不是随机噪声，却会把 aperture spectrum 的峰从 DC 移到旁边一个低频 bin。
-
-这时：
-
-~~~text
-CF 可能很低
-但 aperture 仍然具有很强的低阶结构
-~~~
-
-这正是 GCF 的出发点。
-
-### 20.1 新实验
-
-运行：
-
-~~~matlab
 demo_cf_failure_and_gcf_motivation
 ~~~
 
-它比较三种 aperture vector：
+两个演示不需要 USTB 或 UFF。它们先控制输入，再观察权重，因此比一开始看整张复杂组织图更容易理解因果关系。
 
-~~~text
-A. perfect coherence
-B. smooth 1-bin phase ramp
-C. random phase
-~~~
+#### 7.1 CF：相位、幅值与相干和一起看
 
-并定义一个教学版 GCF：
+![人工接收向量的相位、箭头、相干和与空间频谱](figures/demo_cf_aperture_vectors_01.png)
 
-~~~text
-GCF(K)
-=
-FFT bins [-K ... 0 ... +K] 的能量
---------------------------------
-全部 aperture FFT 能量
-~~~
+**图 6｜四行是四种人工输入。** 每行依次看 phase、phasors 和孔径频谱，再核对 CF 数字。这里的通道向量已经视为对齐后的输入，不包含传播模拟。
 
-因此：
+本次运行的 32 通道结果：
 
-~~~text
-K = 0
-↓
-只保留 DC
-↓
-正好退化为 CF
-~~~
+| 人工输入 | CF | 读图重点 |
+|---|---:|---|
+| 幅值与相位相同 | 1.000000 | 所有样本相等的上界 |
+| 平滑的正弦相位变化 | 0.905494 | 小幅相位变化仍保留较强相干和 |
+| 随机相位，`rng(1)` | 0.031249 | 一次随机实现，不是所有噪声的固定权重 |
+| 一个 3 倍幅值、反相的异常通道 | 0.612500 | 强通道的幅值与相位共同影响结果 |
 
-而 K = 1 时允许：
+先预测“分子、分母谁会变”，再运行脚本。不要只看某张箭头图的方向是否大致相同。
 
-~~~text
--1, 0, +1
-~~~
+#### 7.2 GCF：用一 bin 相位坡解释低频扩展
 
-这些低空间频率一起作为 coherent energy。
+![常量、相位坡与随机相位的 GCF 教学实验](figures/demo_cf_failure_and_gcf_motivation_01.png)
 
-### 20.2 为什么不能把 K 越调越大？
+![教学输入的 CF 与不同低频半宽](figures/demo_cf_failure_and_gcf_motivation_02.png)
 
-如果 K 不断增大：
+**图 7｜先看频谱的位置，再看带宽对应的权重。** 第一张中间行的谱峰在邻近 DC 的 bin，所以纳入该 bin 后 GCF 接近 1；它的 DAS 和仍接近零。第二张显示随机相位也会随带宽扩大而获得更高权重。
 
-~~~text
-允许的 spatial-frequency band 越来越宽
-~~~
+该演示使用 64 通道、`rng(2)`。随机相位的 CF 约 0.026378；GCF 半宽 1、2、4 时约为 0.039178、0.102806、0.206858。
 
-最终连真正的高频不相干成分也会被计入 coherent energy。
+演示中的 `K` 与正式核心的 `M0` 都表示低频半宽。此处为了看清频谱结构画了 `fftshift`；正式核心可以不移动 FFT 顺序而直接选首尾 bins，数值含义相同。
 
-所以 GCF 的核心不是“比 CF 更宽松就一定更好”，而是：
+### 8. 回到真实数据：在 DAS 求和前停下来
 
-> **在保留低阶 coherent structure 与排除高 spatial-frequency incoherence 之间选择一个合理 low-frequency band。**
-
-下一小节才正式把这个概念放回 `L7_FI_TheGB.uff`，实现完整 Manual GCF 图像。
----
-
-## 21. 已验证结果：CF 局限与 GCF 动机
-
-synthetic aperture-vector 实验得到：
-
-~~~text
-Perfect coherence
-  CF      = 1.000000
-  GCF K=1 = 1.000000
-
-Smooth 1-bin phase ramp
-  CF      = 0.000000
-  GCF K=1 = 1.000000
-
-Random phase
-  CF      = 0.026378
-  GCF K=1 = 0.039178
-  GCF K=2 = 0.102806
-  GCF K=4 = 0.206858
-~~~
-
-这组结果非常直接地说明：
-
-- CF 对 exact-DC coherence 很敏感；
-- 一个确定性的平滑 phase ramp 可以让 CF 变成 0，但它并不是随机不相干；
-- 把邻近 low-spatial-frequency bins 纳入后，GCF 可以恢复这种低阶结构；
-- low-frequency band 变宽时，随机相位也会被越来越多地计入，因此带宽不能无限增大。
-
----
-
-## 22. 第六小节：完整 Manual GCF 图像
-
-现在把 GCF 放回真实 `L7_FI_TheGB.uff`。
-
-新增：
-
-~~~text
-reconstruct_fi_gcf_manual.m
-compare_manual_das_cf_gcf.m
-~~~
-
-### 22.1 正式代码中的 M0 convention
-
-正式 Manual GCF 采用清晰的低频半宽定义：
-
-~~~text
-M0 = 0
-    -> 只使用 DC
-    -> GCF 退化为普通 CF
-
-M0 = 1
-    -> 使用 {-1,0,+1}
-
-M0 = 2
-    -> 使用 {-2,-1,0,+1,+2}
-
-M0 = 4
-    -> 使用 {-4,...,0,...,+4}
-~~~
-
-也就是说：
-
-> **M0 就是以 DC 为中心的 low-spatial-frequency half-width。**
-
-这一约定和前面的教学参数 K 保持一致，因此不再让同一个整数在两处代表不同含义。
-
-需要单独说明 USTB：当前 `generalized_coherence_factor` 和 `generalized_coherence_factor_OMHR` 代码存在 legacy special case：`M0=1` 仍只取 DC，只有 `M0>1` 才展开成 `{-M0,...,+M0}`。
-
-因此：
-
-> **本项目不把 USTB 的这个 legacy special case 当成 GCF 主定义。以后做 USTB reference validation 时，会显式做参数映射。**
-
-本章当前推荐先从：
-
-~~~text
-M0 = 1
-~~~
-
-开始，因为它是比 CF 最小幅度的 generalized low-frequency extension。
-
-### 22.2 单个 pixel 的 GCF
-
-对 active aligned aperture vector：
-
-~~~text
-s = [s1, s2, ... , sM]
-~~~
-
-先做 receive-channel FFT：
+接下来需要 USTB 读取器。在当前 `matlab/02_CF_GCF` 目录设置：
 
 ~~~matlab
-X = fft(s);
+addpath(genpath('D:/USTB'));  % 换成自己的 USTB 路径
+addpath('../01_DAS_Real_UFF');
+filename = '../../data/L7_FI_TheGB.uff';
+
+n_z = 512;
+selected_pixels_mm = [-0.75 20.05; 8 22; 10 10];
+inspect_real_cf_aperture_vectors
 ~~~
 
-然后：
+如果不提供 `selected_pixels_mm`，脚本保留交互选点。提供坐标后，每个点会吸附到实际 scanline 与深度网格；记录吸附后的坐标，才知道公式对应哪个像素。
+
+默认 TheGB 数据的 `[sample,Rx,Tx,frame]` 为 `[1920,128,128,1]`，输入是实数 RF。它先沿时间维转为复数解析 RF，再查询当前像素的通道观测：
 
 ~~~text
-GCF
-=
-low-spatial-frequency spectral energy
--------------------------------------
-total aperture spectral energy
+rf_wave         [sample,Rx]
+    ↓ 沿 sample 构造解析 RF
+analytic_wave   [sample,Rx] complex
+    ↓ 每个 Rx 自己的 Tx+Rx 查询时间与插值
+focused_samples [1,N_Rx] complex
+    ↓ 有效接收孔径与记录范围
+s               [1,M_active] complex
+    ├─ sum(s) → 复数 DAS
+    └─ coherence(s) → 实数权重
 ~~~
 
-最后：
+![真实图像中的三个查询位置](figures/inspect_real_cf_aperture_vectors_01.png)
 
-~~~text
-GCF-weighted pixel = GCF × DAS
-~~~
+![同一真实像素的查询时间、幅相、箭头和空间频谱](figures/inspect_real_cf_aperture_vectors_02.png)
 
-和 CF 一样，GCF 不重新计算 Tx/Rx delay；改变的是 aligned aperture data 的 coherence weighting。
+**图 8｜每一行对应一个候选像素。** 从左到右，把第一章的查询时间重新接到本章的幅值、相位、phasor 和 aperture spectrum。不同通道使用不同查询时间；不能在原始 RF 上截一条等时间横线替代它。
 
-### 22.3 一个必须通过的 identity check
+本次 512 深度点、Rx F# 1.7 的实际结果为：
 
-程序会额外计算：
+| 点 | 吸附后的 $(x,z)$，mm | Tx | 有效 Rx 数 M | CF |
+|---|---|---:|---:|---:|
+| P1 | 约 (−0.745,20.029) | 62 | 39 | 0.978040 |
+| P2 | 约 (7.896,21.986) | 91 | 43 | 0.046026 |
+| P3 | 约 (9.982,10.010) | 98 | 19 | 0.097147 |
 
-~~~text
-GCF(M0=0)
-~~~
+P1 接近所选亮点，通道响应较一致。P2 的 CF 虽低，频谱却在 DC 附近有明显结构，可以用来思考 GCF 会接受哪些贡献。仅凭这三个权重，不能给 P2、P3 判定组织或杂波类型。
 
-因为这时只保留 DC，根据 Parseval 关系它必须和 ordinary CF 完全等价。
+脚本还把 `sum(s)` 与第一章同一像素的复数 DAS 比较。本次三个查询点的绝对复数差均为 0，说明拿出的向量确实接回同一条计算链。
 
-所以 `compare_manual_das_cf_gcf.m` 会检查：
+### 9. 把单像素操作重复成整张图
 
-~~~text
-max |CF - GCF(M0=0)|
-~~~
-
-应该接近浮点误差。
-
-这个验证比“图看起来差不多”更重要，因为它直接检查了 CF 与 GCF 数学定义的连接。
-
-### 22.4 运行
+#### 9.1 先看 DAS、CF map 和加权结果
 
 ~~~matlab
-cd matlab/02_CF_GCF
+n_z = 512;
+compare_manual_das_vs_cf
+~~~
 
+![DAS、CF 权重与共同参考下的 CF 加权图](figures/compare_manual_das_vs_cf_01.png)
+
+![DAS 与 CF 各自峰值归一化后的图像](figures/compare_manual_das_vs_cf_02.png)
+
+**图 9｜先看共同参考，再看各自归一化。** 第一张的 CF map 色条为 0–1，表示权重；两侧 B-mode 色条为幅值 dB。第二张更适合比较形态，但隐藏了整体幅值变化。不要把两种色条或两种参考混为一谈。
+
+本次 CF map 的 min / median / mean / max 约为 **0.000006 / 0.178151 / 0.237657 / 0.979233**。权重 0.178 对应约 −15 dB 的逐像素幅值变化；这不是整张图平均回波能量降低 15 dB 的结论。
+
+该入口独立调用第一章基线。第二章内部 DAS 与第一章 DAS 的最大绝对复数误差约 `1.14e-13`，相对全图峰值约 `5.33e-18`。数值结果支持当前条件下保留了原有 DAS 路径。
+
+#### 9.2 再看 GCF：同一 DAS，换一个权重判据
+
+~~~matlab
+n_z = 512;
 M0 = 1;
 compare_manual_das_cf_gcf
 ~~~
 
-输出重点包括：
+![共同 DAS 参考下的 DAS、CF 与 GCF 图像](figures/compare_manual_das_cf_gcf_01.png)
 
-~~~text
-DAS
-DAS × CF
-DAS × GCF
+![同一网格上的 CF 与 GCF 权重图](figures/compare_manual_das_cf_gcf_02.png)
 
-CF map
-GCF map
+![GCF 与 CF 的权重差](figures/compare_manual_das_cf_gcf_03.png)
 
-GCF - CF weight map
-~~~
+**图 10｜把图像变化追溯到权重变化。** 第一张都用同一 DAS peak 作 0 dB；第二张看权重；第三张的差是 GCF−CF，不是相对真值的成像误差。纳入邻近低频 bins 后，更多像素的权重升高。
 
-前三张图共用 DAS peak 作为 amplitude reference，所以可以直接观察真实 suppression 强弱。
+本次 `M0=1` 的 GCF median / mean / max 约为 **0.564431 / 0.547076 / 0.987204**。CF 与 GCF 核心的 DAS 完全一致；`GCF(M0=0)` 与 CF 的最大差约 `9.99e-16`。
 
-### 22.5 预期但尚未验证的现象
+这两个检查分别回答：**DAS 有没有被意外改动？DC-only 是否真的退化为 CF？** 它们是内部一致性验证，不能替代独立的物理模型或图像质量验证。
 
-在真实数据运行之前，只能提出工作预期：
+核心输出可以直接对应理论中的对象：
 
-- GCF 通常会比 CF less aggressive，因为它允许邻近 low-frequency energy；
-- 某些 CF 很低但存在 smooth phase structure 的区域，GCF weight 可能明显升高；
-- M0 增大后背景也可能被更多保留。
+手写核心分别是 [reconstruct_fi_cf_manual.m](../../matlab/02_CF_GCF/reconstruct_fi_cf_manual.m) 与 [reconstruct_fi_gcf_manual.m](../../matlab/02_CF_GCF/reconstruct_fi_gcf_manual.m)。先在逐像素循环里找到 `s = focused_samples(active)`，再沿着求和、权重和复数乘权向下读。
 
-这些都必须以实际 TheGB 运行结果为准，不能提前当作已验证结论。
----
+| 字段 | shape | 数据意义 |
+|---|---|---|
+| `das_analytic` | `[N_z,N_scanline]` complex | 原始接收相干和 $S$ |
+| `cf_map` / `gcf_map` | 同上，real | 0–1 的逐像素权重 |
+| `cf_analytic` / `gcf_analytic` | 同上，complex | 权重乘同一个 $S$ |
+| `*_envelope` | 同上，real | 复数结果的幅值 |
+| `*_db_common` / `*_db_self` | 同上，real | 不同幅值参考下的显示 |
+| `active_channel_count` | 同上 | 每个像素参与计算的有效 Rx 数 |
 
-## 23. 已验证结果：M0=2 在 TheGB 上过于宽松
+### 10. 修改 M0，再用目标剖面观察取舍
 
-真实 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 512` 下，已经验证：
-
-~~~text
-CF statistics
-  median = 0.178151
-  mean   = 0.237657
-  max    = 0.979233
-
-GCF statistics, M0=2
-  median = 0.748523
-  mean   = 0.706695
-  max    = 1.000000
-~~~
-
-同时：
-
-~~~text
-max |CF - legacy-DC GCF| ≈ 1e-15
-~~~
-
-说明上一版代码的 CF/GCF 数学连接本身没有问题；真正的问题是 `M0=2` 的 5-bin low-frequency band 对这份数据过于宽松。
-
-图像上表现为：
-
-- `DAS × CF` 对 background / speckle suppression 很强；
-- `DAS × GCF(M0=2)` 与原始 DAS 非常接近；
-- `GCF - CF` 在大片区域显著为正；
-- GCF map 大量 pixel 权重在 0.6～1 附近。
-
-因此当前数据支持的结论是：
-
-> **对于 TheGB 这组正常 focused-imaging phantom 数据，M0=2 会保留过多 low-spatial-frequency energy；如果评价目标是 point-target突出和强背景抑制，它明显比 CF 更宽松。**
-
-这不代表 GCF 普遍不如 CF。它说明 `M0` 必须和任务一起选择。
-
----
-
-## 24. 第七小节：M0 参数扫描
-
-现在直接比较：
-
-~~~text
-M0 = 0  -> CF
-M0 = 1  -> 3-bin GCF
-M0 = 2  -> 5-bin GCF
-M0 = 4  -> 9-bin GCF
-~~~
-
-运行：
+#### 10.1 先预测带宽变宽会怎样
 
 ~~~matlab
+n_z = 256;
+M0_values = [0 1 2 4];
 experiment_gcf_m0_sweep
 ~~~
 
-为了参数实验速度，默认使用：
+![共同参考下 M0 变化的完整图像](figures/experiment_gcf_m0_sweep_01.png)
 
-~~~text
-n_z = 256
-~~~
+![不同 M0 的 GCF 权重图](figures/experiment_gcf_m0_sweep_02.png)
 
-确认趋势后，再把选中的 M0 用 `n_z=512` 重跑。
+![不同 M0 的权重统计](figures/experiment_gcf_m0_sweep_03.png)
 
-脚本会输出：
+**图 11｜频带更宽，接受更多孔径能量。** 保持数据、DAS、网格和 Rx aperture 相同，只改变 M0。本次导出还逐像素验证权重随 M0 不下降、DAS 不变。
 
-- 各 M0 的 common-reference GCF image；
-- 各 M0 的 coherence-weight map；
-- median / mean / min / max weight；
-- median/mean weight 随 M0 的变化。
+| M0 | median weight | mean weight |
+|---:|---:|---:|
+| 0（CF） | 0.17847 | 0.23755 |
+| 1 | 0.56509 | 0.54686 |
+| 2 | 0.74785 | 0.70652 |
+| 4 | 0.89595 | 0.87012 |
 
-这一步的目的不是找一个“永远最好的 M0”，而是看清：
+均值的增加表示每个像素的低频能量占比平均增加；不是把所有像素的原始能量加在一起求比例。某些权重达到 1，也可能因为小孔径已被这个频带全部覆盖，不能都叫“完美聚焦”。
 
-> **M0 从 0 增大时，算法是怎样一步步从严格 CF 走向越来越宽松的 low-frequency coherence。**
+观察完以后应能回答：图像更接近 DAS，来自更准确的传播时间，还是更宽松的权重？本实验只改变后者。
 
-后续再根据 point target、contrast、speckle preservation 或 aberration robustness 决定评价标准。
----
-
-## 25. 已验证结果：M0 sweep
-
-在 `L7_FI_TheGB.uff`、Rx F# = 1.7、`n_z = 256` 下，得到：
-
-~~~text
-M0    min          median      mean        max
-0     6.46e-7      0.17847     0.23755     0.97648
-1     0.00315      0.56509     0.54686     0.98889
-2     0.01209      0.74785     0.70652     1.00000
-4     0*           0.89553     0.86755     1.00000
-~~~
-
-`M0=4` 的 `min=0` 已确认不是物理结果，而是旧版代码对短 active aperture 直接置零造成的人工边界效应；该逻辑已经修正为自动裁剪 effective M0，不再制造假黑点。
-
-因此本次可以直接信任 `M0=0/1/2` 的统计趋势；`M0=4` 的精确 minimum / mean 建议在修正版上重跑后再作为最终数值。
-
-### 25.1 最重要的定量现象
-
-从 mean weight 看：
-
-~~~text
-M0=0 : 0.23755
-M0=1 : 0.54686
-M0=2 : 0.70652
-~~~
-
-因为 GCF 分子只是逐步加入更多非负 spectral energy，所以这些差值可以直观理解为：
-
-~~~text
-DC 本身平均贡献                    ≈ 23.8%
-加入 ±1 bins 后累计               ≈ 54.7%
-再加入 ±2 bins 后累计             ≈ 70.7%
-~~~
-
-这说明 TheGB 的 delay-aligned receive-aperture spectrum 中，大量能量并不严格停留在 DC，而是分布在 DC 附近几个低 spatial-frequency bins。
-
-这正是为什么：
-
-- CF 对这份数据非常 aggressive；
-- `M0=1` 已经明显比 CF 宽松；
-- `M0=2` 更接近原始 DAS。
-
-### 25.2 当前不能得出的结论
-
-不能仅凭“CF 图更黑”就说 CF 比 GCF 更正确。
-
-当前只能说：
-
-> **如果目标是强 point-target / background suppression，CF 更符合当前视觉目标；如果目标包括保留 diffuse speckle 或容忍低阶 phase variation，GCF 可能更合理。**
-
-最终 M0 应该由任务指标决定，而不是由“看起来最干净”决定。
-
----
-
-## 26. 第八小节：point target 上比较 M0=0 / 1 / 2
-
-下一步只比较：
-
-~~~text
-M0=0  -> CF
-M0=1  -> 3-bin GCF
-M0=2  -> 5-bin GCF
-~~~
-
-运行：
+#### 10.2 DAS 与 CF：先定位目标，再看两个方向
 
 ~~~matlab
+n_z = 1024;
+target_x_mm = -0.75;
+target_z_mm = 20.05;
+analyze_das_vs_cf_point_target
+~~~
+
+![DAS 与 CF 目标附近的局部图像](figures/analyze_das_vs_cf_point_target_04.png)
+
+![同一目标的 DAS 与 CF 横向剖面](figures/analyze_das_vs_cf_point_target_02.png)
+
+![同一目标的 DAS 与 CF 轴向剖面](figures/analyze_das_vs_cf_point_target_03.png)
+
+**图 12｜先确定比较的是同一个目标。** 各方法在同一局部范围寻找峰，再画横向与轴向剖面；脚本分别提供共同参考和局部峰归一化。轴向剖面的横轴为深度。
+
+本次 1024 深度点结果：
+
+| 量 | DAS | CF 加权 |
+|---|---:|---:|
+| 局部峰位置，mm | 约 (−0.745,20.054) | 相同 |
+| 相对 DAS 的局部峰变化 | 0 dB | −0.221 dB |
+| 横向包络半幅宽度 | 0.7322 mm | 0.4304 mm |
+| 横向宽度跨 scanline 间隔 | 2.457 | 1.445 |
+| 轴向包络半幅宽度 | 0.4479 mm | 0.4452 mm |
+| 横向 −20 dB 连续宽度 | 1.1676 mm | 0.9944 mm |
+
+当前目标峰基本保留，横向加权后的响应明显变窄，轴向变化较小。横向只跨少量扫描线，宽度是粗采样估计，不能据此给出高精度“物理分辨率提升百分比”。
+
+这里的目标是从真实数据选出的 point-like 回波，没有独立理想点真值。−20 dB 连续宽度描述剖面外围，不等于严格的峰旁瓣电平。
+
+#### 10.3 同一网格内比较不同 M0
+
+~~~matlab
+n_z = 512;
+M0_values = [0 1 2];
+target_x_mm = -0.75;
+target_z_mm = 20.05;
 analyze_gcf_m0_point_target
 ~~~
 
-建议继续点击前面已经使用过的 z≈20 mm 孤立 point-like target。
+![不同 M0 在同一目标上的横向剖面](figures/analyze_gcf_m0_point_target_02.png)
 
-脚本会输出：
+![不同 M0 在同一目标上的轴向剖面](figures/analyze_gcf_m0_point_target_03.png)
 
-- target coherence weight；
-- target peak attenuation；
-- lateral / axial -6 dB FWHM；
-- lateral / axial -20 dB width；
-- 三种 M0 的 lateral / axial profile。
+**图 13｜带宽变化主要在何处体现？** 比较本组曲线内部的峰值与外围变化。它使用 512 深度点，不能与图 12 的 1024 点结果混成一次只改算法的实验。
 
-这一节要回答的是：
+| M0 | DAS 峰位置处的权重 | 局部峰相对 DAS | 横向半幅宽 | 轴向半幅宽 |
+|---:|---:|---:|---:|---:|
+| 0 | 0.97873 | −0.187 dB | 0.4203 mm | 0.4421 mm |
+| 1 | 0.98222 | −0.156 dB | 0.6205 mm | 0.4436 mm |
+| 2 | 0.98362 | −0.143 dB | 0.6518 mm | 0.4449 mm |
 
-> **从 CF 放宽到 GCF 后，究竟保留了多少目标峰值，又牺牲了多少 profile / background suppression？**
+在这个目标上，M0 增大只轻微改变峰值，却明显恢复了 CF 压低的横向外围响应。这个现象说明当前目标的取舍；不能推广成所有目标、组织或参数的固定行为。
 
-这比仅比较整张 B-mode 图更能说明 M0 的代价与收益。
----
+### 11. 从点状回波走向组织纹理：扩展实验
 
-## 27. 已验证结果：point target 上的 M0 trade-off
+理解前面的主线后，再选读本节。点目标看主峰，组织图还要看背景与结构连续性。
 
-在同一个 point-like target 上，得到：
-
-~~~text
-M0  target weight  peak change   lateral FWHM  axial FWHM  lateral -20 dB  axial -20 dB
-0   0.97648        -0.2067 dB    0.4241 mm     0.4458 mm   0.9871 mm       0.9623 mm
-1   0.98076        -0.1687 dB    0.6490 mm     0.4479 mm   1.1504 mm       0.9880 mm
-2   0.98323        -0.1469 dB    0.6802 mm     0.4494 mm   1.1530 mm       1.0279 mm
-4   0.98695        -0.1141 dB    0.7032 mm     0.4506 mm   1.1552 mm       1.0375 mm
-~~~
-
-lateral spacing = 0.297981 mm；axial spacing = 0.156863 mm。
-
-### 27.1 目标中心几乎不受 M0 影响
-
-target weight 从 0.9765 增加到 0.9870，对应 peak attenuation 仅从约 -0.21 dB 变化到 -0.11 dB。
-
-说明这个高相干点目标中心无论 CF 还是 GCF 都基本被保留。
-
-### 27.2 真正被 M0 改变的是横向 profile
-
-lateral FWHM：
-
-~~~text
-M0=0 : 0.424 mm
-M0=1 : 0.649 mm
-M0=2 : 0.680 mm
-M0=4 : 0.703 mm
-~~~
-
-前面 DAS 的 lateral FWHM 约为 0.708 mm，因此 `M0=4` 已几乎回到 DAS。
-
-这说明：
-
-> **CF 的强 lateral narrowing 主要来自对主峰中心以外 aperture structure 的严格抑制；一旦把邻近 low-spatial-frequency bins 纳入，横向 profile 会迅速恢复。**
-
-尤其是 `M0=1`，只加入 ±1 两个 bins，就已经从 0.424 mm 回到 0.649 mm。
-
-### 27.3 轴向几乎不变
-
-~~~text
-0.446 ~ 0.451 mm
-~~~
-
-不同 M0 的 axial FWHM 基本一致，再次说明 CF/GCF 主要改变 receive-aperture 横向相干加权，而不是 axial pulse response。
-
-### 27.4 -20 dB width 也说明同样趋势
-
-lateral -20 dB width：
-
-~~~text
-0.987 mm → 1.150 → 1.153 → 1.155 mm
-~~~
-
-说明 `M0=1` 已经恢复了大部分 CF 原先压掉的 lateral profile skirt。
-
-因此目前对 TheGB 的 point-target 结论是：
-
-> **M0 增大带来的主要收益不是“更保留点目标峰值”——峰值本来就几乎完整；它主要是在恢复 CF 原本强烈压制的横向外围和低阶 aperture structure。**
-
-这也说明为什么必须继续看 homogeneous speckle：GCF 的价值更可能体现在 diffuse scattering / texture preservation，而不是这个高相干点目标中心。
-
----
-
-## 28. 第九小节：homogeneous speckle preservation
-
-新增：
-
-~~~text
-analyze_gcf_speckle_roi.m
-~~~
-
-运行：
+#### 11.1 选一个固定 ROI，看亮度与纹理如何变化
 
 ~~~matlab
+n_z = 512;
+M0_values = [0 1 2 4];
+roi_corners_mm = [5 18; 11 24];
 analyze_gcf_speckle_roi
 ~~~
 
-在 DAS 图上选择一个尽量均匀的 speckle ROI，两次点击给出矩形对角点。
+也可不提供坐标，用两次点击选矩形。这里给定的 ROI 只是可复现的演示区域，没有被独立验证为理想均匀 speckle。
 
-避开：
+![ROI 在 DAS 中的位置](figures/analyze_gcf_speckle_roi_01.png)
 
-- point target；
-- 强边界；
-- 明显 lesion / cyst 边缘；
-- probe lateral edge。
+![同一 ROI 的 DAS、CF 与 GCF 纹理](figures/analyze_gcf_speckle_roi_02.png)
 
-脚本比较 DAS、CF 与不同 M0 GCF 的：
+![ROI 的均值归一化幅值分布](figures/analyze_gcf_speckle_roi_03.png)
 
-- ROI mean envelope 相对 DAS 的衰减；
-- envelope standard deviation；
-- speckle SNR = mean/std；
-- coefficient of variation；
-- 与原始 DAS envelope texture 的 Pearson correlation；
-- mean-normalized envelope histogram。
+**图 14｜看平均亮度，也看纹理是否被重塑。** 第三张为各方法按 ROI 均值归一化的直方图，用于观察分布形状；它不能恢复被隐藏的幅值变化。
 
-这一节要回答的核心问题是：
+实际落到网格的 ROI 为 $x\approx5.215$–10.876 mm、$z\approx18.072$–23.943 mm，共 1520 个像素：
 
-> **CF 把背景压得更黑时，到底是在去除“不相干 clutter”，还是也在强烈重塑正常 diffuse speckle？而 GCF 又保留了多少原始 speckle texture？**
+| M0 | ROI 平均包络相对 DAS | 与 DAS 包络的相关系数 |
+|---:|---:|---:|
+| 0（CF） | −10.79 dB | 0.9148 |
+| 1 | −4.40 dB | 0.9464 |
+| 2 | −2.02 dB | 0.9810 |
+| 4 | −0.81 dB | 0.9964 |
 
-这些统计只描述当前 ROI 的 texture 变化，不自动证明理想 Rayleigh speckle，也不构成临床图像质量结论。
----
+本例中，带宽越宽，亮度与纹理越接近 DAS。这不证明 DAS 是理想真值，也不能仅凭 ROI 更暗判断杂波去除得更好。
 
-## 29. 已验证结果：真实颈动脉上的 CF / GCF
-
-对两个独立 focused-imaging carotid acquisition：
-
-~~~text
-L7_FI_carotid_cross_1.uff
-L7_FI_carotid_cross_2.uff
-~~~
-
-使用同一套 Manual DAS / CF / GCF(M0=1) 代码，得到：
-
-~~~text
-cross 1
-  CF median  = 0.037282
-  CF mean    = 0.092375
-  GCF median = 0.13792
-  GCF mean   = 0.23105
-
-cross 2
-  CF median  = 0.034348
-  CF mean    = 0.088520
-  GCF median = 0.13131
-  GCF mean   = 0.22724
-~~~
-
-并且 CF core 与 GCF core 的 DAS baseline 完全一致：
-
-~~~text
-DAS_core_scaled_error = 0
-~~~
-
-### 29.1 与 TheGB phantom 相比
-
-TheGB 上此前约为：
-
-~~~text
-CF median      ≈ 0.178
-GCF M0=1 median ≈ 0.565
-~~~
-
-而真实 carotid 上只有：
-
-~~~text
-CF median      ≈ 0.034 ~ 0.037
-GCF M0=1 median ≈ 0.131 ~ 0.138
-~~~
-
-因此同一算法在人体数据上明显更 aggressive。
-
-两个独立 acquisition 给出非常接近的统计值，说明这个现象具有一定重复性，不像是单次采集偶然。
-
-### 29.2 图像上的共同现象
-
-两个 carotid acquisition 都表现出：
-
-- CF 把大量组织 speckle / 深部回波强烈压低；
-- GCF(M0=1) 比 CF 保留更多组织纹理和结构连续性；
-- GCF 仍然比 DAS 明显更暗；
-- lumen 内部和周围低 coherence 区域都被显著抑制；
-- 深部区域的 CF/GCF 权重整体偏低。
-
-当前不能简单解释为“人体数据更差”或“GCF 更正确”。可能贡献因素包括：
-
-- attenuation / SNR 随深度下降；
-- sound-speed mismatch / phase aberration；
-- diffuse scattering statistics；
-- reverberation / clutter；
-- dynamic receive aperture 随深度变化；
-- 真实组织几何和 out-of-plane effects。
-
-这些机制当前没有被单独控制，因此只能作为候选解释。
-
-### 29.3 当前最重要的新问题
-
-真实 carotid 上 CF/GCF 的强 suppression 看起来存在明显 depth dependence。
-
-所以在继续做 ROI 评价之前，先需要确认：
-
-> **coherence weight 是否随深度系统性下降，以及这个趋势与 DAS signal level、active Rx count 是否同时变化。**
-
----
-
-## 30. 第十小节：真实 carotid 的 depth dependence
-
-新增：
-
-~~~text
-analyze_carotid_cf_gcf_depth_dependence.m
-~~~
-
-运行：
+#### 11.2 看两个真实颈动脉 acquisition
 
 ~~~matlab
+n_z = 512;
+M0 = 1;
+compare_carotid_fi_cf_gcf_oneclick
+~~~
+
+入口读取 `L7_FI_carotid_cross_1.uff` 和 `L7_FI_carotid_cross_2.uff`；数据来源与下载方式见 [数据说明](../../data/README.md)。
+
+![两个颈动脉 acquisition 的 DAS、CF 与 GCF](figures/compare_carotid_fi_cf_gcf_oneclick_01.png)
+
+![两个 acquisition 的 CF 与 GCF 权重图](figures/compare_carotid_fi_cf_gcf_oneclick_02.png)
+
+**图 15｜同一套算法，组织数据得到不同的权重分布。** 每一行用该 acquisition 自己的 DAS peak 作参考；同一行可比较抑制，不能跨行用绝对亮度作定量比较。两行都仍受各自采集条件影响。
+
+| 本次数据，512 深度点 | CF median | GCF(M0=1) median |
+|---|---:|---:|
+| TheGB | 0.178151 | 0.564431 |
+| carotid cross 1 | 0.037359 | 0.13767 |
+| carotid cross 2 | 0.034161 | 0.13150 |
+
+在这两个 acquisition 中，CF/GCF 对大量组织回波的抑制比 TheGB 更强。它们不是同一个目标、同一声场或受控的临床对照；散射、像差、孔径、噪声和采集设置等都可能参与差异。
+
+下一步可以问：这种权重变化随深度怎样分布？第 14 节会同时看权重、DAS 幅值和有效通道数。
+
+<a id="implementation-notes"></a>
+
+## 第三部分：主线掌握后，再逐项检查细节
+
+下面按计算链回查：**输入向量 → 权重计算 → 显示与测量 → 解释与验证**。这些内容用于避免错误比较，不需要在第一轮讲理论时一起背下来。
+
+### 12. 输入和频谱：保持孔径、维度与索引一致
+
+#### 12.1 M 是当前像素的有效通道数
+
+本章使用 full 或二值 boxcar 接收孔径。动态 F-number 时，浅层通常选较少通道，深层更多，边缘还受阵列边界限制。插值查询超出记录范围的通道也会被排除。
+
+因此公式中的 $M$ 来自当前 active mask，不能把所有像素都写成硬件通道数 128。有效通道恰好取到零样本，与通道被排除是两回事。
+
+本章接收 DAS 不除以有效通道数；CF 中的 $M$ 是权重公式的归一化。如果以后加入 Hann 等非二值 apodization，要先明确 CF 衡量加权前还是加权后的向量，以及相应定义，不能直接把有效数量公式照搬。
+
+#### 12.2 两个 FFT 的轴不同
+
+| 处理 | 输入 | FFT 轴 | 用途 |
+|---|---|---|---|
+| 从实数 RF 构造解析 RF | `[sample,Rx]` | sample，维 1 | 保留载频的复数时间信号 |
+| GCF 的孔径频谱 | `[1,M_active]` | Rx，维 2 | 计算通道空间变化的能量占比 |
+
+解析 RF 不是已经解调的基带 IQ。前面的 FFT 不会自动给出孔径频谱，后面的 FFT 也不描述发射脉冲的时间带宽。
+
+CF 的和与总能量不依赖通道排列顺序；GCF 的空间频谱依赖排列。当前示例采用线性阵列的空间顺序；更换为非连续通道、稀疏阵列或不等间距阵元时，不能把压缩后的数组序号直接当等距空间轴。
+
+对等间距、连续的 $M$ 通道、pitch 为 $d$ 的孔径，第 $k$ bin 对应空间频率 $k/(Md)$。所以相同 M0 在不同 M 下，对应的物理频带并不相同。
+
+#### 12.3 signed bins 与 MATLAB 下标不能混用
+
+`fftshift` 后的 signed bin 标签为：
+
+$$ k=-\lfloor M/2\rfloor,\ldots,\lceil M/2\rceil-1. $$
+
+DC 的 MATLAB 下标是 `floor(M/2)+1`。未移动的 `fft(s)` 中，下标 1 是 DC，正频率位于开头，负频率位于末尾。下标 1 不代表 signed bin +1。
+
+核心使用未移动的 FFT 与首尾索引；下面用 shifted 版本解释同一数值操作：
+
+~~~matlab
+s = reshape(s,1,[]);            % 一个像素的有效 Rx 向量
+M = numel(s);                   % 需先确认 M > 0
+X = fftshift(fft(s,[],2),2);    % 沿 Rx
+bins = -floor(M/2):ceil(M/2)-1;
+M0_eff = min(M0,floor(M/2));
+energy = abs(X).^2;
+total_energy = sum(energy);
+
+if total_energy > 0
+    GCF = sum(energy(abs(bins)<=M0_eff)) / total_energy;
+else
+    GCF = 0;
+end
+~~~
+
+小孔径没有无限多独立 bins。本章把半宽限制到 `floor(M/2)`；偶数长度的 ±Nyquist 对应同一个独立 bin，只计一次。全部 bins 被覆盖时，非零向量的 GCF 为 1。
+
+`effective_M0_map`、`band_clipped_mask` 与 `band_clipped_fraction` 用于核对小孔径截断。若一片区域 GCF 为 1，先检查是否频带覆盖了全谱，再解释其相干性。
+
+### 13. 显示与剖面：先统一参考，再讨论效果
+
+#### 13.1 权重图不是 B-mode
+
+CF/GCF map 没有回波幅值单位，色条为 0–1。加权复数结果的包络才用于 B-mode：
+
+$$ A(P)=|Y(P)|,\qquad I_{\mathrm{dB}}(P)=20\log_{10}\frac{A(P)}{A_{\mathrm{ref}}}. $$
+
+- **共同参考**：DAS、CF、GCF 都除以同一个 DAS peak，便于观察幅值抑制。
+- **各自峰值参考**：各图除以自身 peak，便于看形态，但会隐藏整体衰减。
+- **目标剖面参考**：各方法在同一目标 ROI 内找到自己的局部峰，形状剖面分别归一化；峰值变化另在共同参考下报告。
+
+当前 B-mode 显示 −60 到 0 dB。显示下限的黑色可能代表很多不同的小幅值；定量统计应使用未裁剪的线性包络。
+
+对同一像素的权重 $W$，共同参考下幅值变化是 $20\log_{10}W$。图像变黑说明加权后响应减少，本身不区分减少的是什么信息。
+
+#### 13.2 CF/GCF 是自适应乘权，剖面会随数据改变
+
+点扩散函数（PSF）描述理想点目标经过成像系统后的扩展响应；本章真实目标未被独立校准为理想点，因此实际报告的是所选 point-like 回波的图像剖面。
+
+CF/GCF 根据当前位置的数据计算权重，结果不是固定线性系统的响应。主峰变窄可以描述为**加权后的横向响应收窄**，还要同时检查峰值、外围响应、背景和结构是否保留。
+
+本章宽度用包络半高测量：
+
+$$ 20\log_{10}(0.5)\approx-6.0206\ \mathrm{dB}. $$
+
+功率减半对应 −3.0103 dB，不能混用。−20 dB 的连续宽度也不同于峰旁瓣电平。
+
+横向步长仍由 conventional scanline 间距决定。插值交点能产生更多小数位，却不能补回未采到的剖面细节；报告宽度时应附上跨多少实际网格间隔。
+
+本次若干目标的轴向宽度变化较小，不代表自适应权重永远不能改变轴向剖面。结论应限定到本次输入、目标、孔径与网格。
+
+#### 13.3 ROI 的“speckle SNR”不是通道信噪比
+
+ROI 脚本中的 `mean(envelope)/std(envelope)` 是包络纹理统计，有时称 speckle SNR；它不是独立信号与噪声功率之比。Coefficient of variation、相关系数与直方图也只描述所选区域。
+
+像素之间可能相关，真实 ROI 也可能含边界或非均匀散射。不能用一个 ROI 的统计直接证明理想 Rayleigh speckle 或临床图像质量提升。
+
+### 14. 深度趋势：同时检查孔径和随机相位基准
+
+~~~matlab
+n_z = 512;
+M0 = 1;
 analyze_carotid_cf_gcf_depth_dependence
 ~~~
 
-无需手工选 ROI。
+![颈动脉数据的相干权重、DAS 幅值与有效孔径随深度变化](figures/analyze_carotid_cf_gcf_depth_dependence_01.png)
 
-脚本自动对两个 carotid acquisition 计算：
+**图 16｜权重下降时，哪些条件也在变化？** 左侧曲线以权重为横轴、深度向下；右侧以深度为横轴，左右 y 轴分别显示 DAS 幅值与有效 Rx 数。两边的坐标组织不同，应先读轴标签。
 
-- central 80% lateral field 的 CF median / IQR；
-- GCF(M0=1) median / IQR；
-- median DAS envelope 随深度变化；
-- median active Rx count 随深度变化；
-- 5–15 / 15–25 / 25–35 / 35–45 mm 四个深度段的统计。
+脚本先在中央 80% scanlines 内按每个深度取 median，再对深度段汇总。下表不是把整段所有像素一次性混合求 median：
 
-外侧 10% scanlines 被排除，以尽量减少 probe-edge aperture truncation 的影响。
+| 深度段 | cross 1 CF | cross 1 GCF | cross 2 CF | cross 2 GCF | 有效 Rx 数 median |
+|---|---:|---:|---:|---:|---:|
+| 5–15 mm | 0.1045 | 0.3799 | 0.0956 | 0.3693 | 19 |
+| 15–25 mm | 0.0539 | 0.2102 | 0.0429 | 0.1814 | 39 |
+| 25–35 mm | 0.0229 | 0.0905 | 0.0195 | 0.0778 | 59 |
+| 35–45 mm | 0.0161 | 0.0597 | 0.0149 | 0.0558 | 77.5 |
 
-这一步只用于识别 depth trend，不能单独证明趋势来自 attenuation、aberration 或其它某一种机制。
----
+两份数据都出现权重随深度下降、有效孔径随深度增大的趋势。后一个条件本身就值得检查。
 
-## 31. 已验证结果：真实 carotid 的 depth dependence
+考虑一个简化基准：等幅、独立均匀随机相位的 $M$ 个通道。对多次随机实现求平均，而非对单次输入强行赋值，有：
 
-在两个独立 carotid focused-imaging acquisition 上，central 80% lateral field 的 coherence weight 都随深度明显下降。
+$$ \mathbb E[\mathrm{CF}]=\frac{1}{M},\qquad \mathbb E[\mathrm{GCF}]=\frac{L}{M}. $$
 
-### carotid cross 1
+$L$ 是纳入分子的独立 bins 数。频带未截断时，`M0=1` 有 $L=3$。当 M 从约 19 增加到约 78，即使保持这种随机相位模型不变，CF 基准也从约 0.053 降到 0.013。
 
-~~~text
-depth      CF median   GCF median   DAS median level   active Rx median
-5–15 mm      0.1056      0.3878        -18.94 dB           19.0
-15–25 mm     0.0529      0.2103         -6.16 dB           39.0
-25–35 mm     0.0230      0.0927        -14.35 dB           59.0
-35–45 mm     0.0162      0.0601        -21.01 dB           77.5
+这不是说真实组织就是随机相位，而是说明：**CF/GCF 数值不能脱离 M 和频带直接比较。** 动态孔径还会改变物理空间范围和 GCF 的实际频带。
+
+DAS 包络大小不是通道 SNR。只靠目前的幅值与权重曲线，不能识别或排除噪声、散射、像差、混响等机制。若专门研究深度效应，应增加固定孔径 / 固定 M 和独立 SNR 对照；本章图用于提出问题，不给出唯一原因。
+
+### 15. 验证与复现：明确每个检查回答什么
+
+#### 15.1 当前已经实际检查的内容
+
+| 检查 | 入口 / 证据 | 可以支持什么 |
+|---|---|---|
+| 真实向量 `sum(s)` 回到第一章 DAS | `inspect_real_cf_aperture_vectors` | 输入向量接回正确计算链 |
+| 第二章 DAS 与第一章基线 | `compare_manual_das_vs_cf` | CF 加入时保留原有 DAS |
+| CF 与 GCF 核心的 DAS | `compare_manual_das_cf_gcf` | 对照没有悄悄更换基础图像 |
+| `GCF(M0=0)=CF` | 同上 | Parseval/DC 关系在实现中成立 |
+| 固定输入的 M0 单调性、权重范围与复数乘权 | `export_chapter2_figures` | 数组、权重和输出满足预期数值关系 |
+
+完整实际参数与结果见 [运行记录](figures/matlab_all_results.txt)；修正后的深度图另有 [单项重跑记录](figures/matlab_analyze_carotid_cf_gcf_depth_dependence_results.txt)。
+
+这些是内部一致性与数值检查。当前第二章没有完成独立 USTB CF/GCF 图像 reference 对照，不能把“图像看起来合理”写成已经完成参考复现。
+
+#### 15.2 USTB 参数名相同，不保证 bin 定义相同
+
+本次本地 USTB 固定版本为 `86126eb7cab8b6009d14f2d448e85eeb8a86f61c`。该版本的 [GCF OMHR 源码](https://github.com/unioslo/USTB/blob/86126eb7cab8b6009d14f2d448e85eeb8a86f61c/%2Bpostprocess/generalized_coherence_factor_OMHR.m)对 `M0<=1` 只选 DC，`M0>1` 才选择 ±M0 频带。
+
+因此，本章 `M0=0` 对应 DC-only；本章 `M0=1` 的三个 bins 没有该实现的直接整数参数对应。比较前必须明确统一 bin selection、有效孔径、FFT 长度与其他重建条件，不能只复制参数数字。以上是特定代码版本的约定，不是 GCF 理论要求。
+
+#### 15.3 一次改一个环节，先写下预测
+
+| 想观察的问题 | 修改 / 入口 | 保持一致 |
+|---|---|---|
+| 频带放宽保留哪些响应？ | `M0_values`、M0 sweep | 数据、DAS、孔径、网格、幅值参考 |
+| 有效孔径怎样影响一致性？ | `receive_f_number` | 数据、传播与取样约定 |
+| 宽度是否被采样限制？ | `n_z` 与实际 scanline 间距 | 目标、孔径、方法、测量定义 |
+| 组织纹理是否被重塑？ | 固定 `roi_corners_mm` | 同一数据、同一 ROI、未裁剪包络 |
+| 深度变化来自哪一步？ | 权重、幅值、有效 M 一起画 | 汇总区域、显示基准与频带定义 |
+
+导出全部课件图：
+
+~~~matlab
+addpath(genpath('D:/USTB'));
+export_chapter2_figures
 ~~~
 
-### carotid cross 2
+也可以只导出一个阶段或脚本：
 
-~~~text
-depth      CF median   GCF median   DAS median level   active Rx median
-5–15 mm      0.0968      0.3651        -16.53 dB           19.0
-15–25 mm     0.0421      0.1853        -16.38 dB           39.0
-25–35 mm     0.0191      0.0760        -21.41 dB           59.0
-35–45 mm     0.0151      0.0560        -25.02 dB           77.5
+~~~matlab
+export_chapter2_figures('concepts')  % 人工向量，不需 USTB
+export_chapter2_figures('phantom')   % TheGB 与目标 / ROI
+export_chapter2_figures('carotid')   % 两份人体数据与深度趋势
+export_chapter2_figures('experiment_gcf_m0_sweep')
 ~~~
 
-### 31.1 可以确认的事实
-
-两个独立 acquisition 都出现：
-
-~~~text
-depth ↑
-CF median ↓
-GCF median ↓
-active receive aperture ↑
-~~~
-
-而 DAS median level 与 coherence weight 并不是简单一一对应。
-
-例如 cross 1 中：
-
-~~~text
-5–15 mm  DAS = -18.94 dB, CF = 0.1056
-15–25 mm DAS =  -6.16 dB, CF = 0.0529
-~~~
-
-DAS amplitude 明显更强，但 CF 反而约减半。
-
-cross 2 中 5–15 mm 与 15–25 mm 的 DAS median level 几乎相同，但 CF / GCF 同样明显下降。
-
-因此：
-
-> **人体数据中的 coherence depth trend 不能仅用“深部信号更弱 / SNR 更低”解释。**
-
-### 31.2 当前最重要的混杂因素
-
-dynamic receive F-number 使 active Rx count 随深度系统性增加：
-
-~~~text
-约 19 → 39 → 59 → 77.5 channels
-~~~
-
-更大的 aperture 会采样更宽的横向范围，因此可能暴露更多：
-
-- phase variation；
-- sound-speed mismatch / aberration；
-- off-axis / diffuse-scattering differences；
-- clutter / reverberation。
-
-所以目前不能把 coherence 下降唯一归因于深度、attenuation 或某一种物理机制。
-
-如果未来专门研究这个问题，应该做 fixed-aperture / fixed-M 对照实验。
-
----
-
-# 32. 第 2 章总结：CF / GCF
-
-第 2 章到这里结束。
-
-## 32.1 从 DAS 到 CF
-
-Chapter 1 的 DAS：
-
-~~~text
-delay-aligned aperture vector
-s = [s1, s2, ... , sM]
-        ↓
-sum(s)
-        ↓
-DAS
-~~~
-
-Chapter 2 增加的问题是：
-
-> **这些已经对齐的 receive channels 到底有多一致？**
-
-普通 CF 可以理解为 coherent energy 相对于总 channel energy 的归一化，也可以从 aperture spatial spectrum 理解为 DC energy fraction。
-
-CF 高意味着 channel energy 大部分成功形成 coherent sum；CF 低意味着大量能量发生相消。
-
-## 32.2 CF 的真实效果
-
-在 TheGB point target 上：
-
-- target peak 基本保留；
-- lateral displayed profile 明显变窄；
-- axial FWHM 基本不变；
-- lateral profile skirt / background suppression 明显增强。
-
-因此更准确的表述是：
-
-> **CF 主要带来 adaptive lateral narrowing 与 low-coherence suppression，而不是改变 axial pulse response。**
-
-同时 conventional-FI lateral sampling 较粗，因此不能把测得的 FWHM 缩小直接解释成高精度物理分辨率提升。
-
-## 32.3 为什么需要 GCF
-
-CF 只严格奖励 exact-DC coherence。
-
-一个平滑 phase ramp 可能不是随机噪声，但能量会从 DC 移到邻近 low-spatial-frequency bins，这时 CF 可以很低。
-
-GCF 因此使用 low-spatial-frequency spectral energy / total aperture spectral energy。
-
-本项目统一 convention：
-
-~~~text
-M0=0 -> DC only -> CF
-M0=1 -> {-1,0,+1}
-M0=2 -> {-2,...,+2}
-...
-~~~
-
-M0 越大，算法越宽松。
-
-## 32.4 M0 的代价与收益
-
-TheGB 上：
-
-~~~text
-M0=0 median ≈ 0.178
-M0=1 median ≈ 0.565
-M0=2 median ≈ 0.748
-~~~
-
-说明大量 aperture energy 分布在 DC 邻近低频 bins。
-
-point target 上，M0 增大几乎不改变目标峰值，却快速恢复 CF 原本压掉的 lateral profile。
-
-所以：
-
-> **GCF 不是“更强的 CF”，而是主动放宽 CF 的 coherence criterion。**
-
-## 32.5 phantom 与 in-vivo 差异
-
-TheGB phantom：
-
-~~~text
-CF median ≈ 0.178
-GCF(M0=1) median ≈ 0.565
-~~~
-
-真实 carotid：
-
-~~~text
-CF median ≈ 0.034–0.037
-GCF(M0=1) median ≈ 0.131–0.138
-~~~
-
-说明相同 coherence weighting 在人体数据上明显更加 aggressive。
-
-这也提醒：
-
-> **算法在 point-target phantom 上表现漂亮，并不代表在真实组织上会同样合理。**
-
-必须关注 speckle preservation、结构连续性、depth dependence 和 acquisition conditions。
-
-## 32.6 本章最终应该记住的五句话
-
-1. **CF / GCF 都建立在正确 delay-aligned aperture data 之上，不重新定义 Tx/Rx propagation。**
-2. **CF 本质上衡量 exact coherent sum，也可理解为 aperture spectrum 的 DC energy fraction。**
-3. **GCF 把 coherence 从 DC 推广到一段 low spatial-frequency band；M0 控制这个带宽。**
-4. **更强 suppression 不自动代表更好的成像；CF 可能同时强烈重塑正常 diffuse speckle。**
-5. **phantom、point target 与真实人体的 coherence statistics 可以显著不同，因此参数和结论必须结合数据类型与任务解释。**
-
----
-
-## 33. 下一章
-
-下一章进入：
-
-> **MV / MVDR / Capon adaptive beamforming**
-
-CF/GCF 仍然是：
-
-~~~text
-先做 DAS
-再根据 coherence 乘一个 pixel-wise weight
-~~~
-
-MVDR 开始真正改变 aperture combination：
-
-~~~text
-aligned aperture data
-        ↓
-estimate covariance
-        ↓
-solve adaptive channel weights
-        ↓
-weighted coherent combination
-~~~
-
-也就是说，下一章从“判断通道是否一致”进一步进入：
-
-> **根据数据本身，自适应决定每个阵元应该给多大权重。**
+入口给定像素、目标与 ROI 坐标，适合非交互导出。同名 MATLAB 图和运行记录会更新；AI 插图由内置文生图工具生成，不由 MATLAB 重画。完整复现与分项图片见 [配图索引](figures/README.md)。
+
+## 自测：先能讲主线，再能解释细节
+
+**读完理论后：**
+
+1. 本章单像素的输入为什么是复数 Rx 向量，而不是一张 DAS 灰阶图？
+2. `[1,1,1,4]` 都同相，为什么 CF 仍小于 1？
+3. CF 的分母为什么有 M？它与孔径 FFT 的 DC 能量怎样相连？
+4. GCF 扩大 M0 时，改变的是传播时间、DAS，还是权重判据？
+5. 一 bin 相位坡可以有 GCF≈1，为什么加权后仍可能没有输出？
+
+**完成实践后：**
+
+6. 权重图的 0–1 与 B-mode 的 dB 分别代表什么？
+7. 一张各自归一化的图，能不能说明目标幅值没有被压低？
+8. 同样的 M0，不同有效 M 下对应同样的物理空间频带吗？
+9. 横向 FWHM 只跨 1.4 个间隔，应该怎样报告？
+10. 深度越大 CF 越低，为什么不能立即归因于 SNR？
+11. 当前内部验证和独立 USTB reference 分别需要什么证据？
+
+<details>
+<summary>展开参考思路</summary>
+
+1. 权重需要各通道的相位与能量信息，求和或取包络后这些信息无法从单个像素恢复。
+2. CF 同时依赖幅值分布；该向量为 49/76。
+3. M 使分母成为相干和功率的上界；Parseval 将它转换为全部 FFT 能量。
+4. 固定同一输入时，只放宽计入分子的空间频带。
+5. 权重没有相位校正能力，仍乘原来相消后的 DAS。
+6. 前者是无量纲权重，后者是相对参考幅值的对数显示。
+7. 不能；目标增益变化应在共同参考下另行报告。
+8. 不一定，空间频率为 k/(M·pitch)。
+9. 报告网格间距和采样支撑，把数值视为粗估。
+10. 有效 M、实际频带和其他传播 / 散射条件也在变化；DAS 包络不是独立 SNR。
+11. 前者检查共享路径和恒等关系；后者还需独立实现、明确定义与匹配条件。
+
+</details>
+
+## 术语回查与课件讲解顺序
+
+| 术语 | 本章的含义 |
+|---|---|
+| aligned aperture vector | 当前像素、当前 Tx 的有效复数 Rx 样本 |
+| phasor | 用箭头表示复数幅值与相位 |
+| coherent sum | 保留相位的通道求和 |
+| channel energy | 各通道幅值平方之和 |
+| aperture spectrum | 沿接收阵元方向的离散空间频谱 |
+| DC | 零空间频率，所有通道相同的常量分量 |
+| M / M0 | 有效 Rx 数 / 低空间频率半宽 bins |
+| CF / GCF map | 逐像素权重图，不是 B-mode |
+| common / self reference | 共同幅值参考 / 各自峰值参考 |
+| point-like profile | 真实点状回波的剖面，未必等于理想 PSF |
+
+建议分三轮授课：
+
+| 轮次 | 图与主线 | 学生应能说清 |
+|---|---|---|
+| 第一轮：完整理论 | 图 1 → 2 → 3 → 4 → 5 | 输入、CF、乘权流程、空间频谱、GCF |
+| 第二轮：公式落地 | 图 6 → 7 → 8 → 9 → 10 | 人工向量、真实向量、整张加权图 |
+| 第三轮：任务与边界 | 图 11–16 | M0 取舍、目标采样、组织纹理、深度混杂因素 |
+
+课时较少时，先完成前两轮；目标、ROI 与人体图用于进一步讨论。每组 MATLAB 图的运行入口、网格和显示基准都可在 [完整图册](figures/README.md)回查。
+
+## 延伸阅读与下一章
+
+- [Mallart 与 Fink，1994](https://doi.org/10.1121/1.410562)：聚焦准则、散射介质与声速不均匀背景。本章不把历史问题简化成“CF 最初就是为了让图更黑”。
+- [Li 与 Li，2003：Adaptive imaging using the generalized coherence factor](https://pubmed.ncbi.nlm.nih.gov/12625586/)：GCF 的低空间频率能量比例与 DC-only 退化关系；DOI `10.1109/TUFFC.2003.1182117`。
+- [USTB 固定版本的 CF 源码](https://github.com/unioslo/USTB/blob/86126eb7cab8b6009d14f2d448e85eeb8a86f61c/%2Bpostprocess/coherence_factor.m)：公式、乘权与历史引用。
+- [USTB 固定版本的 GCF OMHR 源码](https://github.com/unioslo/USTB/blob/86126eb7cab8b6009d14f2d448e85eeb8a86f61c/%2Bpostprocess/generalized_coherence_factor_OMHR.m)：特定实现的参数与频带约定。
+
+本章的手写核心面向二维线性阵列、正深度 spherical FI、实数 RF 和二值接收孔径，未包含跨 Tx coherence、基带 IQ 处理或运动补偿。
+
+下一章进入 **MV / MVDR / Capon**。本章先沿 Rx 作 DAS，再乘一个逐像素权重；下一章会从对齐后的通道数据估计协方差，进一步决定各接收通道的自适应组合权重。

@@ -42,7 +42,7 @@
 %   cd matlab/02_CF_GCF
 %   analyze_gcf_speckle_roi
 
-clearvars -except filename z_min z_max n_z receive_f_number M0_values;
+clearvars -except filename z_min z_max n_z receive_f_number M0_values roi_corners_mm;
 clc;
 close all;
 
@@ -122,7 +122,16 @@ caxis([-60 0]);
 colorbar;
 colormap gray;
 
-[x_click_mm,z_click_mm] = ginput(2);
+% For lecture export, use two reproducible [x,z] corners instead of clicks.
+if exist('roi_corners_mm','var')
+    assert(isequal(size(roi_corners_mm),[2 2]) && ...
+        all(isfinite(roi_corners_mm(:))), ...
+        'roi_corners_mm must contain two finite [x,z] corners in mm.');
+    x_click_mm = roi_corners_mm(:,1);
+    z_click_mm = roi_corners_mm(:,2);
+else
+    [x_click_mm,z_click_mm] = ginput(2);
+end
 
 x_min = min(x_click_mm)*1e-3;
 x_max = max(x_click_mm)*1e-3;

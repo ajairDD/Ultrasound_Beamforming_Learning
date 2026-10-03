@@ -1,0 +1,78 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Phantom: L7_FI_TheGB.uff; carotid: cross_1 and cross_2.
+Frame 1; depth 5--45 mm; binary Rx F-number 1.7.
+Target seed [x,z]=[-0.75,20.05] mm.
+Aperture-vector seeds: [-0.75,20.05;8,22;10,10] mm.
+Speckle demonstration ROI corners: [5,18;11,24] mm.
+Full-image M0=1; sweep [0,1,2,4]; target M0 [0,1,2].
+Common-reference images use the corresponding dataset DAS peak.
+The selected ROI has no verified ideal-speckle ground truth.
+
+--- analyze_carotid_cf_gcf_depth_dependence | n_z=512 ---
+============================================================
+ CAROTID CF/GCF DEPTH DEPENDENCE
+============================================================
+GCF M0 = 1
+Rx F#  = 1.700
+
+carotid cross 1
+carotid cross 2
+
+============================================================
+carotid cross 1
+central lateral x range: -15.35 to 15.35 mm
+============================================================
+ 5-15 mm:
+  CF median across depth profile  : 0.1045
+  GCF median across depth profile : 0.3799
+  DAS median level                : -19.49 dB
+  active Rx median                : 19.0
+15-25 mm:
+  CF median across depth profile  : 0.0539
+  GCF median across depth profile : 0.2102
+  DAS median level                : -7.15 dB
+  active Rx median                : 39.0
+25-35 mm:
+  CF median across depth profile  : 0.0229
+  GCF median across depth profile : 0.0905
+  DAS median level                : -14.88 dB
+  active Rx median                : 59.0
+35-45 mm:
+  CF median across depth profile  : 0.0161
+  GCF median across depth profile : 0.0597
+  DAS median level                : -22.16 dB
+  active Rx median                : 77.5
+
+============================================================
+carotid cross 2
+central lateral x range: -15.35 to 15.35 mm
+============================================================
+ 5-15 mm:
+  CF median across depth profile  : 0.0956
+  GCF median across depth profile : 0.3693
+  DAS median level                : -16.04 dB
+  active Rx median                : 19.0
+15-25 mm:
+  CF median across depth profile  : 0.0429
+  GCF median across depth profile : 0.1814
+  DAS median level                : -16.00 dB
+  active Rx median                : 39.0
+25-35 mm:
+  CF median across depth profile  : 0.0195
+  GCF median across depth profile : 0.0778
+  DAS median level                : -20.64 dB
+  active Rx median                : 59.0
+35-45 mm:
+  CF median across depth profile  : 0.0149
+  GCF median across depth profile : 0.0558
+  DAS median level                : -24.40 dB
+  active Rx median                : 77.5
+
+Interpretation boundary:
+  If CF/GCF fall with depth while DAS level also falls, lower SNR /
+  attenuation is a plausible contributor, but not a proven cause.
+  If active-channel count changes strongly with depth, aperture size is
+  another confound. Do not attribute the trend to one mechanism
+  without a controlled experiment.
+
+Exported 1 figures; elapsed 49.4 s.

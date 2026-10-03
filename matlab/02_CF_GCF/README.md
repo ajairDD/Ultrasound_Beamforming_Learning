@@ -1,392 +1,122 @@
-# Chapter 2 MATLAB：CF / GCF
+# Chapter 2 MATLAB：从 DAS 到 CF / GCF
 
-默认真实数据：
-
-~~~text
-../../data/L7_FI_TheGB.uff
-~~~
-
-本章第一阶段只研究 receive-domain coherence。
-
-## 第一课
-
-~~~matlab
-demo_cf_aperture_vectors
-~~~
-
-不需要 USTB。
-
-目的不是成像，而是先理解一个 pixel 的 aligned aperture vector：
+先读[第二章教程](../../chapters/02_CF_GCF/README.md)的理论主线，再按下面的顺序运行。本目录沿用 Chapter 1 的 conventional FI-DAS：一个像素对应一次 Tx，对已对齐的 **active Rx 复数向量**计算权重，再乘到同一个 DAS 复数像素上。
 
 ~~~text
-s = [s1, s2, ... , sM]
+真实 RF → analytic RF → Tx/Rx 延时与插值 → active Rx 向量
+                                         ├→ 相干求和 → DAS
+                                         └→ CF / GCF 权重 → DAS × 权重
 ~~~
 
-为什么：
+## 运行准备
 
-- 同相时 CF 接近 1；
-- phase 越乱 CF 越低；
-- CF 与 aperture spatial spectrum 有什么关系。
-
-后续再进入真实 UFF 的 Manual CF / GCF。
-
----
-
-## 第二课：真实 aligned aperture vector
-
-运行：
+在 MATLAB 中进入本目录，并设置：
 
 ~~~matlab
+addpath(genpath('D:/USTB'));
 addpath('../01_DAS_Real_UFF');
+~~~
+
+两个 `demo_*` 人工向量示例不需要 USTB 或数据。真实数据默认 `../../data/L7_FI_TheGB.uff`；人体扩展使用 `L7_FI_carotid_cross_1.uff`、`L7_FI_carotid_cross_2.uff`。
+
+本章真实数据代码的范围是二维 x-z、正深度 spherical FI、实 RF、binary boxcar 接收孔径，默认 frame 1、深度 5–45 mm、Rx F-number 1.7。它研究 **receive-domain coherence**；RTB 的 Tx 相干加权不在本章实现范围内。
+
+## 按主线运行
+
+| 顺序 | 入口 | 要回答的问题 |
+|---|---|---|
+| 1 | `demo_cf_aperture_vectors` | 同相、相位误差、随机相位、强离群通道怎样改变 CF？ |
+| 2 | `demo_cf_failure_and_gcf_motivation` | 平滑 phase ramp 为什么 CF 低，却能被邻近 FFT bins 捕捉？ |
+| 3 | `inspect_real_cf_aperture_vectors` | 真实像素的 aligned Rx 向量是什么，能否重现 Chapter 1 DAS？ |
+| 4 | `compare_manual_das_vs_cf` | CF 权重图怎样改变同一张 DAS？共同参考和各自归一化有何差别？ |
+| 5 | `compare_manual_das_cf_gcf` | 允许邻近 spatial-frequency bins 后，GCF 与 CF 有何变化？ |
+| 6 | `experiment_gcf_m0_sweep` | `M0=[0 1 2 4]` 如何改变抑制强度？ |
+
+第三步默认在图中点击三个像素，然后 snap 到实际 scanline 与 z-grid。脚本检查 `sum(aligned active samples)` 是否重现 Chapter 1 的复数 DAS 像素；主要误差以 `sum(abs(s))` 归一化，避免接近相消的 DAS 值使相对误差膨胀。
+
+第四步独立调用 Chapter 1 DAS，验证同样的延时、插值和孔径确实得到同样的 baseline。第五步同时验证 CF 与 GCF 内部 DAS 相同、`GCF(M0=0)==CF`。
+
+### 核心函数与参数约定
+
+| 函数 | 输出的权重 | 主要复数输出 |
+|---|---|---|
+| `reconstruct_fi_cf_manual(filename,opts)` | `cf_map` | `das_analytic`、`cf_analytic` |
+| `reconstruct_fi_gcf_manual(filename,opts)` | `gcf_map` | `das_analytic`、`gcf_analytic` |
+
+以上图像数组均为 `[n_z,N_waves]`，第二维是 conventional FI scanline；`x_axis`、`z_axis` 单位为 m。权重为实数，名义范围 `[0,1]`；复数图保留 DAS 的相位。包络只在相干求和和加权完成后取绝对值。
+
+本仓库 `M0` 是孔径 FFT 低频**半宽**：
+
+~~~text
+M0=0 → {0}            → CF
+M0=1 → {-1,0,+1}      → 3-bin GCF
+M0=2 → {-2,...,+2}    → 5-bin GCF
+M0=4 → {-4,...,+4}    → 9-bin GCF
+~~~
+
+`demo_cf_failure_and_gcf_motivation` 用 `K` 表示同一教学半宽。本仓库的 `M0=1` 不能直接套用到存在 legacy special case 的 USTB GCF 实现；本章没有提供 USTB GCF 数值对照脚本。
+
+短 active aperture 采用 `effective_M0=min(M0,floor(M/2))`，FFT bins 去重后求和，避免重复统计 even-length Nyquist bin。GCF 输出还包括 `effective_M0_map`、`band_clipped_mask` 与 `band_clipped_fraction`。
+
+~~~matlab
+opts = struct('n_z',512,'receive_f_number',1.7,'M0',1);
+gcf = reconstruct_fi_gcf_manual('../../data/L7_FI_TheGB.uff',opts);
+~~~
+
+### 先看共同参考，再看形态
+
+`cf_db_common` / `gcf_db_common` 使用同一数据集的 DAS peak 为 0 dB，便于比较线性包络被抑制多少。`*_db_self` 使用每种方法自己的 peak，便于观察形态，但会隐藏全局衰减。dB 图采用 `20*log10(envelope/reference)`，默认显示动态范围 60 dB。
+
+## 单因素扩展实验
+
+| 入口 | 默认设置 | 观察内容 |
+|---|---|---|
+| `analyze_das_vs_cf_point_target` | `n_z=1024` | 独立局部峰值、峰值衰减、横向/轴向半幅宽度与 -20 dB profile width |
+| `analyze_gcf_m0_point_target` | `n_z=512; M0_values=[0 1 2]` | 放宽低频带对目标峰值和剖面的影响 |
+| `analyze_gcf_speckle_roi` | `n_z=512; M0_values=[0 1 2 4]` | 均值衰减、std ratio、mean/std、CV、与 DAS 包络纹理的相关性 |
+| `compare_carotid_fi_cf_gcf_oneclick` | `n_z=512; M0=1` | 两次独立人体采集的 DAS / CF / GCF、权重及差值图 |
+| `analyze_carotid_cf_gcf_depth_dependence` | `n_z=512; M0=1` | 中央 80% scanline 的权重 median/IQR、信号与 active Rx 数随深度变化 |
+
+`experiment_gcf_m0_sweep` 默认 `n_z=256` 以缩短参数扫描时间；选定感兴趣的 `M0` 后可用 `compare_manual_das_cf_gcf` 的 512 点深度网格查看。
+
+点目标脚本各自归一化剖面来观察形态，并单独打印共同线性参考下的峰值衰减。常规 FI 的横向采样由 scanline 间距决定；半幅宽度若只跨少于三个间隔，只能视为采样受限的粗估。自适应加权后剖面变窄不等于采集的衍射极限改变；-20 dB width 用于观察裙边，不是独立、严格的旁瓣指标。
+
+Speckle ROI 指标描述所选区域被改变了多少，不证明该区域服从理想 Rayleigh 模型，也不证明诊断质量改善。人体两行分别使用各自采集的 DAS peak，不能比较两行绝对亮度；深度趋势还同时受到 signal level 与动态接收孔径等因素影响。
+
+## 非交互复现坐标
+
+除保留原来的点击选择，还可在运行前指定位置，适合课件导出：
+
+~~~matlab
+selected_pixels_mm = [-0.75 20.05;8 22;10 10]; % 三行 [x,z]，单位 mm
 inspect_real_cf_aperture_vectors
-~~~
 
-脚本流程：
-
-~~~text
-Chapter-1 conventional FI-DAS
-        ↓
-在图上点击 3 个 pixel
-        ↓
-snap 到真实 scanline / z-grid
-        ↓
-重新计算相同 Tx+Rx delay
-        ↓
-fractional interpolation
-        ↓
-active receive aperture
-        ↓
-真实 aligned complex aperture vector
-        ↓
-CF / phasor / aperture FFT
-~~~
-
-每个点还会验证：
-
-~~~text
-sum(aligned active samples)
-==
-Chapter-1 DAS complex pixel
-~~~
-
-默认使用 Rx F# = 1.7。
-
-这一课仍然不做完整 CF 图像；目标是先把真实数据中的 aligned aperture vector 物理含义彻底看清楚。
----
-
-## 第三课：整张 Manual CF 图像
-
-核心函数：
-
-~~~text
-reconstruct_fi_cf_manual.m
-~~~
-
-对比入口：
-
-~~~matlab
-addpath('../01_DAS_Real_UFF');
-compare_manual_das_vs_cf
-~~~
-
-输出包括：
-
-~~~text
-das_analytic
-das_envelope
-das_db
-
-cf_map
-
-cf_analytic
-cf_envelope
-cf_db_self
-cf_db_common
-~~~
-
-`cf_db_common` 使用 DAS peak 作为共同参考，用来看真实 suppression。
-
-`cf_db_self` 使用 CF 图自己的 peak，用来看 morphology。
-
-脚本还会重新调用 Chapter 1 DAS，并验证 Chapter 2 内部的 DAS 没有发生变化。
----
-
-## 第四课：DAS vs CF point-target profile
-
-运行：
-
-~~~matlab
+target_x_mm = -0.75;
+target_z_mm = 20.05;
 analyze_das_vs_cf_point_target
-~~~
 
-点击一个相对孤立的 point-like target。
-
-输出：
-
-~~~text
-peak location / shift
-target peak attenuation
-lateral -6 dB FWHM
-axial -6 dB FWHM
-lateral -20 dB width
-axial -20 dB width
-~~~
-
-注意：conventional FI lateral sampling 较粗；若 FWHM 跨少于 3 个 scanline intervals，只能把横向宽度当作 sampling-limited 粗估。
-
--20 dB width 只用于观察 profile skirt，不作为严格 sidelobe metric。
----
-
-## 第五课：CF 的局限与 GCF 动机
-
-运行：
-
-~~~matlab
-demo_cf_failure_and_gcf_motivation
-~~~
-
-比较：
-
-~~~text
-Perfect coherence
-Smooth 1-bin phase ramp
-Random phase
-~~~
-
-教学版 GCF 使用：
-
-~~~text
-K = 0  -> only DC -> CF
-K = 1  -> bins -1, 0, +1
-K = 2  -> bins -2 ... +2
-~~~
-
-重点理解：
-
-~~~text
-CF 低
-并不一定等于
-aperture 完全随机不相干
-~~~
-
-一个平滑 phase ramp 也可能让 DC 能量很低，但其能量仍集中在邻近 low spatial-frequency bins。
-
-后续正式 GCF 实现时，会再明确教学参数 K 与 USTB / 文献 M0 convention 的对应关系。
----
-
-## 第六课：完整 Manual GCF
-
-核心：
-
-~~~text
-reconstruct_fi_gcf_manual.m
-~~~
-
-对比入口：
-
-~~~matlab
-M0 = 1;
-compare_manual_das_cf_gcf
-~~~
-
-正式 Manual GCF 使用统一的 low-frequency half-width `M0`：
-
-~~~text
-M0 = 0 -> DC only -> CF
-M0 = 1 -> bins -1,0,+1
-M0 = 2 -> bins -2...+2
-M0 = 4 -> bins -4...+4
-~~~
-
-USTB 当前实现对 `M0=1` 有 legacy special case；后续做 reference validation 时单独映射，不改变本项目主定义。
-
-脚本会验证：
-
-~~~text
-CF core DAS == GCF core DAS
-GCF(M0=0) == CF
-~~~
-
-然后显示 DAS / CF / GCF 的 common-reference 图像和权重图。
----
-
-## 第七课：GCF M0 参数扫描
-
-运行：
-
-~~~matlab
-experiment_gcf_m0_sweep
-~~~
-
-默认比较：
-
-~~~text
-M0 = [0 1 2 4]
-~~~
-
-其中：
-
-~~~text
-M0=0 -> CF
-M0=1 -> 3-bin GCF
-M0=2 -> 5-bin GCF
-M0=4 -> 9-bin GCF
-~~~
-
-参数扫描默认 `n_z=256` 以缩短运行时间。
-
-先用它看趋势；确定感兴趣的 M0 后，再用 `compare_manual_das_cf_gcf` 以 `n_z=512` 做正式比较。
----
-
-## 第八课：point target 上比较 M0
-
-运行：
-
-~~~matlab
+target_x_mm = -0.75;
+target_z_mm = 20.05;
 analyze_gcf_m0_point_target
-~~~
 
-默认：
-
-~~~text
-M0 = [0 1 2]
-n_z = 512
-~~~
-
-对应：
-
-~~~text
-M0=0 -> CF
-M0=1 -> 3-bin GCF
-M0=2 -> 5-bin GCF
-~~~
-
-输出 point-target peak、FWHM 和 -20 dB profile width，用来量化从严格 CF 到更宽松 GCF 的变化。
-
-另外，`reconstruct_fi_gcf_manual.m` 已修正短 active aperture 的边界处理：requested M0 过大时会裁剪到当前 aperture 能支持的最大 unique symmetric FFT band，而不是把 GCF 权重直接设成 0。
----
-
-## 第九课：homogeneous speckle ROI
-
-运行：
-
-~~~matlab
+roi_corners_mm = [5 18;11 24]; % 两个对角点 [x,z]，单位 mm
 analyze_gcf_speckle_roi
 ~~~
 
-在 DAS 图上点击两个对角点选择一块均匀 speckle 区域。
+这些固定点与 ROI 是可复现的教学示例；其物理类别不由坐标或相干权重自动确定。实际 pixel/ROI 范围由重建网格决定，脚本会报告 snap 后的位置与大小。
 
-输出：
-
-~~~text
-mean_vs_DAS_dB
-std_vs_DAS
-speckle_SNR
-CV
-corr_with_DAS
-~~~
-
-以及 common-reference ROI 图和 mean-normalized envelope histogram。
-
-目的：定量观察 CF / GCF 在 suppress background 的同时，改变了多少原始 speckle texture。
-
----
-
-## 人体 FI 颈动脉：一键 DAS / CF / GCF 对比
-
-运行：
+## 一键生成课件 PNG 与日志
 
 ~~~matlab
-compare_carotid_fi_cf_gcf_oneclick
+export_chapter2_figures('all');       % 全部 11 个示例
+export_chapter2_figures('concepts');  % 仅两个人工向量示例，无需 USTB
+export_chapter2_figures('phantom');   % TheGB 的真实向量、全图、参数与 ROI
+export_chapter2_figures('carotid');   % 两个人体示例
+export_chapter2_figures('compare_manual_das_cf_gcf'); % 只运行一个示例
 ~~~
 
-自动处理：
+输出到 [Chapter 2 figures](../../chapters/02_CF_GCF/figures/)：`<script>_01.png` 等 150 dpi PNG，以及 `matlab_<section>_results.txt` 参数和数值日志。默认导出设置与上表一致，目标 seed `(-0.75,20.05) mm`，三点与 ROI 使用上面的固定坐标。
 
-~~~text
-L7_FI_carotid_cross_1.uff
-L7_FI_carotid_cross_2.uff
-~~~
+Exporter 会暂时隐藏 figure 并恢复原设置；脚本会清理自身工作区和关闭图窗，建议用新的 MATLAB session 运行。它检查图像/权重尺寸、权重范围、复数加权关系、M0 sweep 的全像素单调性；各示例仍执行原有的 baseline 与 CF/GCF identity 检查。
 
-默认比较：
-
-~~~text
-DAS
-CF
-GCF, M0=1
-~~~
-
-无需手工选 pixel / ROI。
-
-脚本会自动：
-
-- 检查当前 UFF 是否满足本章 RF + spherical FI 假设；
-- 对两个 acquisition 分别重建 DAS / CF / GCF；
-- 验证 CF core 与 GCF core 的 DAS baseline 一致；
-- 打印 sampling frequency、channel / wave 数和 CF/GCF statistics；
-- 生成两行三列的 DAS / CF / GCF common-reference 对比；
-- 生成 CF / GCF weight maps；
-- 生成 GCF-CF difference maps。
-
-注意：两个 carotid 文件是独立 acquisition，因此每一行使用各自的 DAS peak 作为 0 dB reference。不要根据两行之间的绝对亮度做定量比较。
-
-正常使用无需额外设置；如需覆盖默认参数，可以在运行前设置：
-
-~~~matlab
-M0 = 1;
-n_z = 512;
-z_min = 5e-3;
-z_max = 45e-3;
-receive_f_number = 1.7;
-
-compare_carotid_fi_cf_gcf_oneclick
-~~~
-
----
-
-## 第十课：carotid CF/GCF depth dependence
-
-运行：
-
-~~~matlab
-analyze_carotid_cf_gcf_depth_dependence
-~~~
-
-自动处理两个 carotid focused-imaging 数据，不需要选择 ROI。
-
-输出：
-
-~~~text
-CF / GCF median vs depth
-CF / GCF IQR vs depth
-median DAS envelope vs depth
-median active Rx count vs depth
-4 个 depth bands 的 summary
-~~~
-
-用途：判断人体数据中 CF/GCF 的强 suppression 是否存在系统性 depth dependence，并同时检查 signal level 和 dynamic aperture 这两个重要混杂因素。
----
-
-## Chapter 2 完成
-
-本章主要入口：
-
-~~~text
-demo_cf_aperture_vectors.m
-inspect_real_cf_aperture_vectors.m
-reconstruct_fi_cf_manual.m
-compare_manual_das_vs_cf.m
-analyze_das_vs_cf_point_target.m
-
-demo_cf_failure_and_gcf_motivation.m
-reconstruct_fi_gcf_manual.m
-compare_manual_das_cf_gcf.m
-experiment_gcf_m0_sweep.m
-analyze_gcf_m0_point_target.m
-
-compare_carotid_fi_cf_gcf_oneclick.m
-analyze_carotid_cf_gcf_depth_dependence.m
-~~~
-
-`analyze_gcf_speckle_roi.m` 保留为可选扩展实验，不是完成本章的必跑项。
-
-Chapter 2 已完成；下一章进入 MV / MVDR / Capon。
+下一章计划进入 MV / MVDR / Capon。
