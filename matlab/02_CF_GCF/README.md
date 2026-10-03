@@ -364,3 +364,29 @@ median active Rx count vs depth
 ~~~
 
 用途：判断人体数据中 CF/GCF 的强 suppression 是否存在系统性 depth dependence，并同时检查 signal level 和 dynamic aperture 这两个重要混杂因素。
+---
+
+## Chapter 2 完成
+
+本章主要入口：
+
+~~~text
+demo_cf_aperture_vectors.m
+inspect_real_cf_aperture_vectors.m
+reconstruct_fi_cf_manual.m
+compare_manual_das_vs_cf.m
+analyze_das_vs_cf_point_target.m
+
+demo_cf_failure_and_gcf_motivation.m
+reconstruct_fi_gcf_manual.m
+compare_manual_das_cf_gcf.m
+experiment_gcf_m0_sweep.m
+analyze_gcf_m0_point_target.m
+
+compare_carotid_fi_cf_gcf_oneclick.m
+analyze_carotid_cf_gcf_depth_dependence.m
+~~~
+
+`analyze_gcf_speckle_roi.m` 保留为可选扩展实验，不是完成本章的必跑项。
+
+Chapter 2 已完成；下一章进入 MV / MVDR / Capon。
