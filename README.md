@@ -15,7 +15,7 @@
 | 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
 | 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
 | 第 2 章 | CF / GCF | **已完成** |
-| 第 3 章 | MV / MVDR / Capon | 计划中 |
+| 第 3 章 | MV / MVDR / Capon | **进行中** |
 | 第 4 章 | DMAS / fDMAS | 计划中 |
 | 第 5 章 | SLSC | 计划中 |
 | 第 6 章 | NSI | 计划中 |
@@ -81,6 +81,27 @@ experiment = 'delay_model';
 experiment_rtb_parameter_sweep
 ~~~
 
+---
+
+## 第 3 章
+
+阅读：**[第 3 章：MV / MVDR / Capon](./chapters/03_MVDR/README.md)**
+
+为了提高学习效率，本章只保留：
+
+~~~text
+1. 原理 + 完整二维 Manual MVDR / DAS 对比
+2. 一次性参数实验
+3. EIBMV / RCB / LCMV / Beamspace MV 等衍生算法概览
+~~~
+
+必跑：
+
+~~~matlab
+cd matlab/03_MVDR
+compare_manual_das_vs_mvdr
+experiment_mvdr_tradeoffs
+~~~
 ---
 
 ## 统一数学框架
