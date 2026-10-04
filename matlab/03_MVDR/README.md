@@ -1,0 +1,60 @@
+# Chapter 3 MATLAB：MV / MVDR / Capon
+
+本章只保留两个必跑入口。
+
+## 1. 原理 + 完整二维 DAS / MVDR
+
+~~~matlab
+compare_manual_das_vs_mvdr
+~~~
+
+核心：
+
+~~~text
+reconstruct_fi_mvdr_manual.m
+~~~
+
+默认：
+
+~~~text
+dataset              = L7_FI_TheGB.uff
+Rx F#                = 1.7
+subarray fraction    = 0.5
+diagonal loading     = 0.01
+forward-backward     = false
+n_z                  = 256
+~~~
+
+输出完整二维 DAS / MVDR common-reference 和 self-normalized 对比。
+
+## 2. 一次性参数实验
+
+~~~matlab
+experiment_mvdr_tradeoffs
+~~~
+
+比较：
+
+~~~text
+L/M = 0.25 / 0.50 / 0.75
+loading = 0.01
+
+以及
+
+L/M = 0.50
+loading = 0.10
+~~~
+
+只重建 point-target 附近窄 depth band，以减少运行时间。
+
+## 3. 可选开关
+
+`reconstruct_fi_mvdr_manual.m` 还支持：
+
+~~~matlab
+opts.forward_backward = true;
+~~~
+
+用于 forward-backward covariance averaging。
+
+本章暂不把 temporal averaging、EIBMV、RCB、LCMV 放入主实现，避免再次把学习路线拉长。
