@@ -20,7 +20,8 @@
 %   compare_manual_das_vs_mvdr
 
 clearvars -except filename n_z z_min z_max ...
-    receive_f_number subarray_fraction diagonal_loading forward_backward;
+    receive_f_number subarray_fraction diagonal_loading ...
+    axial_averaging_lambda forward_backward;
 clc;
 close all;
 
@@ -55,6 +56,13 @@ if ~exist('diagonal_loading','var') || ...
         ~isfinite(diagonal_loading)
     diagonal_loading = 0.01;
 end
+if ~exist('axial_averaging_lambda','var') || ...
+        ~isnumeric(axial_averaging_lambda) || ...
+        ~isscalar(axial_averaging_lambda) || ...
+        ~isfinite(axial_averaging_lambda) || ...
+        axial_averaging_lambda < 0
+    axial_averaging_lambda = 1.5;
+end
 if ~exist('forward_backward','var') || ...
         ~isscalar(forward_backward) || ...
         ~(islogical(forward_backward) || isnumeric(forward_backward))
@@ -69,6 +77,7 @@ opts.receive_aperture_mode = 'f_number';
 opts.receive_f_number = receive_f_number;
 opts.subarray_fraction = subarray_fraction;
 opts.diagonal_loading = diagonal_loading;
+opts.axial_averaging_lambda = axial_averaging_lambda;
 opts.forward_backward = forward_backward;
 opts.display_dynamic_range_db = 60;
 opts.verbose = true;
@@ -81,6 +90,8 @@ fprintf('n_z                 : %d\n',n_z);
 fprintf('Rx F#               : %.3f\n',receive_f_number);
 fprintf('subarray fraction   : %.3f\n',subarray_fraction);
 fprintf('diagonal loading    : %.4f\n',diagonal_loading);
+fprintf('axial averaging     : %.2f lambda half-window\n', ...
+    axial_averaging_lambda);
 fprintf('forward-backward    : %d\n\n',forward_backward);
 
 tic;
@@ -132,8 +143,8 @@ colormap gray;
 
 sgtitle({ ...
     'Chapter 3: receive-domain MVDR / Capon', ...
-    sprintf('L/M=%.2f, diagonal loading=%.3g', ...
-        subarray_fraction,diagonal_loading)});
+    sprintf('L/M=%.2f, loading=%.3g, axial avg=%.2f lambda', ...
+        subarray_fraction,diagonal_loading,axial_averaging_lambda)});
 
 %% Self-normalized morphology comparison
 figure('Color','w','Position',[120 120 1250 600]);
