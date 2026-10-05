@@ -58,3 +58,28 @@ opts.forward_backward = true;
 用于 forward-backward covariance averaging。
 
 本章暂不把 temporal averaging、EIBMV、RCB、LCMV 放入主实现，避免再次把学习路线拉长。
+
+---
+
+## 4. RTB + receive-MVDR
+
+新增：
+
+~~~text
+reconstruct_fi_rtb_mvdr_manual.m
+compare_rtb_das_vs_rtb_mvdr.m
+~~~
+
+直接运行：
+
+~~~matlab
+compare_rtb_das_vs_rtb_mvdr
+~~~
+
+默认只重建 TheGB 20.1 mm point target 附近的密集 RTB ROI，用于判断 conventional-FI 中 MVDR 的“单 scanline”外观是否来自 lateral undersampling。
+
+新 core 同时计算 RTB-DAS 与 RTB-MVDR；两者使用相同的 Tx delay、Tx weight、Rx F#、RTB grid 和跨 Tx coherent combination，只改变 receive combination。
+
+comparison script 默认还会调用 Chapter-1 reconstruct_fi_rtb_manual.m，对新 core 的 RTB-DAS complex output 做 regression check。
+
+Chapter-1 reconstruct_fi_rtb_manual.m 新增向后兼容的 opts.x_min / opts.x_max，用于 ROI reconstruction；未设置时行为不变。
