@@ -395,3 +395,112 @@ Chapter 3 不把所有衍生算法都实现一遍。
 6. 知道 EIBMV、RCB、LCMV、Beamspace MV 分别在核心 MVDR 上改了什么。
 
 完成这些后即可进入下一章，不继续堆 MV 变体。
+---
+
+## 2.3 RTB + receive-MVDR：解决 conventional-FI lateral undersampling
+
+Conventional FI 中一个 Tx 只对应一个输出 scanline。前面的 MVDR point-target 结果可能已经窄到接近一个 scanline，因此仅靠 conventional-FI grid 很难判断：
+
+~~~text
+是真的 lateral mainlobe 很窄
+还是
+lateral sampling 太粗造成“细线”显示
+~~~
+
+因此新增 RTB 对照：
+
+~~~text
+reconstruct_fi_rtb_mvdr_manual.m
+compare_rtb_das_vs_rtb_mvdr.m
+~~~
+
+核心设计是只改变 receive combination：
+
+~~~text
+same RTB Tx delay
+same Tx support / Tukey weight
+same Rx F#
+same RTB grid
+same cross-Tx coherent compounding
+
+branch A:
+aligned Rx aperture -> DAS
+
+branch B:
+aligned Rx aperture -> MVDR
+~~~
+
+所以最终比较的是：
+
+~~~text
+RTB-DAS
+vs
+RTB + receive-MVDR
+~~~
+
+而不是把 RTB 与 MVDR 两个因素混在一起。
+
+### 默认快速实验
+
+运行：
+
+~~~matlab
+compare_rtb_das_vs_rtb_mvdr
+~~~
+
+默认只重建 TheGB 中约 20.1 mm point target 的密集 ROI：
+
+~~~text
+x = -4 ~ +3 mm
+z = 18 ~ 22.5 mm
+n_x = 141
+n_z = 181
+~~~
+
+lateral spacing 约 0.05 mm，明显细于 conventional-FI 的约 0.298 mm scanline spacing。
+
+默认 MVDR：
+
+~~~text
+L/M = 0.5
+diagonal loading = 0.01
+axial averaging = +/- 1.5 lambda
+~~~
+
+### 验证设计
+
+新 RTB+MVDR core 同时计算 RTB-DAS branch。
+
+comparison script 默认还会调用第 1 章已经验证过的：
+
+~~~text
+reconstruct_fi_rtb_manual.m
+~~~
+
+并比较两套 RTB-DAS complex result。
+
+只有：
+
+~~~text
+max-peak scaled complex error < 1e-10
+~~~
+
+才继续接受结果。
+
+这一步用于确认新增 RTB+MVDR 代码没有悄悄改变：
+
+- Tx delay；
+- Rx delay；
+- interpolation；
+- Tx support / apodization；
+- cross-Tx coherent combination。
+
+### 当前科学问题
+
+这个实验主要回答：
+
+> **MVDR point target 在 dense RTB grid 上是否仍然退化成单条线。**
+
+如果 RTB-MVDR 的 lateral FWHM 能跨多个 dense-grid samples，则之前 conventional-FI 的“细线”主要属于 lateral undersampling。
+
+如果在 dense RTB grid 上仍然出现异常断裂或单线结构，则应继续检查 covariance / steering-vector assumptions，而不是直接解释成物理分辨率提升。
