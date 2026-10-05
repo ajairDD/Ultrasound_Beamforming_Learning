@@ -39,13 +39,25 @@ end
 if ~exist('receive_f_number','var')
     receive_f_number = 1.7;
 end
-if ~exist('subarray_fraction','var')
+% The script allows scalar overrides from the base workspace.  However,
+% experiment_mvdr_tradeoffs leaves vector-valued sweep variables named
+% subarray_fraction / diagonal_loading behind.  Those vectors are not valid
+% for this one-shot comparison, so reset non-scalar leftovers to defaults.
+if ~exist('subarray_fraction','var') || ...
+        ~isnumeric(subarray_fraction) || ...
+        ~isscalar(subarray_fraction) || ...
+        ~isfinite(subarray_fraction)
     subarray_fraction = 0.5;
 end
-if ~exist('diagonal_loading','var')
+if ~exist('diagonal_loading','var') || ...
+        ~isnumeric(diagonal_loading) || ...
+        ~isscalar(diagonal_loading) || ...
+        ~isfinite(diagonal_loading)
     diagonal_loading = 0.01;
 end
-if ~exist('forward_backward','var')
+if ~exist('forward_backward','var') || ...
+        ~isscalar(forward_backward) || ...
+        ~(islogical(forward_backward) || isnumeric(forward_backward))
     forward_backward = false;
 end
 
