@@ -294,15 +294,14 @@ function out = reconstruct_fi_rtb_mvdr_manual(filename,opts)
                 active_idx = find(rx_active(iz,:));
                 M = numel(active_idx);
 
-                if M == 0
-                    continue;
-                end
-
-                assert(M == 1 || all(diff(active_idx) == 1), ...
+                assert(M <= 1 || all(diff(active_idx) == 1), ...
                     ['Active receive aperture is not contiguous at ' ...
                      'z index %d, x index %d, wave %d.'], ...
                      iz,ix,iw);
 
+                % Match Chapter-1 RTB exactly: even if all receive queries
+                % are invalid at an edge pixel, this Tx still contributes
+                % its Tx weight while the receive value is zero.
                 das_value = das_by_z(iz);
 
                 if M < 3
