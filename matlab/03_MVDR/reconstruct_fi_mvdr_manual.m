@@ -70,6 +70,7 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
 %   receive_f_number         default 1.7
 %   subarray_fraction        L/M, default 0.5
 %   diagonal_loading         delta, default 0.01
+%   axial_averaging_lambda   covariance half-window [lambda], default 1.5
 %   forward_backward         logical, default false
 %   display_dynamic_range_db default 60
 %   verbose                  true/false, default false
@@ -92,8 +93,11 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
 % ----------------
 % This is receive-domain MVDR on conventional FI.
 %
+% The default core uses both spatial smoothing and axial/temporal
+% covariance averaging. Set axial_averaging_lambda = 0 to reproduce the
+% earlier spatial-only teaching variant.
+%
 % Intentionally excluded from the main teaching core:
-%   - axial/temporal covariance averaging;
 %   - eigenspace projection;
 %   - robust steering-vector optimization;
 %   - transmit-domain MV;
@@ -180,6 +184,15 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
     fs = cd.sampling_frequency;
     t0 = cd.initial_time;
 
+    wavelength = cd.lambda;
+    assert(isnumeric(wavelength) && isscalar(wavelength) && ...
+           isfinite(wavelength) && wavelength > 0, ...
+        'channel_data.lambda must be a positive finite scalar.');
+
+    dz = median(diff(z_axis));
+    axial_half_window_samples = round( ...
+        opts.axial_averaging_lambda*wavelength/dz);
+
     %% 3. Allocate outputs
     das_analytic = complex(zeros(opts.n_z,N_waves));
     mvdr_analytic = complex(zeros(opts.n_z,N_waves));
@@ -187,7 +200,23 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
     active_channel_count = zeros(opts.n_z,N_waves);
     subarray_length_map = zeros(opts.n_z,N_waves);
 
-    %% 4. Pixel-by-pixel DAS + MVDR
+    %% 4. Per-wave delay alignment, then DAS + MVDR
+    %
+    % The earlier teaching version estimated one covariance matrix from
+    % spatially overlapping subarrays at only the current depth sample.
+    % That estimate is very noisy on real/phantom RF data and produces
+    % strongly pixel-varying MVDR weights.
+    %
+    % Here we first prepare the full delayed receive aperture versus depth,
+    % then estimate each pixel covariance from:
+    %
+    %   spatially overlapping subarrays
+    %   x
+    %   neighboring axial samples
+    %
+    % This is the standard temporal/axial averaging idea also used by
+    % practical Capon implementations such as USTB.
+
     for iw = 1:N_waves
 
         if opts.verbose && ...
@@ -202,22 +231,27 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
 
         x_line = x_axis(iw);
 
+        % [z, receive_channel] delayed aperture data for this scanline.
+        aligned_by_depth = complex(zeros(opts.n_z,N_channels));
+        valid_by_depth = false(opts.n_z,N_channels);
+        active_by_depth = false(opts.n_z,N_channels);
+
+        % -------------------------------------------------------------
+        % 4a. Delay/interpolate every depth once.
+        % -------------------------------------------------------------
         for iz = 1:opts.n_z
 
             z_pixel = z_axis(iz);
 
-            % Same focused Tx delay as Chapter 1.
             tau_tx = focused_tx_delay_spherical( ...
                 sequence(iw),x_line,0,z_pixel);
 
-            % One receive delay per array element.
             rx_distance = sqrt( ...
                 (probe.x(:).' - x_line).^2 + ...
                 (probe.y(:).' - 0).^2 + ...
                 (probe.z(:).' - z_pixel).^2);
 
             tau_rx = rx_distance / cd.sound_speed;
-
             query_time = tau_tx + tau_rx;
 
             [focused_samples,valid] = ...
@@ -231,37 +265,38 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
                 opts.receive_aperture_mode, ...
                 opts.receive_f_number);
 
-            weights(~valid) = 0;
+            active = (weights > 0) & valid;
 
-            active_idx = find(weights > 0);
+            aligned_by_depth(iz,:) = focused_samples;
+            valid_by_depth(iz,:) = valid;
+            active_by_depth(iz,:) = active;
+
+            active_channel_count(iz,iw) = nnz(active);
+
+            if any(active)
+                das_analytic(iz,iw) = sum(focused_samples(active));
+            end
+        end
+
+        % -------------------------------------------------------------
+        % 4b. Estimate covariance with spatial + axial averaging.
+        % -------------------------------------------------------------
+        for iz = 1:opts.n_z
+
+            active_idx = find(active_by_depth(iz,:));
             M = numel(active_idx);
 
-            active_channel_count(iz,iw) = M;
-
-            if M == 0
-                continue;
-            end
-
-            % Spatial smoothing assumes neighboring entries represent
-            % neighboring physical elements.
-            if M > 1
-                assert(all(diff(active_idx) == 1), ...
-                    ['Active receive aperture is not contiguous at ' ...
-                     'z index %d, wave %d.'],iz,iw);
-            end
-
-            s = focused_samples(active_idx);
-
-            % Ordinary DAS baseline.
-            das_value = sum(s);
-            das_analytic(iz,iw) = das_value;
+            das_value = das_analytic(iz,iw);
 
             if M < 3
-                % Not enough aperture for a meaningful adaptive covariance.
                 mvdr_analytic(iz,iw) = das_value;
                 subarray_length_map(iz,iw) = M;
                 continue;
             end
+
+            assert(all(diff(active_idx) == 1), ...
+                ['Active receive aperture is not contiguous at ' ...
+                 'z index %d, wave %d.'],iz,iw);
 
             L = floor(opts.subarray_fraction*M);
             L = max(2,L);
@@ -269,8 +304,18 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
 
             subarray_length_map(iz,iw) = L;
 
+            iz_lo = max(1,iz-axial_half_window_samples);
+            iz_hi = min(opts.n_z,iz+axial_half_window_samples);
+
+            center_s = aligned_by_depth(iz,active_idx);
+
             mvdr_analytic(iz,iw) = mvdr_pixel( ...
-                s,L,opts.diagonal_loading,opts.forward_backward);
+                center_s, ...
+                aligned_by_depth(iz_lo:iz_hi,active_idx), ...
+                valid_by_depth(iz_lo:iz_hi,active_idx), ...
+                L, ...
+                opts.diagonal_loading, ...
+                opts.forward_backward);
         end
     end
 
@@ -318,6 +363,9 @@ function out = reconstruct_fi_mvdr_manual(filename,opts)
     out.fs = fs;
     out.initial_time = t0;
     out.sound_speed = cd.sound_speed;
+    out.wavelength = wavelength;
+    out.axial_half_window_samples = axial_half_window_samples;
+    out.axial_averaging_lambda = opts.axial_averaging_lambda;
 
     out.source_x = source_x;
     out.source_z = source_z;
@@ -329,21 +377,50 @@ end
 % Local MVDR core
 % =========================================================================
 
-function y = mvdr_pixel(s,L,diagonal_loading,do_forward_backward)
+function y = mvdr_pixel( ...
+    center_s,axial_samples,axial_valid,L, ...
+    diagonal_loading,do_forward_backward)
 
-    M = numel(s);
+    M = numel(center_s);
     P = M-L+1;
 
     assert(P >= 2, ...
         'Need at least two overlapping subarrays.');
 
-    % X shape = [L, P].
     starts = 1:P;
     index_matrix = (0:L-1).' + starts;
-    X = s(index_matrix);
 
-    % Spatially smoothed covariance.
-    R = (X*X')/P;
+    % Center-depth subarrays are used for the final beamformer output.
+    X_center = center_s(index_matrix);
+
+    % Covariance snapshots come from all valid spatial subarrays across
+    % neighboring axial samples.
+    R = complex(zeros(L,L));
+    n_snapshots = 0;
+
+    for iq = 1:size(axial_samples,1)
+
+        sq = axial_samples(iq,:);
+        vq = axial_valid(iq,:);
+
+        Xq = sq(index_matrix);
+        Vq = vq(index_matrix);
+
+        keep = all(Vq,1);
+
+        if any(keep)
+            Xq = Xq(:,keep);
+            R = R + Xq*Xq';
+            n_snapshots = n_snapshots + size(Xq,2);
+        end
+    end
+
+    if n_snapshots < 1
+        y = sum(center_s);
+        return;
+    end
+
+    R = R/n_snapshots;
 
     if do_forward_backward
         J = fliplr(eye(L));
@@ -353,7 +430,7 @@ function y = mvdr_pixel(s,L,diagonal_loading,do_forward_backward)
     mean_power = real(trace(R))/L;
 
     if ~(isfinite(mean_power) && mean_power > 0)
-        y = sum(s);
+        y = sum(center_s);
         return;
     end
 
@@ -363,31 +440,30 @@ function y = mvdr_pixel(s,L,diagonal_loading,do_forward_backward)
 
     a = ones(L,1);
 
-    % Solve instead of explicitly forming inv(R).
+    % Solve R_loaded*u = a rather than explicitly forming inv(R_loaded).
     Ria = R_loaded\a;
 
     denom = a'*Ria;
 
     if ~(isfinite(real(denom)) && isfinite(imag(denom))) || ...
             abs(denom) < eps
-        y = sum(s);
+        y = sum(center_s);
         return;
     end
 
     w = Ria/denom;
 
-    % Distortionless-constraint numerical check.
     constraint_error = abs(w'*a-1);
 
     assert(constraint_error < 1e-8, ...
         'MVDR distortionless constraint failed: %.3e',constraint_error);
 
-    % Average the overlapping subarray estimates.
-    subarray_output = w'*X;
+    % Apply the weights only to the CURRENT pixel's subarrays. Neighboring
+    % depths are used to estimate R, not averaged into the image amplitude.
+    subarray_output = w'*X_center;
     y_unit_gain = mean(subarray_output);
 
-    % Match coherent DAS amplitude convention:
-    % perfectly aligned A*ones(1,M) -> M*A.
+    % Match coherent DAS amplitude convention.
     y = M*y_unit_gain;
 end
 
@@ -406,6 +482,7 @@ function opts = apply_defaults(opts)
         'receive_f_number',1.7, ...
         'subarray_fraction',0.5, ...
         'diagonal_loading',0.01, ...
+        'axial_averaging_lambda',1.5, ...
         'forward_backward',false, ...
         'display_dynamic_range_db',60, ...
         'verbose',false);
@@ -456,6 +533,12 @@ function opts = apply_defaults(opts)
         ['diagonal_loading must be one positive finite scalar. A vector ' ...
          'usually means a parameter-sweep variable was left in the ' ...
          'MATLAB workspace.']);
+
+    assert(isnumeric(opts.axial_averaging_lambda) && ...
+           isscalar(opts.axial_averaging_lambda) && ...
+           isfinite(opts.axial_averaging_lambda) && ...
+           opts.axial_averaging_lambda >= 0, ...
+        'axial_averaging_lambda must be one finite scalar >= 0.');
 
     assert(isscalar(opts.forward_backward) && ...
            (islogical(opts.forward_backward) || ...
