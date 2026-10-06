@@ -15,7 +15,7 @@
 | 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
 | 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
 | 第 2 章 | CF / GCF | **已完成** |
-| 第 3 章 | MV / MVDR / Capon | **进行中** |
+| 第 3 章 | MV / MVDR / Capon | **已完成** |
 | 第 4 章 | DMAS / fDMAS | 计划中 |
 | 第 5 章 | SLSC | 计划中 |
 | 第 6 章 | NSI | 计划中 |
@@ -87,23 +87,29 @@ experiment_rtb_parameter_sweep
 
 阅读：**[第 3 章：MV / MVDR / Capon](./chapters/03_MVDR/README.md)**
 
-为了提高学习效率，本章只保留：
+本章已经完成：
 
 ~~~text
-1. 原理 + 完整二维 Manual MVDR / DAS 对比
-2. 一次性参数实验
-3. EIBMV / RCB / LCMV / Beamspace MV 等衍生算法概览
+1. conventional receive-domain MVDR
+2. covariance / spatial smoothing / axial averaging / diagonal loading
+3. dense-grid RTB point-target validation
+4. in-vivo carotid RTB-DAS vs RTB-MVDR
+5. EIBMV 与 RCB 两个重要后续方向
 ~~~
 
-必跑：
+推荐入口：
 
 ~~~matlab
 cd matlab/03_MVDR
-compare_manual_das_vs_mvdr
-experiment_mvdr_tradeoffs
-~~~
----
 
+compare_manual_das_vs_mvdr
+compare_rtb_das_vs_rtb_mvdr
+compare_carotid_rtb_das_vs_rtb_mvdr
+~~~
+
+最终结论：MVDR 在 point target 上可以产生很强的 lateral adaptive narrowing，但在真实 carotid B-mode 上优势明显减弱；steering mismatch 和 covariance robustness 是理解 MVDR 的关键边界。
+
+---
 ## 统一数学框架
 
 候选 pixel：
@@ -146,12 +152,20 @@ $$
 
 ## 下一章
 
-第 2 章完成后，下一步进入：
+第 3 章完成后，下一步进入：
 
-**第 3 章：MV / MVDR / Capon**
+**第 4 章：DMAS / fDMAS**
 
-第 0–1 章解决“如何把 channel data 按传播模型正确对齐”，第 2 章进一步学习了“如何利用对齐后 aperture data 的相干性进行自适应加权”。
+前面章节从：
 
-第 3 章开始进入真正的 adaptive array beamforming：
+~~~text
+DAS：固定线性求和
+CF/GCF：DAS 后的 coherence scalar weighting
+MVDR：covariance-driven adaptive linear weighting
+~~~
 
-> **不再只给 DAS 乘一个 coherence weight，而是根据 aperture covariance 自适应求取通道权重。**
+逐步走到 adaptive linear beamforming。
+
+下一章开始研究：
+
+> **利用 channel-pair multiplication 构造非线性 beamforming response。**
