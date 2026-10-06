@@ -504,3 +504,29 @@ max-peak scaled complex error < 1e-10
 如果 RTB-MVDR 的 lateral FWHM 能跨多个 dense-grid samples，则之前 conventional-FI 的“细线”主要属于 lateral undersampling。
 
 如果在 dense RTB grid 上仍然出现异常断裂或单线结构，则应继续检查 covariance / steering-vector assumptions，而不是直接解释成物理分辨率提升。
+
+---
+
+## 2.4 In-vivo carotid RTB-MVDR
+
+在 dense-grid point-target 实验确认 MVDR 的 lateral narrowing 不是单纯 conventional-FI undersampling 后，下一步进入真实人体 robustness 检查。
+
+运行：
+
+~~~matlab
+compare_carotid_rtb_das_vs_rtb_mvdr
+~~~
+
+默认比较 `L7_FI_carotid_cross_1.uff` 的血管 ROI；可设置 `dataset_index=2` 运行第二次独立 acquisition。
+
+观察重点不是 point-target FWHM，而是：
+
+- lumen residual clutter；
+- near/far wall continuity；
+- tissue speckle preservation；
+- small-structure fragmentation / needle-like artifacts；
+- depth-dependent instability。
+
+默认快速模式使用 `wave_stride=2`、约 0.125 mm lateral grid；如果第一轮表现合理，再用 `wave_stride=1` 和更密 grid 做最终检查。
+
+人体结果只能用于 robustness / morphology 判断，没有 ground truth，因此“更黑、更锐”不能直接等价为更正确。
