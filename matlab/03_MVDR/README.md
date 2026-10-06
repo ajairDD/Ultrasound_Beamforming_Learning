@@ -83,3 +83,50 @@ compare_rtb_das_vs_rtb_mvdr
 comparison script 默认还会调用 Chapter-1 reconstruct_fi_rtb_manual.m，对新 core 的 RTB-DAS complex output 做 regression check。
 
 Chapter-1 reconstruct_fi_rtb_manual.m 新增向后兼容的 opts.x_min / opts.x_max，用于 ROI reconstruction；未设置时行为不变。
+
+
+---
+
+## 5. In-vivo carotid RTB-DAS vs RTB-MVDR
+
+新增一键脚本：
+
+~~~text
+compare_carotid_rtb_das_vs_rtb_mvdr.m
+~~~
+
+默认运行第一组 carotid acquisition：
+
+~~~matlab
+compare_carotid_rtb_das_vs_rtb_mvdr
+~~~
+
+默认使用快速 ROI：
+
+~~~text
+x = -10 ~ +10 mm
+z = 8 ~ 25 mm
+n_x = 161
+n_z = 171
+wave_stride = 2
+~~~
+
+保持 RTB-DAS / RTB-MVDR 的 Tx delay、Tx weight、Rx F#、RTB grid 和跨 Tx coherent compounding 完全一致，只改变 receive combination。
+
+第二组数据：
+
+~~~matlab
+dataset_index = 2;
+compare_carotid_rtb_das_vs_rtb_mvdr
+~~~
+
+更密的最终检查：
+
+~~~matlab
+n_x = 241;
+n_z = 257;
+wave_stride = 1;
+compare_carotid_rtb_das_vs_rtb_mvdr
+~~~
+
+输出 common-reference 图、self-normalized morphology、MVDR-DAS dB change map、runtime、peak change、masked median change、envelope correlation 和 fallback ratio。人体数据没有 ground truth，这些统计只用于描述算法行为，不能直接解释为临床优越性。
