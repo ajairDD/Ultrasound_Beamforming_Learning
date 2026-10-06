@@ -21,6 +21,9 @@
 %       larger -> more robust / more DAS-like
 %       smaller -> more adaptive / potentially less stable
 %
+% All configurations use the same stabilized covariance baseline:
+%   axial covariance averaging = +/- 1.5 lambda
+%
 % To keep runtime reasonable, only a narrow depth band around the target is
 % reconstructed.
 %
@@ -76,6 +79,9 @@ for k = 1:N
     opts.subarray_fraction = subarray_fraction(k);
     opts.diagonal_loading = diagonal_loading(k);
 
+    % Keep the Chapter-3 stabilized covariance baseline explicit rather
+    % than relying on the core function's default.
+    opts.axial_averaging_lambda = 1.5;
     opts.forward_backward = false;
     opts.display_dynamic_range_db = 60;
     opts.verbose = false;
