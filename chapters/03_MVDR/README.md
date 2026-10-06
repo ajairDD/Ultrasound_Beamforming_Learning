@@ -1,107 +1,105 @@
 # 第 3 章：MV / MVDR / Capon
 
-本章加快节奏，只保留三部分：
+本章目标不是把所有 Minimum-Variance 变体都实现一遍，而是把 **标准 receive-domain MVDR 的核心原理、实现条件、真实优缺点和两个重要后续方向**讲清楚。
 
-1. **原理 + 完整二维 Manual MVDR + DAS 对比**
-2. **一次性参数实验**
-3. **衍生算法与后续路线**
-
-默认数据仍使用：
+默认教学数据：
 
 ~~~text
 data/L7_FI_TheGB.uff
 ~~~
 
-本章先只做 conventional FI 的 **receive-domain MVDR**，不把 RTB / transmit-adaptive processing 混进来。
+真实人体补充验证：
+
+~~~text
+data/L7_FI_carotid_cross_1.uff
+data/L7_FI_carotid_cross_2.uff
+~~~
 
 ---
 
-# 1. 原理：从 DAS 到 MVDR，并直接形成二维图像
+# 1. 从 DAS 到 MVDR
 
-## 1.1 MV、MVDR、Capon 是什么关系？
-
-在本章语境下可以先把它们理解成同一家族，而不是三个完全不同的算法：
-
-- **MV**：Minimum Variance，最小方差；
-- **MVDR**：Minimum Variance Distortionless Response，更完整地写出了“最小方差 + 目标方向无失真”的约束；
-- **Capon beamformer**：这一类方法的经典名称，超声文献和 USTB 中经常与 MV/MVDR 连用。
-
-所以后面看到“MV image”“MVDR image”“Capon image”，先不要把它们当成三套完全不同的核心公式。
-
-## 1.2 和 DAS 的本质差别
-
-第 1 章 DAS 在 delay alignment 后得到：
-
-~~~text
-s = [s1, s2, ..., sM]
-~~~
-
-然后直接：
-
-~~~text
-DAS = s1 + s2 + ... + sM
-~~~
-
-也就是 active receive channels 基本等权相加。
-
-MVDR 则问：
-
-> **在保证真正来自当前 focal point 的信号不被削弱的前提下，怎样自动给各通道权重，使输出的总功率尽可能小？**
-
-直觉上：
-
-~~~text
-已经 delay-aligned 的目标信号
-    → 各通道应该大体同相
-    → steering vector a = [1,1,...,1]^T
-
-off-axis / sidelobe / clutter / mismatch
-    → 在 aperture 上呈现不同空间结构
-    → covariance 中可以被识别
-~~~
-
-MVDR 的约束是：
+完成 Tx/Rx delay alignment 后，一个 pixel 的 active receive aperture 写成：
 
 $$
-\min_{\mathbf w}\ \mathbf w^H\mathbf R\mathbf w
-\qquad
-\text{s.t.}\ \mathbf w^H\mathbf a=1
+\mathbf s=[s_1,s_2,\ldots,s_M]^T
 $$
 
-解为：
+DAS 使用固定等权组合：
 
 $$
-\mathbf w=\frac{\mathbf R^{-1}\mathbf a}
-{\mathbf a^H\mathbf R^{-1}\mathbf a}
+y_{DAS}=\mathbf 1^H\mathbf s
 $$
 
-这里最重要的不是背公式，而是：
+MVDR 则根据当前 aperture data 的 covariance 自适应计算权重：
 
-~~~text
-DAS：权重基本预先定好
+$$
+y_{MVDR}=\mathbf w^H\mathbf s
+$$
 
-MVDR：权重由当前 aperture data 的 covariance 自适应算出来
-~~~
+因此 MVDR 不是对 DAS 图像再乘一个 scalar，而是直接改变 receive-channel combination。
 
-## 1.3 为什么突然多了 covariance matrix？
+如果当前 pixel 的 Tx/Rx delay 正确，理想目标经过 delay alignment 后应该近似同相，因此本章 nominal steering vector 为：
 
-CF/GCF 只需要回答“通道整体有多相干”。
+$$
+\mathbf a=[1,1,\ldots,1]^T
+$$
 
-MVDR 需要进一步知道：
+MVDR 要求：
 
-> **哪些通道变化是一起出现的？哪些 aperture pattern 更像目标？哪些更像干扰？**
+$$
+\mathbf w^H\mathbf a=1
+$$
 
-所以需要估计 channel covariance：
+同时最小化输出功率：
+
+$$
+\min_{\mathbf w}\mathbf w^H\mathbf R\mathbf w
+$$
+
+其中：
 
 $$
 \mathbf R=E\{\mathbf x\mathbf x^H\}
 $$
 
-但一个 pixel 只有一组 aperture vector，直接估计 covariance 很不稳定。
+解为：
 
-因此医学超声 MV 通常要做 **spatial smoothing**：把 M 个 active channels 切成很多重叠的长度 L 子阵。
+$$
+\boxed{
+\mathbf w=
+\frac{\mathbf R^{-1}\mathbf a}
+{\mathbf a^H\mathbf R^{-1}\mathbf a}
+}
+$$
 
-例如：
+最重要的直觉：
+
+~~~text
+R
+→ 描述当前 aperture 中的空间功率结构
+
+R^{-1}
+→ 对高功率 eigen-directions 给予较小响应
+
+a
+→ 指定哪个模式必须保留
+
+归一化分母
+→ 保证 w^H a = 1
+~~~
+
+所以 MVDR 不是“强信号都压掉”，而是在保护指定 steering mode 的前提下最小化剩余输出功率。
+
+---
+
+# 2. Covariance estimation：真正的工程核心
+
+## 2.1 Spatial smoothing
+
+一个 pixel 只有一个 aperture snapshot。直接使用 xx^H 最多 rank 1，不能稳定估计 covariance。
+
+因此把 M 个 active receive channels 切成多个重叠长度-L子阵：
 
 ~~~text
 s1 s2 s3 s4 s5 s6
@@ -114,419 +112,316 @@ x3 = [s3 s4 s5]
 x4 = [s4 s5 s6]
 ~~~
 
-把这些子阵当作多个 covariance snapshots。
+构造：
 
-代码中：
+$$
+\mathbf X=[\mathbf x_1,\mathbf x_2,\ldots,\mathbf x_P]
+$$
 
-~~~matlab
-X = [x1 x2 ... xP];       % [L, P]
-R = (X * X') / P;         % [L, L]
+其中 P=M-L+1，再估计：
+
+$$
+\hat{\mathbf R}=\frac{1}{P}\mathbf X\mathbf X^H
+$$
+
+这些 overlapping subarrays 不是独立采集，而是利用阵列空间平移构造 pseudo-snapshots。
+
+## 2.2 Axial / temporal covariance averaging
+
+本章最初只用 spatial smoothing，完整二维 MVDR 图像出现明显 pixel-to-pixel 权重波动。
+
+当前核心实现默认再使用邻近 axial samples 增加 covariance snapshots：
+
+~~~text
+spatial subarrays
+        ×
+neighboring axial samples
+        ↓
+covariance estimate
 ~~~
 
-## 1.4 为什么还需要 diagonal loading？
+默认半窗：
 
-真实 ultrasound covariance 很容易病态或受模型误差影响，所以通常加：
+~~~text
+axial_averaging_lambda = 1.5
+~~~
+
+邻近深度只用于估 covariance；当前 pixel 最终幅度仍由当前深度 aperture 计算，不是直接做图像轴向平滑。
+
+## 2.3 Diagonal loading
+
+有限 snapshots、overlap、噪声和模型误差都会让 covariance ill-conditioned。
+
+本章使用：
 
 $$
 \mathbf R_{loaded}
 =
-\mathbf R
-+
+\mathbf R+
 \delta\frac{\mathrm{tr}(\mathbf R)}{L}\mathbf I
 $$
 
-`delta` 越大通常越稳健，但也会让 MVDR 更接近非自适应方法；太小则更激进、更容易受 covariance estimation 和 steering mismatch 影响。
-
-本章默认：
+默认：
 
 ~~~text
-subarray fraction L/M = 0.5
-diagonal loading      = 0.01
+diagonal_loading = 0.01
 ~~~
 
-这也和 USTB 常见示例中的 `L ≈ N/2`、`regCoef = 1/100` 保持同一数量级。
+它可以理解成给很小的 eigenvalues 加一个 floor，防止 covariance inversion 对估计误差过度敏感。
 
-## 1.5 为什么代码最后还乘 M？
+---
 
-MVDR 约束是 unit gain。
+# 3. Manual implementation
 
-如果所有 active channels 都是完全一致的：
+## 3.1 Conventional FI
 
-~~~text
-s = [A, A, A, ..., A]
-~~~
-
-标准 MVDR 输出约为 `A`，而 DAS 输出是 `M*A`。
-
-为了让 DAS / MVDR 使用同一个 amplitude reference 做直观比较，本项目把平均子阵 MVDR 输出乘回 active-channel count `M`。
-
-这样理想完全相干目标满足：
-
-~~~text
-Manual MVDR amplitude ≈ Manual DAS amplitude
-~~~
-
-这个缩放只统一显示/幅度 convention，不改变 MVDR 权重本身。
-
-## 1.6 整张二维图怎么出来？
-
-每一个 conventional-FI pixel 都完整执行：
-
-~~~text
-RF
- ↓
-Tx/Rx delay
- ↓
-fractional interpolation
- ↓
-aligned active aperture s   [1,M]
- ├──────────────→ DAS = sum(s)
- ↓
-overlapping subarrays X     [L,P]
- ↓
-covariance R                [L,L]
- ↓
-diagonal loading
- ↓
-MVDR weights w              [L,1]
- ↓
-average subarray outputs
- ↓
-MVDR pixel
-~~~
-
-整幅扫描后得到：
-
-~~~text
-das_analytic   [Nz, Nscanline] complex
-mvdr_analytic  [Nz, Nscanline] complex
-~~~
-
-核心代码：
+核心：
 
 ~~~text
 matlab/03_MVDR/reconstruct_fi_mvdr_manual.m
 ~~~
 
-一键二维比较：
+主入口：
 
 ~~~matlab
 cd matlab/03_MVDR
 compare_manual_das_vs_mvdr
 ~~~
 
-默认 `n_z=256`，目的是先快速看完整二维结果；如果最终需要更密的轴向显示，再设置 `n_z=512`。
-
-脚本同时画：
+默认：
 
 ~~~text
-DAS
-MVDR（使用 DAS peak 作为共同 0 dB reference）
+Rx F#                 = 1.7
+L/M                   = 0.5
+diagonal loading      = 0.01
+axial averaging       = +/- 1.5 lambda
+forward-backward      = false
 ~~~
 
-以及 self-normalized morphology 对比。
+## 3.2 RTB + receive-MVDR
 
-> **先看 common-reference 图判断真实 amplitude suppression；再看 self-normalized 图判断形态变化。**
-
-## 1.7 当前 Manual core 刻意没有加什么？
-
-为了把主原理一次讲清，本节只包含：
-
-~~~text
-spatial smoothing
-+
-diagonal loading
-+
-receive-domain MVDR
-~~~
-
-暂时不加 temporal averaging、EIBMV、robust steering-vector optimization、transmit-domain MV。
-
-这些留到第三部分统一讲。
-
----
-
-# 2. 一次性实验：只看两个最关键参数
-
-不再拆很多实验，只跑一个：
-
-~~~matlab
-experiment_mvdr_tradeoffs
-~~~
-
-只围绕 TheGB 中已经反复使用的约 20.1 mm point-like target，并缩小 depth range 以节省时间。
-
-一次比较四个配置：
-
-~~~text
-A  L/M=0.25, loading=0.01
-B  L/M=0.50, loading=0.01   ← baseline
-C  L/M=0.75, loading=0.01
-D  L/M=0.50, loading=0.10
-~~~
-
-这样一次就回答两个问题。
-
-## 2.1 Subarray length L
-
-比较 A / B / C。
-
-通常：
-
-~~~text
-L 更长
-→ 自适应空间自由度更高
-→ 可能得到更窄主瓣 / 更强干扰抑制
-→ 但可用于 covariance averaging 的重叠子阵数量减少
-→ 对估计误差和模型失配更敏感
-~~~
-
-`L` 太短则逐渐失去 MVDR 的分辨能力，结果更接近常规加权。
-
-## 2.2 Diagonal loading
-
-比较 B / D。
-
-~~~text
-loading 小
-→ 更依赖估计出来的 covariance
-→ 更 adaptive
-
-loading 大
-→ covariance inversion 更稳定
-→ steering mismatch 更不容易把目标压掉
-→ 但结果通常更保守、更接近 DAS
-~~~
-
-脚本自动输出：
-
-- common-reference MVDR target-region images；
-- target peak change；
-- lateral / axial FWHM；
-- lateral -20 dB width；
-- lateral profile。
-
-注意 conventional FI lateral spacing 仍约为一个 Tx scanline spacing，所以非常窄的 FWHM 仍然是 sampling-limited。
-
----
-
-# 3. 衍生算法：知道它们在 MVDR 上改了什么就够了
-
-## 3.1 Spatial smoothing / diagonal loading / temporal averaging
-
-这些首先是 **MVDR 的 covariance estimation / robustness 技术**，不必当作全新的 beamformer。
-
-- spatial smoothing：本章已经实现；
-- diagonal loading：本章已经实现；
-- temporal / axial averaging：用当前 pixel 邻近深度样本继续增加 covariance snapshots，USTB 的 Capon 实现支持这一做法；
-- forward-backward averaging：利用阵列对称性进一步稳定 covariance，本项目 core 已预留 `forward_backward` 开关。
-
-## 3.2 EIBMV / ESMV：Eigenspace-Based MV
-
-先算普通 MVDR weights，再对 covariance 做特征分解：
-
-~~~text
-R
-↓ eig
-signal subspace + noise subspace
-↓
-把 MVDR weight 投影到 signal subspace
-~~~
-
-目的通常是进一步抑制 noise / interference，同时保留主要 signal subspace。
-
-代价是多一个 eigenvalue threshold，例如 USTB 的 EIBMV 实现使用 `gamma` 来决定 signal subspace。
-
-这是最值得在 MVDR 之后继续学习的直接衍生算法。
-
-## 3.3 Robust Capon Beamforming（RCB）
-
-普通 MVDR 默认 steering vector 是准确的。
-
-真实人体里 speed-of-sound mismatch、aberration、probe/model error 会让 `a=[1,...,1]` 不再完全正确。
-
-RCB 不再假定 steering vector 精确已知，而是允许它在一个 uncertainty set 内变化，再求更稳健的 Capon solution。
-
-优点：对 steering mismatch 更稳。
-
-代价：优化问题更复杂、计算量更高。
-
-## 3.4 LCMV
-
-MVDR 只有一个 distortionless constraint。
-
-LCMV（Linearly Constrained Minimum Variance）允许多个线性约束，例如：
-
-~~~text
-当前 focal direction 保持增益
-+
-某些方向明确形成 null
-+
-某些信号分量保持指定响应
-~~~
-
-它是 MVDR 从单约束到多约束的自然推广。
-
-## 3.5 Beamspace MV
-
-先把 element-space aperture data 投影到较低维 beamspace，再做 MV。
-
-主要目的：
-
-~~~text
-减少 covariance 维度
-降低 inversion 成本
-改善有限 snapshots 下的稳定性
-~~~
-
-适合大阵元数或实时化场景。
-
-## 3.6 本项目后续怎么走？
-
-Chapter 3 不把所有衍生算法都实现一遍。
-
-本章验收标准只有：
-
-1. 能解释 DAS 与 MVDR 权重的本质区别；
-2. 能从 aligned aperture data 得到 covariance；
-3. 理解 subarray smoothing 与 diagonal loading 为什么必须存在；
-4. 能生成完整 Manual MVDR 二维图并和 DAS 比较；
-5. 能通过一次实验理解 `L` 与 loading 的 trade-off；
-6. 知道 EIBMV、RCB、LCMV、Beamspace MV 分别在核心 MVDR 上改了什么。
-
-完成这些后即可进入下一章，不继续堆 MV 变体。
----
-
-## 2.3 RTB + receive-MVDR：解决 conventional-FI lateral undersampling
-
-Conventional FI 中一个 Tx 只对应一个输出 scanline。前面的 MVDR point-target 结果可能已经窄到接近一个 scanline，因此仅靠 conventional-FI grid 很难判断：
-
-~~~text
-是真的 lateral mainlobe 很窄
-还是
-lateral sampling 太粗造成“细线”显示
-~~~
-
-因此新增 RTB 对照：
+核心：
 
 ~~~text
 reconstruct_fi_rtb_mvdr_manual.m
-compare_rtb_das_vs_rtb_mvdr.m
 ~~~
 
-核心设计是只改变 receive combination：
-
-~~~text
-same RTB Tx delay
-same Tx support / Tukey weight
-same Rx F#
-same RTB grid
-same cross-Tx coherent compounding
-
-branch A:
-aligned Rx aperture -> DAS
-
-branch B:
-aligned Rx aperture -> MVDR
-~~~
-
-所以最终比较的是：
-
-~~~text
-RTB-DAS
-vs
-RTB + receive-MVDR
-~~~
-
-而不是把 RTB 与 MVDR 两个因素混在一起。
-
-### 默认快速实验
-
-运行：
-
-~~~matlab
-compare_rtb_das_vs_rtb_mvdr
-~~~
-
-默认只重建 TheGB 中约 20.1 mm point target 的密集 ROI：
-
-~~~text
-x = -4 ~ +3 mm
-z = 18 ~ 22.5 mm
-n_x = 141
-n_z = 181
-~~~
-
-lateral spacing 约 0.05 mm，明显细于 conventional-FI 的约 0.298 mm scanline spacing。
-
-默认 MVDR：
-
-~~~text
-L/M = 0.5
-diagonal loading = 0.01
-axial averaging = +/- 1.5 lambda
-~~~
-
-### 验证设计
-
-新 RTB+MVDR core 同时计算 RTB-DAS branch。
-
-comparison script 默认还会调用第 1 章已经验证过的：
-
-~~~text
-reconstruct_fi_rtb_manual.m
-~~~
-
-并比较两套 RTB-DAS complex result。
-
-只有：
-
-~~~text
-max-peak scaled complex error < 1e-10
-~~~
-
-才继续接受结果。
-
-这一步用于确认新增 RTB+MVDR 代码没有悄悄改变：
-
-- Tx delay；
-- Rx delay；
-- interpolation；
-- Tx support / apodization；
-- cross-Tx coherent combination。
-
-### 当前科学问题
-
-这个实验主要回答：
-
-> **MVDR point target 在 dense RTB grid 上是否仍然退化成单条线。**
-
-如果 RTB-MVDR 的 lateral FWHM 能跨多个 dense-grid samples，则之前 conventional-FI 的“细线”主要属于 lateral undersampling。
-
-如果在 dense RTB grid 上仍然出现异常断裂或单线结构，则应继续检查 covariance / steering-vector assumptions，而不是直接解释成物理分辨率提升。
+RTB-DAS 和 RTB-MVDR 使用完全相同的 Tx delay、Tx support/apodization、Rx F-number、reconstruction grid 和 cross-Tx coherent combination，只改变 receive combination。
 
 ---
 
-## 2.4 In-vivo carotid RTB-MVDR
+# 4. 已验证实验结果
 
-在 dense-grid point-target 实验确认 MVDR 的 lateral narrowing 不是单纯 conventional-FI undersampling 后，下一步进入真实人体 robustness 检查。
+## 4.1 Conventional FI
 
-运行：
+仅使用 spatial smoothing 时，完整二维 MVDR 图像存在明显 covariance instability。加入 axial covariance averaging 后稳定性明显改善。
 
-~~~matlab
-compare_carotid_rtb_das_vs_rtb_mvdr
+1.5 lambda 与更大的 axial averaging window 在 point-target 图像上没有根本差异，因此当前主要限制已经不是 snapshot 数量。
+
+## 4.2 Dense-grid RTB point target
+
+最终 dense-grid 结果：
+
+~~~text
+lateral spacing = 0.0250 mm
+axial spacing   = 0.0250 mm
+
+                       RTB-DAS      RTB-MVDR
+lateral FWHM            0.7063 mm    0.1238 mm
+axial FWHM              0.4231 mm    0.4071 mm
+lateral -20 dB width    1.1482 mm    0.4617 mm
+
+MVDR lateral FWHM / dx = 4.953 samples
+MVDR peak vs DAS       = -2.893 dB
+MVDR fallback          = 0%
 ~~~
 
-默认比较 `L7_FI_carotid_cross_1.uff` 的血管 ROI；可设置 `dataset_index=2` 运行第二次独立 acquisition。
+因此可以确认：
 
-观察重点不是 point-target FWHM，而是：
+> **非常强的 lateral adaptive narrowing 不是单纯 conventional-FI scanline undersampling 造成的。**
 
-- lumen residual clutter；
-- near/far wall continuity；
-- tissue speckle preservation；
-- small-structure fragmentation / needle-like artifacts；
-- depth-dependent instability。
+但不能把 0.706 -> 0.124 mm 直接写成“物理分辨率提高约 5.7 倍”。同时存在约 -2.9 dB target peak loss，说明当前 MVDR 已经存在 target self-suppression / steering mismatch 风险。
 
-默认快速模式使用 `wave_stride=2`、约 0.125 mm lateral grid；如果第一轮表现合理，再用 `wave_stride=1` 和更密 grid 做最终检查。
+更准确的结论是：
 
-人体结果只能用于 robustness / morphology 判断，没有 ground truth，因此“更黑、更锐”不能直接等价为更正确。
+> **MVDR 对 point-target profile 产生强烈 lateral adaptive narrowing 和 lateral-skirt suppression，但这种 narrowing 不是无代价的。**
+
+## 4.3 In-vivo carotid
+
+使用 compare_carotid_rtb_das_vs_rtb_mvdr.m 对真实 carotid 做 RTB-DAS vs RTB-MVDR。
+
+在 wave_stride=2 和 wave_stride=1 两种情况下，最终 B-mode morphology 都只表现出有限差异。
+
+观察到：
+
+- lumen / 局部组织幅度存在 adaptive change；
+- 部分局部结构有 suppression / sharpening；
+- 没有出现 point-target 实验中同等量级的明显结构改善；
+- 整体 vessel-wall morphology 与 RTB-DAS 相近；
+- “更黑 / 更锐”不能自动解释为更正确。
+
+因此：
+
+> **MVDR 在理想 point target 上的强 adaptive narrowing，不会等比例转化成真实人体 B-mode 图像中的明显结构优势。**
+
+---
+
+# 5. 两个真正值得知道的后续算法
+
+本项目不继续实现大量 MV variants，只保留 EIBMV 和 RCB 两个真正有新概念的方向。
+
+## 5.1 EIBMV / ESMV：Eigenspace-Based Minimum Variance
+
+普通 MVDR 得到 w_MVDR，同时 covariance 可做特征分解：
+
+$$
+\mathbf R=\mathbf E\mathbf \Lambda\mathbf E^H
+$$
+
+根据 eigenvalue threshold 选择主要 signal subspace E_s。
+
+一个常见 EIBMV 思路是把 MVDR weight 投影到 signal subspace：
+
+$$
+\mathbf w_{EIBMV}
+=
+\mathbf E_s\mathbf E_s^H\mathbf w_{MVDR}
+$$
+
+实际实现通常还需要 normalization 和 signal-subspace threshold rule。
+
+直觉：
+
+~~~text
+普通 MVDR
+→ covariance 中所有方向都可能影响 weights
+
+EIBMV
+→ 先判断哪些 eigen-directions 属于主要 signal subspace
+→ 再限制 MVDR weights 主要留在这些方向
+~~~
+
+它主要回答：
+
+> **covariance 中哪些 eigen-directions 值得相信？**
+
+潜在收益是减少 noise-subspace contribution 和某些不稳定 adaptive weights；代价是 eigendecomposition 和新的 threshold 参数。
+
+本项目到这里认识原理即可，不再增加完整 EIBMV 实验。
+
+## 5.2 RCB：Robust Capon Beamforming
+
+普通 MVDR 假设 nominal steering vector：
+
+$$
+\mathbf a_0=[1,1,\ldots,1]^T
+$$
+
+是准确的。
+
+真实 delay-aligned target 可能更像：
+
+$$
+\mathbf a_{true}
+=
+[1,e^{j\phi_2},e^{j\phi_3},\ldots]^T
+$$
+
+原因可能包括 sound-speed mismatch、phase aberration、RTB Tx model mismatch、probe geometry / calibration error 和 interpolation error。
+
+普通 MVDR 只保证：
+
+$$
+\mathbf w^H\mathbf a_0=1
+$$
+
+并不保证真实 a_true 也能 unit-gain 通过，所以可能出现 target self-suppression。
+
+RCB 的核心思想是不再把 steering vector 当成绝对准确的点，而是允许：
+
+$$
+\mathbf a_{true}\in\mathcal A(\mathbf a_0)
+$$
+
+即真实 steering vector 位于 nominal vector 周围的 uncertainty set 内。
+
+它主要回答：
+
+> **如果 steering vector 本身不完全正确，怎样避免 MVDR 把真正目标也当成干扰压掉？**
+
+这与本章 point-target 中观察到的约 -2.9 dB peak loss 直接对应。
+
+RCB 的代价是优化问题和 uncertainty-set 参数选择更复杂。本项目只保留这一核心思想，不继续实现 RCB。
+
+---
+
+# 6. Chapter 3 最终总结
+
+这一章最终应该记住 8 点：
+
+1. **DAS 与 MVDR 的真正区别是 receive-channel weights：DAS 基本固定，MVDR 由 data covariance 自适应决定。**
+2. **MVDR 不是 DAS 后处理，而是在 channel-combination 阶段直接替代等权求和。**
+3. **理论 covariance 是 R=E{xx^H}；有限超声数据需要 spatial smoothing 和 axial/temporal averaging 去近似这个统计期望。**
+4. **Diagonal loading 是 covariance regularization：防止很小、不可靠的 eigenvalues 在 inversion 后被极度放大。**
+5. **a=ones 不是天然真理，而是 delay alignment 正确时的 nominal steering model。**
+6. **MVDR 在 dense-grid point target 上确实产生很强的 lateral adaptive narrowing，但同时有明显 target peak loss，不能把 FWHM narrowing 直接等同于无代价的物理分辨率提升。**
+7. **真实 carotid 上 RTB-MVDR 相比 RTB-DAS 的最终 B-mode morphology 改变有限，说明 point-target 优势不能直接外推到 in-vivo tissue。**
+8. **EIBMV 主要解决“哪些 covariance eigen-directions 值得相信”，RCB 主要解决“steering vector 不准确怎么办”。**
+
+---
+
+# 7. 代码入口
+
+~~~text
+matlab/03_MVDR/
+│
+├─ reconstruct_fi_mvdr_manual.m
+│    conventional-FI receive-domain MVDR core
+│
+├─ compare_manual_das_vs_mvdr.m
+│    完整二维 DAS vs MVDR
+│
+├─ experiment_mvdr_tradeoffs.m
+│    L/M 与 diagonal loading 的可选参数实验
+│
+├─ reconstruct_fi_rtb_mvdr_manual.m
+│    RTB-DAS + RTB receive-MVDR core
+│
+├─ compare_rtb_das_vs_rtb_mvdr.m
+│    dense-grid point-target validation
+│
+├─ compare_carotid_rtb_das_vs_rtb_mvdr.m
+│    in-vivo carotid robustness check
+│
+└─ README.md
+~~~
+
+核心实现：
+
+~~~text
+reconstruct_fi_mvdr_manual.m
+reconstruct_fi_rtb_mvdr_manual.m
+~~~
+
+最重要验证：
+
+~~~text
+compare_rtb_das_vs_rtb_mvdr.m
+compare_carotid_rtb_das_vs_rtb_mvdr.m
+~~~
+
+Chapter 3 到这里结束，不继续堆 MVDR variants。
+
+---
+
+# 8. 下一章
+
+下一章进入：
+
+> **DMAS / fDMAS**
+
+MVDR 的核心是 covariance-driven adaptive linear weighting。
+
+DMAS 则进入另一条路线：
+
+> **利用 channel-pair multiplication 构造非线性 beamforming response。**
