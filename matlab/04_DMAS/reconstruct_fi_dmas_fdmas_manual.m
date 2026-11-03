@@ -133,11 +133,17 @@ function out = reconstruct_fi_dmas_fdmas_manual(filename,opts)
 
             % Same dynamic receive F# / boxcar used for both branches.
             half_width=z/(2*opts.receive_f_number);
-            active=valid & abs(probe.x(:).'-x)<=half_width;
-            if ~any(active)
+            in_aperture=abs(probe.x(:).'-x)<=half_width;
+
+            % Match Chapter-1 receive_weights exactly: only select a
+            % nearest element when the GEOMETRIC aperture is empty.
+            % Do not reactivate a valid out-of-aperture element merely
+            % because all in-aperture time queries were out of range.
+            if ~any(in_aperture)
                 [~,nearest]=min(abs(probe.x(:).'-x));
-                active(nearest)=valid(nearest);
+                in_aperture(nearest)=true;
             end
+            active=in_aperture & valid;
             M=nnz(active);
             active_rx(iz,iw)=M;
             if M==0
@@ -199,10 +205,6 @@ function out = reconstruct_fi_dmas_fdmas_manual(filename,opts)
     out.fdmas_envelope=fdmas_env;
     out.das_db=to_db(das_env,das_peak,opts.display_dynamic_range_db);
     out.fdmas_db_self=to_db(fdmas_env,fdmas_peak,opts.display_dynamic_range_db);
-
-    % Visual-only peak matching, NOT radiometric / amplitude calibration.
-    out.fdmas_db_peak_matched=...
-        to_db(fdmas_env,fdmas_peak,opts.display_dynamic_range_db);
 
     out.x_axis=x_axis;
     out.z_axis=z_axis;
