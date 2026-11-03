@@ -16,7 +16,7 @@
 | 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
 | 第 2 章 | CF / GCF | **已完成** |
 | 第 3 章 | MV / MVDR / Capon | **已完成** |
-| 第 4 章 | DMAS / fDMAS | 计划中 |
+| 第 4 章 | DMAS / fDMAS | **进行中** |
 | 第 5 章 | SLSC | 计划中 |
 | 第 6 章 | NSI | 计划中 |
 | 第 7 章 | 统一 benchmark | 计划中 |
@@ -110,6 +110,23 @@ compare_carotid_rtb_das_vs_rtb_mvdr
 最终结论：MVDR 在 point target 上可以产生很强的 lateral adaptive narrowing，但在真实 carotid B-mode 上优势明显减弱；steering mismatch 和 covariance robustness 是理解 MVDR 的关键边界。
 
 ---
+## 第 4 章
+
+阅读：**[第 4 章：DMAS / fDMAS](./chapters/04_DMAS/README.md)**
+
+本章按“原理 → 一次完整二维实验 → 总结”进行，使用经典 **real-RF signed-sqrt DMAS** 和约 `2*f0` 带通后的 fDMAS。
+
+~~~matlab
+cd matlab/04_DMAS
+compare_fi_das_vs_fdmas
+~~~
+
+注意：fDMAS 的二倍频滤波要求比普通 DAS 更密的 z 采样。脚本默认自动按 wavelength 设置 n_z，并检测 image-time Nyquist。
+
+核心实现与教学文档已提交，真实 UFF 运行结果仍待验证，因此暂标记“进行中”。
+
+---
+
 ## 统一数学框架
 
 候选 pixel：
@@ -152,20 +169,8 @@ $$
 
 ## 下一章
 
-第 3 章完成后，下一步进入：
+当前正在进行：**第 4 章 DMAS / fDMAS**。
 
-**第 4 章：DMAS / fDMAS**
+它与 MVDR 的主要区别是：MVDR 根据 covariance 求取 adaptive linear weights；fDMAS 对延时后的实数 RF 做非线性通道对运算，再保留约 2f0 的频带。
 
-前面章节从：
-
-~~~text
-DAS：固定线性求和
-CF/GCF：DAS 后的 coherence scalar weighting
-MVDR：covariance-driven adaptive linear weighting
-~~~
-
-逐步走到 adaptive linear beamforming。
-
-下一章开始研究：
-
-> **利用 channel-pair multiplication 构造非线性 beamforming response。**
+完成一次二维 DAS/fDMAS 实验并核对结果后，进入第 5 章 SLSC。
