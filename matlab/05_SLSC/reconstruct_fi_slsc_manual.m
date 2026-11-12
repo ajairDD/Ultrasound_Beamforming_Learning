@@ -78,7 +78,7 @@ function out = reconstruct_fi_slsc_manual(filename,opts)
                seq(iw).source.z>0, ...
             'Wave %d is not positive-focus conventional FI.',iw);
         assert(abs(seq(iw).source.y)<1e-9, ...
-            'This core assumes a 2-D x-z focused scan.',iw);
+            'This core assumes a 2-D x-z focused scan.');
         source_x(iw)=seq(iw).source.x;
     end
 
