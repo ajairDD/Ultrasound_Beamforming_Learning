@@ -10,7 +10,7 @@ cd matlab/04_DMAS
 compare_fi_das_vs_fdmas
 ~~~
 
-默认数据：\`../../data/L7_FI_TheGB.uff\`，conventional FI，5–45 mm，全扫描线，Rx F#=1.7，输出 \(dz\) 约 \(\lambda/16\)。
+默认数据：`../../data/L7_FI_TheGB.uff`，conventional FI，5–45 mm，全扫描线，Rx F#=1.7，输出 \(dz\) 约 \(\lambda/16\)。
 
 快速 point-target ROI：
 
@@ -24,9 +24,9 @@ compare_fi_das_vs_fdmas
 
 | 文件 | 用途 |
 |---|---|
-| \`reconstruct_fi_dmas_fdmas_manual.m\` | Chapter-1 同款 FI delays/interpolation/aperture；复数 analytic DAS；实数 RF signed-sqrt DMAS；轴向 \(2f_0\) 带通；fDMAS envelope / B-mode |
-| \`compare_fi_das_vs_fdmas.m\` | 运行完整二维比较、点目标 lateral profile、滤波前后频谱、fast-DMAS identity check、Chapter-1 DAS regression check |
-| \`README.md\` | 本文运行说明 |
+| `reconstruct_fi_dmas_fdmas_manual.m` | Chapter-1 同款 FI delays/interpolation/aperture；复数 analytic DAS；实数 RF signed-sqrt DMAS；轴向 \(2f_0\) 带通；fDMAS envelope / B-mode |
+| `compare_fi_das_vs_fdmas.m` | 运行完整二维比较、点目标 lateral profile、滤波前后频谱、fast-DMAS identity check、Chapter-1 DAS regression check |
+| `README.md` | 本文运行说明 |
 
 ## 主要算法对应代码
 
