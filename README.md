@@ -174,9 +174,15 @@ cd matlab/06_NSI
 compare_rtb_das_vs_nsi
 ~~~
 
-默认对 TheGB 的 20.1 mm 点目标附近进行密集 RTB 二维 ROI 重建。新 NSI 核心与第 1 章 RTB-DAS 使用相同 Tx/Rx timing、Tx weights、Rx F# 与 coherent Tx compounding，脚本包含 Chapter-1 RTB 复数数据回归验证。
+第一阶段已在 MATLAB 完成 TheGB 20.1 mm 点目标的密集 RTB ROI 实验：NSI 的横向响应显著收窄，但背景出现大范围暗区，提示很强的组织/speckle 抑制，不足以判定整体成像质量提高。
 
-**代码、教学说明已提交；真实 UFF 输出尚待本地运行验证，故暂标记“进行中”。**
+下一阶段新增全视野脚本：
+
+~~~matlab
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+默认比较 TheGB 全图和真实颈动脉 cross 1 全图，自动从 UFF focused-Tx 位置取横向视野，深度 5–45 mm，快速预览 n_x=257、n_z=385、wave_stride=2，DC offset 仍固定为 0.2。可选 cross 2，以及 all-Tx / 更密网格。**目前全视野结果尚未实际运行验证，因此第 6 章仍标记为“进行中”。**
 
 ---
 
