@@ -159,7 +159,7 @@ $$
 
 ### 1. 数据、条件和一键运行
 
-- 数据：\`data/L7_FI_TheGB.uff\`，focused FI，real RF。
+- 数据：`data/L7_FI_TheGB.uff`，focused FI，real RF。
 - 图像：所有 focused scanlines，\(z=5\sim45\) mm。
 - Tx/Rx delays、fractional interpolation、dynamic Rx F#：与 Chapter 1 的 conventional FI-DAS 一致。
 - Rx F#：默认 \(1.7\)。
