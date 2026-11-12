@@ -115,6 +115,12 @@ function out = reconstruct_fi_rtb_nsi_manual(filename,opts)
            x_max<=max(src_x)+1e-12, ...
         'The RTB ROI must lie inside focused-Tx lateral coverage.');
 
+    % Record the effective x bounds in metadata, including auto full-FOV
+    % mode. Otherwise out.options would misleadingly retain the default
+    % cropped point-target limits even for a full-width reconstruction.
+    opts.x_min=x_min;
+    opts.x_max=x_max;
+
     x_axis=linspace(x_min,x_max,opts.n_x).';
     z_axis=linspace(opts.z_min,opts.z_max,opts.n_z).';
     selected_waves=1:opts.wave_stride:Nw;
