@@ -10,7 +10,7 @@ cd matlab/05_SLSC
 compare_fi_das_vs_slsc
 ~~~
 
-默认数据：\`../../data/L7_FI_TheGB.uff\`，real RF conventional focused imaging，z=5–45 mm，全部 FI scanlines。
+默认数据：`../../data/L7_FI_TheGB.uff`，real RF conventional focused imaging，z=5–45 mm，全部 FI scanlines。
 
 ### 目录
 
@@ -44,7 +44,7 @@ SLSC display              [z,scanline] real [0,1]
 x/z axes                  [m]
 ~~~
 
-**关于 normalization：** 原始 SLSC 是对 short lags 的 correlation 求和。由于本项目采用动态 Rx F#，不同深度的有效 lag 数可能不同；core 同时保留 \`slsc_sum\`（经典累加形式）与 \`slsc_mean\`（对有效 lag 数取平均的教学显示约定），只将后者裁负值、归一化到 [0,1] 用于 Figure 1。不要把它当 DAS dB amplitude 比较。
+**关于 normalization：** 原始 SLSC 是对 short lags 的 correlation 求和。由于本项目采用动态 Rx F#，不同深度的有效 lag 数可能不同；core 同时保留 `slsc_sum`（经典累加形式）与 `slsc_mean`（对有效 lag 数取平均的教学显示约定），只将后者裁负值、归一化到 [0,1] 用于 Figure 1。不要把它当 DAS dB amplitude 比较。
 
 ### 验证
 
@@ -52,7 +52,7 @@ x/z axes                  [m]
 
 1. normalized correlation 的正/负边界与 amplitude scaling sanity checks；
 2. SLSC [-1,1] 范围、lag count consistency；
-3. independent Chapter-1 conventional FI-DAS 的复数最大峰归一化误差 \`<1e-10\`；
+3. independent Chapter-1 conventional FI-DAS 的复数最大峰归一化误差 `<1e-10`；
 4. 完整二维 DAS dB / SLSC linear image、lag curve 和使用 lag 数量 map。
 
 **不执行** USTB SLSC postprocessor，不需要 USTB MEX 来完成本项目算法。USTB 仅负责 UFF 读取。
