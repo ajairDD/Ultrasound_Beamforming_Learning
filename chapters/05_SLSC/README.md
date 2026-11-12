@@ -1,6 +1,6 @@
 # 第 5 章：SLSC（Short-Lag Spatial Coherence）
 
-**状态：代码和原理教程已完成；真实 UFF 输出尚未由本地 MATLAB 验证。**
+**状态：已完成教学和一次 TheGB 真实 UFF 二维图像实验（定性验证）。** 目前没有 Console 具体数值及独立 SLSC 定量基准，不宣称临床或普遍性能优势。
 
 本章沿用“完整原理一节 → 一次二维 DAS 对照实验 → 总结”的效率优先结构，不增加不必要的变体或参数扫描。
 
@@ -86,11 +86,13 @@ $$
 
 只取两个阵元在同一个深度的**一个 RF 数字**，不能稳定估计统计相关性（两个标量的“相关系数”没有我们想要的物理意义）。
 
-因此需要一个小的轴向 RF 邻域作为统计样本，在每对阵元之间计算 normalized correlation。经典超声 SLSC 通常选择约一个波长的轴向 kernel，本章默认：
+因此需要一个小的轴向 RF 邻域作为统计样本，在每对阵元之间计算 normalized correlation。经典超声 SLSC 通常使用约一个波长量级的轴向 kernel。本章默认：
 
 ~~~text
 axial_kernel_lambda = 1.0
 ~~~
+
+**注意核长的实际定义**：如果窗口里有 `K` 个均匀深度采样点、采样间隔为 `dz`，从第一个点到最后一个点的物理跨度是 `(K-1)*dz`，而不是 `K*dz`。本次截图的标题写为 `1.23 lambda`，是旧版代码采用 `K*dz/lambda` 统计的结果，**不代表真实轴向窗口跨度为 1.23 λ**。目前已将打印值改为 `(K-1)*dz/lambda`，没有修改参与相关计算的实际样本，因此不改变这次 SLSC 图像结果。
 
 这与 MVDR 的 axial covariance averaging 有相似之处，但它们服务的最终目标不同：
 
@@ -221,7 +223,33 @@ Figure 2 辅助显示 short-lag correlation 随 m 的变化，以及使用 dynam
 3. 与 Chapter 1 的 `reconstruct_fi_scanline_manual.m` 对**复数 DAS 数据**做 max-peak scaled regression test，要求小于 \(10^{-10}\)；
 4. 输出 2-D DAS/SLSC 两幅图和 lag behavior。
 
-**目前状态**：核心文件和脚本已提交 GitHub；尚未在用户本地 MATLAB + TheGB UFF 环境中执行，因此未记录或虚构 PSF/FWHM、CNR、SNR 或提升百分比。
+**当前验证状态**：用户已在本地 MATLAB 使用 TheGB UFF 完整执行并提供 Figure 1 / Figure 2。两张图说明脚本已运行至可视化阶段；默认的 sanity checks 与 DAS reference regression 位于画图之前，因此**在用户未关闭默认检查的前提下**可认为程序检查已通过。未收到原始 Console，所以不记录精确的 regression error、运行时间或其他未提供的数值。
+
+### 4. 本次真实 TheGB 实验的图像解读（2026-11-12）
+
+用户在 MATLAB 完成默认 FI-SLSC 实验，并提供两个 Figure 的截图。这是本章的**实际教学实验记录**；下面只写截图支持的事实，不把图像外观当成 ground truth。
+
+**Figure 1：完整二维 DAS vs SLSC。**
+
+| 观察位置 | 本次现象 | 解释边界 |
+|---|---|---|
+| 5–45 mm 全视野 | DAS 与 SLSC 都呈现出体模的主要空间结构，但组织灰度和散斑纹理差异很大 | DAS 为 RF envelope 的 dB 图；SLSC 为经过非负裁剪、最大值归一化后的 **linear coherence** 图，不能进行绝对亮度比较 |
+| 约 15–35 mm 区域 | SLSC 中大面积组织非常亮，部分局部结构的可辨识性不如 DAS 直观 | 高相干性不等于高反射幅度，也不证明组织信号更真实 |
+| 点目标 / 局部结构附近 | 两种成像方式的亮点、暗区与组织纹理并不完全对应 | SLSC 不是点目标 PSF 的幅度替代；不能直接用其亮斑宽度报告 lateral resolution improvement |
+| 较浅及深部区域 | SLSC 的整体灰度深度依赖与 DAS 不同 | 可能同时受到相干统计、噪声/杂波和动态孔径等因素影响，不能由一张图单独确认因果来源 |
+
+**Figure 2：lag correlation 与动态孔径。**
+
+- 在 `z=15–30 mm` 的中央 ROI，**Lag 1 平均相关性约为 0.90**，Lag 2 约 0.78，Lag 4–5 约 0.54；短 lag 通常更高，说明代码确实捕捉到了近邻阵元的相干性。
+- 曲线在 Lag 5 之后并非严格单调，Lag 6–8 约回升至 0.58–0.60。**不能直接解释成远阵元反而物理上更相干**：因为动态 F#、`Q=0.15` 和 `max_lag=12` 使不同 lag 参与平均的像素/深度集合不同。大 lag 可用样本更少；图中的空白 Lag 9–12 不等于相关性为 0。
+- 右侧 lag-count map 呈现从浅层较少 lag 到深部较多 lag 的变化：与动态 Rx F# 导致 active receive aperture 随深度扩大吻合，图像边缘也受孔径截断影响。
+- **这条 correlation 曲线是中央混合组织区域的平均结果，不是某个固定同质 ROI 的标准 spatial-coherence decay 测量。** 不能据此直接拟合声速、噪声或组织微结构。
+
+**这次实验实际能支持的结论：**
+
+> 在同一真实 FI channel data 上，SLSC 成功形成了与 DAS 信息定义不同的二维相干性图；短 lag 平均相关性较高，且随 lag 增加整体先下降。SLSC 显著改变组织灰度与散斑表现，但本次没有证据证明其整体成像质量优于 DAS。
+
+本次实验**不应**报告没有计算/展示的 CNR、gCNR、PSF FWHM、SNR 或优越性百分比。尤其不能把线性 SLSC 与 dB-DAS 的视觉差异当作噪声/信号强度改善。
 
 ---
 
@@ -233,7 +261,7 @@ Figure 2 辅助显示 short-lag correlation 随 m 的变化，以及使用 dynam
 2. **它既需要空间 lag，也需要足够短且有统计意义的 axial RF kernel**；kernel、lag fraction 和动态接收孔径都对结果有影响。
 3. **相干性不是组织真值**。SLSC 可改善某些 clutter-limited 条件下的结构显示，但会改变 speckle 和点目标外观。尤其不能把线性 coherence 图与 log-compressed DAS 幅度图直接对比亮度来断言优劣。
 
-在一个完整二维实验后本章便可结束，不延伸到 FSAS、G-SLSC、LSC、coherence-flow 等扩展方向。真正比较不同算法性能留到 Chapter 7 的统一 benchmark。
+本章已经完成一次 TheGB 完整二维对照，按原定学习目标封章，不延伸到 FSAS、G-SLSC、LSC、coherence-flow 等扩展方向。真正比较不同算法性能留到 Chapter 7 的统一 benchmark。
 
 ### 文献与官方实现
 
