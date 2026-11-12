@@ -1,3 +1,16 @@
 work/pdfs/
 tools/pdf/node_modules/
 tools/pdf/__pycache__/
+
+# Keep standalone lesson figures local, regardless of label language.
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.webp
+*.gif
+*.tif
+*.tiff
+*.bmp
+*.fig
+*.eps
