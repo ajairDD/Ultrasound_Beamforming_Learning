@@ -208,7 +208,9 @@ grid on;
 xlabel('Receive-element lag (number of pitches)');
 ylabel('Mean normalized correlation');
 title('Short-lag behavior: central ROI, z=15–30 mm');
-xlim([1 max_lag]);
+if max_lag>1
+    xlim([1 max_lag]);
+end
 ylim([-1 1]);
 
 subplot(1,2,2);
