@@ -1,6 +1,6 @@
 # 第 6 章：NSI（Null Subtraction Imaging）
 
-**状态：教学与算法代码已提交；真实 TheGB UFF 成像结果尚未在 MATLAB 验证。**
+**状态：TheGB 点目标实验已由用户在 MATLAB 运行并提供图像；全视野体模与人体对照实验待运行。**
 
 本章结构：一节完整原理、一次密集二维 RTB-DAS/NSI 对照实验、一个总结。不做大量参数扫描或派生变体。
 
@@ -144,7 +144,63 @@ compare_rtb_das_vs_nsi
 - 不把点目标 FWHM 缩小直接解释为两个紧邻目标的实际 resolvability 提高相同比例。
 - 论文已经报告：NSI 可明显压窄主瓣，却可能造成 speckle underdevelopment 与 CNR 损失。我们不重复扩展调参来追求视觉效果。
 
-本次实验是**真正的 2D RTB ROI**，不是完整 5–45 mm 全视野扫描；这样能集中验证最关键的横向特性并降低 MATLAB 运行成本。
+第一阶段为点目标的 **dense 2D RTB ROI**，用于隔离横向响应；随后追加全视野 TheGB / carotid 实验，检查是否会普遍损伤 speckle 或真实组织结构。
+
+### 4. TheGB 点目标初步结果：响应很窄，但明显过度抑制
+
+用户在 MATLAB 运行默认点目标密集 RTB-NSI，给出 Figure 1 和 Figure 2 截图：
+
+- **Figure 1**：与 RTB-DAS 相比，NSI 的点目标在 x 方向明显收窄；但附近背景出现大片近黑的断裂/不连续纹理。
+- **Figure 2 左**：NSI 横向 profile 的 -6 dB 主瓣明显更窄，-20 dB 以外的横向响应也出现强抑制；这显示了 NSI 借 Null cancellation 产生窄有效响应的特点。
+- **Figure 2 右**：ZM 与 mean(DC1,DC2) 两条 envelope 曲线几乎重合，仅在目标中心附近留下一个小残差，符合 \(E_{\rm NSI}\) 是两个近似相等量相减得到的计算结构。**这也表明它容易对小的模型/噪声误差敏感。**
+
+但这些图**不能证明**“NSI 真实分辨率提高数倍”或“背景杂波被正确去除”。尤其是 speckle 大片变黑可能意味着真实组织信号一并被抑制。用户尚未提供本轮 Console 的精确 FWHM/回归误差，因此不编造数值。
+
+### 5. 下一步：全视野 TheGB 与真实 carotid，而不是继续调点目标
+
+新增：
+
+~~~text
+matlab/06_NSI/compare_full_fov_rtb_das_vs_nsi.m
+~~~
+
+一键运行：
+
+~~~matlab
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+默认直接比较 **TheGB 全视野** 与 **L7_FI_carotid_cross_1 全视野**。为了快速判定结构破坏是否普遍存在，默认设置：
+
+~~~text
+x: full focused Tx span (UFF metadata -> automatic)
+z: 5–45 mm
+n_x=257, n_z=385
+wave_stride=2
+dc_offset=0.2 (与上一轮保持一致)
+~~~
+
+Figure 1 每组显示同一 DAS 0-dB reference 下的 RTB-DAS/NSI；Figure 2 显示经过阈值掩膜的 NSI/DAS amplitude ratio（0–1）。这两个图的意义不同：前者看组织形态，后者看算法抑制强度，而不是以“黑”自动判断是否正确。
+
+可选第二份独立 carotid：
+
+~~~matlab
+dataset_indices=[1 2 3];
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+如果需要最终检查 all-Tx 而不仅是半数 Tx 快速预览：
+
+~~~matlab
+wave_stride=1;
+n_x=385;
+n_z=513;
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+默认保持 c=0.2，不马上调大。只有当全视野显示出类似过度抑制、需要定位 DC offset 的敏感性时，再做 c=0.5 之类的**单变量对照**；不能通过调参让图变亮就宣称更准确。
+
+**目前 full-FOV 代码尚未在用户 MATLAB 环境运行，不把这一阶段当成已经完成的实验。**
 
 ---
 
@@ -169,10 +225,11 @@ compare_rtb_das_vs_nsi
 ~~~text
 matlab/06_NSI/
   reconstruct_fi_rtb_nsi_manual.m  % 同一 RTB baseline 上的 receive NSI
-  compare_rtb_das_vs_nsi.m         % 一次性二维对照 + 复杂 DAS 回归验证
+  compare_rtb_das_vs_nsi.m         % 点目标密集二维对照 + DAS 复数回归验证
+  compare_full_fov_rtb_das_vs_nsi.m % 全视野体模/人体形态鲁棒性
   README.md
 ~~~
 
-**当前已提交原理与代码；尚未在用户 MATLAB+UFF 环境中实际执行，不能虚构 NSI FWHM、CNR 或性能提升数字。**
+**当前仅有 TheGB 点目标的 MATLAB 成像截图，尚无本次 Console 精确 FWHM 或全视野/人体结果，不填写或猜测 CNR、gCNR、临床性能提升数字。**
 
 下一章为 **第 7 章：统一 Benchmark**。
