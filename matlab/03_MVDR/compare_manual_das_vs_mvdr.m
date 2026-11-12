@@ -2,7 +2,8 @@
 % Chapter 3 - One-click 2-D Manual DAS vs MVDR/Capon comparison.
 %
 % Default dataset:
-%   L7_FI_TheGB.uff
+%   L7_FI_carotid_cross_2.uff
+% Set filename='../../data/L7_FI_TheGB.uff' for the chapter's phantom figures.
 %
 % Default MVDR:
 %   receive-domain conventional FI
@@ -26,7 +27,7 @@ clc;
 close all;
 
 if ~exist('filename','var')
-    filename = '../../data/L7_FI_TheGB.uff';
+    filename = '../../data/L7_FI_carotid_cross_2.uff';
 end
 if ~exist('n_z','var')
     n_z = 256;

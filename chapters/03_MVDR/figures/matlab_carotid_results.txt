@@ -1,0 +1,162 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Frame 1; complex analytic RF; binary receive F-number 1.7.
+Concept demo: rng(3); narrowband complex vectors; no RF / acoustic angle.
+Conventional: TheGB, 5--45 mm, Nz=256, axial half-window=0 or 1.5 lambda.
+Trade-offs: TheGB, 18--22.5 mm, Nz=160; four existing configurations.
+Dense RTB: TheGB, x=-4--3 mm, z=18--22.5 mm, Nx=281, Nz=181, stride=1.
+Carotid: cross_1 / cross_2, x=-10--10 mm, z=8--25 mm, Nx=161, Nz=171, stride=2.
+RTB: blended Tx; pw_margin=1 mm (hybrid-only, unused here); blending power=0.5; Tx F#=2; min support=3 mm; Tukey25.
+Default MVDR: L/M=0.5, loading=0.01, axial half-window=1.5 lambda, FB=false.
+Image amplitudes share the corresponding DAS peak unless labeled self-normalized.
+
+--- compare_carotid_rtb_das_vs_rtb_mvdr_cross1 ---
+============================================================
+ IN-VIVO CAROTID RTB-DAS vs RTB-MVDR
+============================================================
+dataset                 : L7 FI carotid cross 1
+x ROI                   : -10.00 ... 10.00 mm
+z ROI                   : 8.00 ... 25.00 mm
+grid                    : 171 x 161 [z x]
+wave stride             : 2
+MVDR L/M                : 0.500
+diagonal loading        : 0.01
+axial covariance avg    : +/- 1.50 lambda
+
+============================================================
+ Manual RTB-DAS vs RTB + Rx-MVDR
+============================================================
+File                    : ../../data/L7_FI_carotid_cross_1.uff
+Grid [z x]              : [171 161]
+x spacing               : 0.125000 mm
+z spacing               : 0.100000 mm
+Used Tx waves           : 64 / 128
+Tx delay model          : blended
+Rx F#                   : 1.700
+MVDR L/M                : 0.500
+MVDR diagonal loading   : 0.01
+MVDR axial avg          : +/- 1.50 lambda (4 samples)
+
+RTB+MVDR Tx 1 / 64 (wave 1) ...
+RTB+MVDR Tx 7 / 64 (wave 13) ...
+RTB+MVDR Tx 13 / 64 (wave 25) ...
+RTB+MVDR Tx 19 / 64 (wave 37) ...
+RTB+MVDR Tx 25 / 64 (wave 49) ...
+RTB+MVDR Tx 31 / 64 (wave 61) ...
+RTB+MVDR Tx 37 / 64 (wave 73) ...
+RTB+MVDR Tx 43 / 64 (wave 85) ...
+RTB+MVDR Tx 49 / 64 (wave 97) ...
+RTB+MVDR Tx 55 / 64 (wave 109) ...
+RTB+MVDR Tx 61 / 64 (wave 121) ...
+
+============================================================
+ DESCRIPTIVE SUMMARY
+============================================================
+runtime                 : 24.13 s
+lateral spacing         : 0.1250 mm
+axial spacing           : 0.1000 mm
+MVDR global peak vs DAS : -2.040 dB
+median MVDR-DAS dB      : -1.697 dB (DAS >= -40 dB mask)
+envelope correlation    : 0.9518 (same mask)
+MVDR fallback           : 0 / 150354 (0.0000%)
+
+Interpret these only as descriptive image statistics.
+They are NOT measures of clinical superiority.
+
+============================================================
+ VISUAL CHECKLIST
+============================================================
+1) lumen residual clutter: lower or just unnaturally black?
+2) near/far vessel wall: sharper AND continuous, or broken/thinned?
+3) tissue speckle: preserved texture, or strongly re-shaped?
+4) small structures: clearer, or converted into needle-like features?
+5) deep region: stable, or increasingly aggressive / fragmented?
+
+For the second acquisition run:
+  dataset_index = 2;
+  compare_carotid_rtb_das_vs_rtb_mvdr
+
+For a denser final run:
+  n_x = 241; n_z = 257; wave_stride = 1;
+  compare_carotid_rtb_das_vs_rtb_mvdr
+
+Metadata: fs=20834666 Hz; c=1540 m/s; lambda=0.295679986 mm.
+Axial half-window: 4 output-grid steps = 0.399999976 mm.
+Verified complex finite [z,x] arrays and exact abs(.) envelopes.
+
+Exported 2 figures; elapsed 28.2 s.
+
+--- compare_carotid_rtb_das_vs_rtb_mvdr_cross2 ---
+============================================================
+ IN-VIVO CAROTID RTB-DAS vs RTB-MVDR
+============================================================
+dataset                 : L7 FI carotid cross 2
+x ROI                   : -10.00 ... 10.00 mm
+z ROI                   : 8.00 ... 25.00 mm
+grid                    : 171 x 161 [z x]
+wave stride             : 2
+MVDR L/M                : 0.500
+diagonal loading        : 0.01
+axial covariance avg    : +/- 1.50 lambda
+
+============================================================
+ Manual RTB-DAS vs RTB + Rx-MVDR
+============================================================
+File                    : ../../data/L7_FI_carotid_cross_2.uff
+Grid [z x]              : [171 161]
+x spacing               : 0.125000 mm
+z spacing               : 0.100000 mm
+Used Tx waves           : 64 / 128
+Tx delay model          : blended
+Rx F#                   : 1.700
+MVDR L/M                : 0.500
+MVDR diagonal loading   : 0.01
+MVDR axial avg          : +/- 1.50 lambda (4 samples)
+
+RTB+MVDR Tx 1 / 64 (wave 1) ...
+RTB+MVDR Tx 7 / 64 (wave 13) ...
+RTB+MVDR Tx 13 / 64 (wave 25) ...
+RTB+MVDR Tx 19 / 64 (wave 37) ...
+RTB+MVDR Tx 25 / 64 (wave 49) ...
+RTB+MVDR Tx 31 / 64 (wave 61) ...
+RTB+MVDR Tx 37 / 64 (wave 73) ...
+RTB+MVDR Tx 43 / 64 (wave 85) ...
+RTB+MVDR Tx 49 / 64 (wave 97) ...
+RTB+MVDR Tx 55 / 64 (wave 109) ...
+RTB+MVDR Tx 61 / 64 (wave 121) ...
+
+============================================================
+ DESCRIPTIVE SUMMARY
+============================================================
+runtime                 : 23.62 s
+lateral spacing         : 0.1250 mm
+axial spacing           : 0.1000 mm
+MVDR global peak vs DAS : -3.330 dB
+median MVDR-DAS dB      : -1.452 dB (DAS >= -40 dB mask)
+envelope correlation    : 0.9133 (same mask)
+MVDR fallback           : 0 / 151302 (0.0000%)
+
+Interpret these only as descriptive image statistics.
+They are NOT measures of clinical superiority.
+
+============================================================
+ VISUAL CHECKLIST
+============================================================
+1) lumen residual clutter: lower or just unnaturally black?
+2) near/far vessel wall: sharper AND continuous, or broken/thinned?
+3) tissue speckle: preserved texture, or strongly re-shaped?
+4) small structures: clearer, or converted into needle-like features?
+5) deep region: stable, or increasingly aggressive / fragmented?
+
+For the second acquisition run:
+  dataset_index = 2;
+  compare_carotid_rtb_das_vs_rtb_mvdr
+
+For a denser final run:
+  n_x = 241; n_z = 257; wave_stride = 1;
+  compare_carotid_rtb_das_vs_rtb_mvdr
+
+Metadata: fs=20834666 Hz; c=1540 m/s; lambda=0.295679986 mm.
+Axial half-window: 4 output-grid steps = 0.399999976 mm.
+Verified complex finite [z,x] arrays and exact abs(.) envelopes.
+
+Exported 2 figures; elapsed 25.0 s.

@@ -215,6 +215,9 @@ for k = 1:N
 
     set(gca,'YDir','reverse');
     axis image;
+    % Crop only the display: the full scanline reconstruction, DAS reference
+    % and all numeric measurements above retain their original definition.
+    xlim((target_x + [-3.5 3.5]*1e-3)*1e3);
 
     xlabel('x (mm)');
     ylabel('z (mm)');
@@ -229,7 +232,7 @@ colormap gray;
 
 sgtitle({ ...
     'MVDR parameter trade-off near TheGB point target', ...
-    'All panels use the SAME DAS amplitude reference'});
+    'Same DAS amplitude reference; display cropped around the target'});
 
 %% 2. Lateral profiles
 figure('Color','w','Position',[100 100 1000 600]);
@@ -237,7 +240,7 @@ figure('Color','w','Position',[100 100 1000 600]);
 plot( ...
     x*1e3, ...
     clip_db(das_lat,60), ...
-    'LineWidth',1.8);
+    '-o','LineWidth',1.8,'MarkerSize',4);
 
 hold on;
 
@@ -245,7 +248,7 @@ for k = 1:N
     plot( ...
         x*1e3, ...
         clip_db(profiles_lat{k},60), ...
-        'LineWidth',1.3);
+        '-o','LineWidth',1.3,'MarkerSize',4);
 end
 
 yline(-6.0206,'--','-6 dB');

@@ -1,0 +1,21 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Frame 1; complex analytic RF; binary receive F-number 1.7.
+Concept demo: rng(3); narrowband complex vectors; no RF / acoustic angle.
+Conventional: TheGB, 5--45 mm, Nz=256, axial half-window=0 or 1.5 lambda.
+Trade-offs: TheGB, 18--22.5 mm, Nz=160; four existing configurations.
+Dense RTB: TheGB, x=-4--3 mm, z=18--22.5 mm, Nx=281, Nz=181, stride=1.
+Carotid: cross_1 / cross_2, x=-10--10 mm, z=8--25 mm, Nx=161, Nz=171, stride=2.
+RTB: blended Tx; pw_margin=1 mm (hybrid-only, unused here); blending power=0.5; Tx F#=2; min support=3 mm; Tukey25.
+Default MVDR: L/M=0.5, loading=0.01, axial half-window=1.5 lambda, FB=false.
+Image amplitudes share the corresponding DAS peak unless labeled self-normalized.
+
+--- demo_mvdr_building_blocks ---
+Deterministic narrowband examples; rng(3); no UFF data.
+Unit-gain error: 1.735e-18
+Loaded output power, DAS / MVDR: 11.1416 / 10.1332
+Interference amplitude gain, DAS / MVDR: 0.100484 / 0.000133687
+Covariance rank, spatial / axial: 5 / 8 (L=8, P=5).
+Coherent M*A scaling error: 0.000e+00
+Verified: complex conjugation, unit gain, PSD loading, center-only output scaling.
+
+Exported 5 figures; elapsed 9.0 s.

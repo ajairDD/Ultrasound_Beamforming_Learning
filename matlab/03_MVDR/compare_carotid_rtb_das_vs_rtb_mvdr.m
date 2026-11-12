@@ -315,6 +315,7 @@ xlabel('x (mm)');
 ylabel('z (mm)');
 title('RTB-DAS, self-normalized');
 caxis([-60 0]);
+colormap(gca,gray(256));
 colorbar;
 
 subplot(1,3,2);
@@ -325,21 +326,26 @@ xlabel('x (mm)');
 ylabel('z (mm)');
 title('RTB-MVDR, self-normalized');
 caxis([-60 0]);
+colormap(gca,gray(256));
 colorbar;
 
 subplot(1,3,3);
-imagesc(x*1e3,z*1e3,delta_display);
-set(gca,'YDir','reverse');
+change_image = imagesc(x*1e3,z*1e3,delta_display);
+% Masked pixels are not measured -20 dB suppression: display the axes
+% background there, independently of the quantitative difference colors.
+set(change_image,'AlphaData',double(mask));
+set(gca,'YDir','reverse','Color',[0.9 0.9 0.9]);
 axis image;
 xlabel('x (mm)');
 ylabel('z (mm)');
 title('MVDR - DAS amplitude change (dB)');
 caxis([-20 10]);
+colormap(gca,parula(256));
 colorbar;
 
 sgtitle({ ...
     'Morphology and adaptive amplitude change', ...
-    'Difference map shown only where RTB-DAS >= -40 dB'});
+    'Gray background: outside the DAS >= -40 dB / Tx-support mask'});
 
 %% ------------------------------------------------------------------------
 % 6. What to inspect

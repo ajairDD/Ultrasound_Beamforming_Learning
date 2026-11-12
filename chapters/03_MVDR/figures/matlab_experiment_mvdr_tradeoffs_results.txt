@@ -1,0 +1,55 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Frame 1; complex analytic RF; binary receive F-number 1.7.
+Concept demo: rng(3); narrowband complex vectors; no RF / acoustic angle.
+Conventional: TheGB, 5--45 mm, Nz=256, axial half-window=0 or 1.5 lambda.
+Trade-offs: TheGB, 18--22.5 mm, Nz=160; four existing configurations.
+Dense RTB: TheGB, x=-4--3 mm, z=18--22.5 mm, Nx=281, Nz=181, stride=1.
+Carotid: cross_1 / cross_2, x=-10--10 mm, z=8--25 mm, Nx=161, Nz=171, stride=2.
+RTB: blended Tx; pw_margin=1 mm (hybrid-only, unused here); blending power=0.5; Tx F#=2; min support=3 mm; Tukey25.
+Default MVDR: L/M=0.5, loading=0.01, axial half-window=1.5 lambda, FB=false.
+Image amplitudes share the corresponding DAS peak unless labeled self-normalized.
+
+--- experiment_mvdr_tradeoffs ---
+============================================================
+ MVDR PARAMETER TRADE-OFF EXPERIMENT
+============================================================
+L/M=0.25, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+23.23 s
+L/M=0.50, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+23.17 s
+L/M=0.75, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+22.86 s
+L/M=0.50, load=0.10 ... UFF: reading channel_data [uff.channel_data]
+22.55 s
+
+DAS reference target
+  peak x,z      : -0.7450 mm, 20.0660 mm
+  lateral FWHM  : 0.7096 mm
+  axial FWHM    : 0.4427 mm
+  lateral -20dB : 1.1437 mm
+
+        configuration        subarray_fraction    diagonal_loading    peak_change_dB    lateral_FWHM_mm    axial_FWHM_mm    lateral_w20_mm    median_L
+    _____________________    _________________    ________________    ______________    _______________    _____________    ______________    ________
+
+    "L/M=0.25, load=0.01"          0.25                 0.01             -0.26038           0.34513           0.44383          0.80043            9
+    "L/M=0.50, load=0.01"           0.5                 0.01              -2.5355           0.30518            0.4891          0.54933           19
+    "L/M=0.75, load=0.01"          0.75                 0.01               -7.792           0.32647           0.73409          0.65841           29
+    "L/M=0.50, load=0.10"           0.5                  0.1              -1.1841           0.31208           0.45858          0.56175           19
+
+Sampling context
+  lateral spacing : 0.297981 mm
+  axial spacing   : 0.028302 mm
+
+How to read this experiment:
+  1) Compare L/M=0.25, 0.50, 0.75 at fixed loading=0.01 to see
+     the subarray-length trade-off.
+  2) Compare loading=0.01 vs 0.10 at fixed L/M=0.50 to see
+     how diagonal loading pushes MVDR toward a more robust,
+     less aggressive solution.
+  3) Conventional-FI lateral sampling is still coarse. If a measured
+     FWHM spans only a few scanlines, treat the exact mm value as
+     sampling-limited.
+
+Verified finite complex arrays/envelopes for all four trade-off configurations.
+
+Exported 2 figures; elapsed 96.7 s.

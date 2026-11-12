@@ -1,0 +1,221 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Frame 1; complex analytic RF; binary receive F-number 1.7.
+Concept demo: rng(3); narrowband complex vectors; no RF / acoustic angle.
+Conventional: TheGB, 5--45 mm, Nz=256, axial half-window=0 or 1.5 lambda.
+Trade-offs: TheGB, 18--22.5 mm, Nz=160; four existing configurations.
+Dense RTB: TheGB, x=-4--3 mm, z=18--22.5 mm, Nx=281, Nz=181, stride=1.
+Carotid: cross_1 / cross_2, x=-10--10 mm, z=8--25 mm, Nx=161, Nz=171, stride=2.
+RTB: blended Tx; pw_margin=1 mm (hybrid-only, unused here); blending power=0.5; Tx F#=2; min support=3 mm; Tukey25.
+Default MVDR: L/M=0.5, loading=0.01, axial half-window=1.5 lambda, FB=false.
+Image amplitudes share the corresponding DAS peak unless labeled self-normalized.
+
+--- compare_manual_das_vs_mvdr_spatial_only ---
+============================================================
+ MANUAL DAS vs MVDR / CAPON
+============================================================
+dataset             : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+n_z                 : 256
+Rx F#               : 1.700
+subarray fraction   : 0.500
+diagonal loading    : 0.0100
+axial averaging     : 0.00 lambda half-window
+forward-backward    : 0
+
+MVDR reconstruction wave 1 / 128 ...
+MVDR reconstruction wave 13 / 128 ...
+MVDR reconstruction wave 25 / 128 ...
+MVDR reconstruction wave 37 / 128 ...
+MVDR reconstruction wave 49 / 128 ...
+MVDR reconstruction wave 61 / 128 ...
+MVDR reconstruction wave 73 / 128 ...
+MVDR reconstruction wave 85 / 128 ...
+MVDR reconstruction wave 97 / 128 ...
+MVDR reconstruction wave 109 / 128 ...
+MVDR reconstruction wave 121 / 128 ...
+
+Runtime: 23.98 s
+Active Rx count: median 43.0, range [5,89]
+Subarray L: median 21.0, range [2,44]
+MVDR global peak vs DAS global peak: -7.469 dB
+
+Interpretation:
+  DAS uses fixed equal weights after delay alignment.
+  MVDR estimates a covariance matrix from overlapping receive
+  subarrays and computes data-adaptive channel weights.
+  The distortionless constraint preserves a perfectly aligned focal
+  signal, while the minimum-variance objective suppresses energy
+  inconsistent with that steering vector.
+  A sharper / darker MVDR image is not by itself proof of universally
+  better image quality; robustness depends strongly on covariance
+  estimation, subarray size, diagonal loading and model mismatch.
+
+Verified conventional DAS against Chapter 1: scaled complex error 1.071e-17.
+
+Metadata: fs=20833334 Hz; c=1540 m/s; lambda=0.295679986 mm.
+Axial half-window: 0 output-grid steps = 0 mm.
+Verified complex finite [z,x] arrays and exact abs(.) envelopes.
+
+Exported 2 figures; elapsed 46.9 s.
+
+--- compare_manual_das_vs_mvdr_axial ---
+============================================================
+ MANUAL DAS vs MVDR / CAPON
+============================================================
+dataset             : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+n_z                 : 256
+Rx F#               : 1.700
+subarray fraction   : 0.500
+diagonal loading    : 0.0100
+axial averaging     : 1.50 lambda half-window
+forward-backward    : 0
+
+MVDR reconstruction wave 1 / 128 ...
+MVDR reconstruction wave 13 / 128 ...
+MVDR reconstruction wave 25 / 128 ...
+MVDR reconstruction wave 37 / 128 ...
+MVDR reconstruction wave 49 / 128 ...
+MVDR reconstruction wave 61 / 128 ...
+MVDR reconstruction wave 73 / 128 ...
+MVDR reconstruction wave 85 / 128 ...
+MVDR reconstruction wave 97 / 128 ...
+MVDR reconstruction wave 109 / 128 ...
+MVDR reconstruction wave 121 / 128 ...
+
+Runtime: 23.21 s
+Active Rx count: median 43.0, range [5,89]
+Subarray L: median 21.0, range [2,44]
+MVDR global peak vs DAS global peak: -3.778 dB
+
+Interpretation:
+  DAS uses fixed equal weights after delay alignment.
+  MVDR estimates a covariance matrix from overlapping receive
+  subarrays and computes data-adaptive channel weights.
+  The distortionless constraint preserves a perfectly aligned focal
+  signal, while the minimum-variance objective suppresses energy
+  inconsistent with that steering vector.
+  A sharper / darker MVDR image is not by itself proof of universally
+  better image quality; robustness depends strongly on covariance
+  estimation, subarray size, diagonal loading and model mismatch.
+
+Verified conventional DAS against Chapter 1: scaled complex error 1.071e-17.
+
+Metadata: fs=20833334 Hz; c=1540 m/s; lambda=0.295679986 mm.
+Axial half-window: 3 output-grid steps = 0.470588237 mm.
+Verified complex finite [z,x] arrays and exact abs(.) envelopes.
+
+Exported 2 figures; elapsed 44.2 s.
+
+--- experiment_mvdr_tradeoffs ---
+============================================================
+ MVDR PARAMETER TRADE-OFF EXPERIMENT
+============================================================
+L/M=0.25, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+23.09 s
+L/M=0.50, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+23.18 s
+L/M=0.75, load=0.01 ... UFF: reading channel_data [uff.channel_data]
+23.82 s
+L/M=0.50, load=0.10 ... UFF: reading channel_data [uff.channel_data]
+23.45 s
+
+DAS reference target
+  peak x,z      : -0.7450 mm, 20.0660 mm
+  lateral FWHM  : 0.7096 mm
+  axial FWHM    : 0.4427 mm
+  lateral -20dB : 1.1437 mm
+
+        configuration        subarray_fraction    diagonal_loading    peak_change_dB    lateral_FWHM_mm    axial_FWHM_mm    lateral_w20_mm    median_L
+    _____________________    _________________    ________________    ______________    _______________    _____________    ______________    ________
+
+    "L/M=0.25, load=0.01"          0.25                 0.01             -0.26038           0.34513           0.44383          0.80043            9
+    "L/M=0.50, load=0.01"           0.5                 0.01              -2.5355           0.30518            0.4891          0.54933           19
+    "L/M=0.75, load=0.01"          0.75                 0.01               -7.792           0.32647           0.73409          0.65841           29
+    "L/M=0.50, load=0.10"           0.5                  0.1              -1.1841           0.31208           0.45858          0.56175           19
+
+Sampling context
+  lateral spacing : 0.297981 mm
+  axial spacing   : 0.028302 mm
+
+How to read this experiment:
+  1) Compare L/M=0.25, 0.50, 0.75 at fixed loading=0.01 to see
+     the subarray-length trade-off.
+  2) Compare loading=0.01 vs 0.10 at fixed L/M=0.50 to see
+     how diagonal loading pushes MVDR toward a more robust,
+     less aggressive solution.
+  3) Conventional-FI lateral sampling is still coarse. If a measured
+     FWHM spans only a few scanlines, treat the exact mm value as
+     sampling-limited.
+
+Verified finite complex arrays/envelopes for all four trade-off configurations.
+
+Exported 2 figures; elapsed 96.3 s.
+
+--- compare_rtb_das_vs_rtb_mvdr ---
+============================================================
+ RTB-DAS vs RTB + RECEIVE-MVDR
+============================================================
+============================================================
+ Manual RTB-DAS vs RTB + Rx-MVDR
+============================================================
+File                    : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+Grid [z x]              : [181 281]
+x spacing               : 0.025000 mm
+z spacing               : 0.025000 mm
+Used Tx waves           : 128 / 128
+Tx delay model          : blended
+Rx F#                   : 1.700
+MVDR L/M                : 0.500
+MVDR diagonal loading   : 0.01
+MVDR axial avg          : +/- 1.50 lambda (18 samples)
+
+RTB+MVDR Tx 1 / 128 (wave 1) ...
+RTB+MVDR Tx 13 / 128 (wave 13) ...
+RTB+MVDR Tx 25 / 128 (wave 25) ...
+RTB+MVDR Tx 37 / 128 (wave 37) ...
+RTB+MVDR Tx 49 / 128 (wave 49) ...
+RTB+MVDR Tx 61 / 128 (wave 61) ...
+RTB+MVDR Tx 73 / 128 (wave 73) ...
+RTB+MVDR Tx 85 / 128 (wave 85) ...
+RTB+MVDR Tx 97 / 128 (wave 97) ...
+RTB+MVDR Tx 109 / 128 (wave 109) ...
+RTB+MVDR Tx 121 / 128 (wave 121) ...
+
+Runtime: 247.55 s
+
+Checking RTB-DAS branch against Chapter-1 RTB core ...
+  max abs complex error : 0.000000e+00
+  max-peak scaled error : 0.000000e+00
+
+Point-target metrics
+------------------------------------------------------------
+RTB-DAS peak x,z       : -0.6750 mm, 20.0500 mm
+RTB-MVDR peak x,z      : -0.7250 mm, 20.0500 mm
+MVDR peak vs DAS       : -2.893 dB
+
+                     RTB-DAS      RTB-MVDR
+lateral FWHM mm         0.7063        0.1238
+axial FWHM mm           0.4231        0.4071
+lateral -20dB mm        1.1482        0.4617
+
+Sampling context
+  lateral spacing       : 0.025000 mm
+  axial spacing         : 0.025000 mm
+  DAS FWHM / dx         : 28.253 samples
+  MVDR FWHM / dx        : 4.953 samples
+
+MVDR fallback count
+  fallback / attempted  : 0 / 795264 (0.000%)
+
+Interpretation boundary
+  If RTB-MVDR becomes narrow but still spans several lateral pixels,
+  the earlier one-scanline appearance was mainly conventional-FI
+  lateral undersampling.
+  If RTB-MVDR remains pathological on this dense grid, inspect the
+  covariance / steering assumptions rather than claiming a
+  physical resolution gain.
+
+Metadata: fs=20833334 Hz; c=1540 m/s; lambda=0.295679986 mm.
+Axial half-window: 18 output-grid steps = 0.449999988 mm.
+Verified complex finite [z,x] arrays and exact abs(.) envelopes.
+
+Exported 3 figures; elapsed 271.3 s.
