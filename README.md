@@ -36,7 +36,7 @@
 | 第 3 章 | MV / MVDR / Capon | **已完成** |
 | 第 4 章 | DMAS / fDMAS | **已完成** |
 | 第 5 章 | SLSC | **已完成** |
-| 第 6 章 | NSI | **进行中** |
+| 第 6 章 | NSI | **已完成** |
 | 第 7 章 | 统一 benchmark | 计划中 |
 
 ---
@@ -167,22 +167,17 @@ compare_fi_das_vs_slsc
 
 阅读：**[第 6 章：NSI（Null Subtraction Imaging）](./chapters/06_NSI/README.md)**
 
-本章继续按“原理 → 一次二维实验 → 总结”推进。NSI 利用 zero-mean receive apodization 构造 Null，再通过两幅 DC-offset envelope 平均后减去 ZM envelope 形成窄横向响应。
+本章完成：Null/zero-mean receive apodization 原理、密集 RTB 点目标、TheGB 全视野与两组人体 carotid 的 DAS/NSI 实验，以及 c=0.2 / c=0.8 的 DC-offset 对照。
 
 ~~~matlab
 cd matlab/06_NSI
 compare_rtb_das_vs_nsi
-~~~
-
-第一阶段已在 MATLAB 完成 TheGB 20.1 mm 点目标的密集 RTB ROI 实验：NSI 的横向响应显著收窄，但背景出现大范围暗区，提示很强的组织/speckle 抑制，不足以判定整体成像质量提高。
-
-下一阶段新增全视野脚本：
-
-~~~matlab
 compare_full_fov_rtb_das_vs_nsi
 ~~~
 
-默认比较 TheGB 全图和真实颈动脉 cross 1 全图，自动从 UFF focused-Tx 位置取横向视野，深度 5–45 mm，快速预览 n_x=257、n_z=385、wave_stride=2，DC offset 仍固定为 0.2。可选 cross 2，以及 all-Tx / 更密网格。**目前全视野结果尚未实际运行验证，因此第 6 章仍标记为“进行中”。**
+**实验观察**：NSI 的点目标横向响应显著收窄，但在全视野体模和真实颈动脉上，对组织和 speckle 的抑制非常强。c=0.2 时有效像素 median NSI/DAS amplitude ratio 约 0.06–0.07；c=0.8 时约 0.37–0.38，组织有所恢复，但仍出现 speckle 颗粒化与血管壁/组织连续性损伤。stride=2 与 1 对 c=0.2 的强抑制结果基本相同。
+
+该 ratio 是算法幅度保留比例，不是对比度、功率或临床质量指标。本章完成的是方法教学与定性鲁棒性观察，不把窄 PSF 直接视为真实 B-mode 整体更好。
 
 ---
 
@@ -228,4 +223,6 @@ $$
 
 ## 下一章
 
-当前第 6 章 **NSI** 正在进行，完成 TheGB 二维 DAS/NSI 验证后进入 **第 7 章：统一 Benchmark**。
+**第 6 章 NSI 已完成。下一步进入第 7 章：统一 Benchmark。**
+
+将已完成算法按各自真实输出定义和合适数据集对照，集中评价点目标横向响应、contrast/speckle 保真性、人体结构鲁棒性与计算成本。
