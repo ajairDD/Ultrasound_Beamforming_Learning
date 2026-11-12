@@ -167,15 +167,16 @@ compare_fi_das_vs_slsc
 
 阅读：**[第 6 章：NSI（Null Subtraction Imaging）](./chapters/06_NSI/README.md)**
 
-本章完成：Null/zero-mean receive apodization 原理、密集 RTB 点目标、TheGB 全视野与两组人体 carotid 的 DAS/NSI 实验，以及 c=0.2 / c=0.8 的 DC-offset 对照。
+本章按“算法原理 → 手算与数值小例子 → 密集点目标 → 完整体模与两组颈动脉 → 实现注意事项”组织，包含 7 张中文概念图与 17 张 MATLAB 图。独立配图仅保存在本地，[运行与导出说明](./matlab/06_NSI/README.md)提供复现入口。
 
 ~~~matlab
 cd matlab/06_NSI
+demo_nsi_building_blocks       % 无需 USTB / UFF 的八个小例子
 compare_rtb_das_vs_nsi
 compare_full_fov_rtb_das_vs_nsi
 ~~~
 
-**实验观察**：NSI 的点目标横向响应显著收窄，但在全视野体模和真实颈动脉上，对组织和 speckle 的抑制非常强。c=0.2 时有效像素 median NSI/DAS amplitude ratio 约 0.06–0.07；c=0.8 时约 0.37–0.38，组织有所恢复，但仍出现 speckle 颗粒化与血管壁/组织连续性损伤。stride=2 与 1 对 c=0.2 的强抑制结果基本相同。
+**实验观察**：密集点目标的半幅横向宽度约为 DAS 0.7063 mm、NSI 0.1609 mm；全视野三份数据的幅度保留比中位数在 δ=0.2 时约 0.06–0.07，δ=0.8 时约 0.37–0.38。组织有所恢复，但仍需检查 speckle 与壁面连续性。点目标及三份全视野的第 1 章复数 RTB-DAS 回归均已执行，误差为 0。
 
 该 ratio 是算法幅度保留比例，不是对比度、功率或临床质量指标。本章完成的是方法教学与定性鲁棒性观察，不把窄 PSF 直接视为真实 B-mode 整体更好。
 

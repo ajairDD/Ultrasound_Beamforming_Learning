@@ -215,7 +215,8 @@ fprintf('Odd active apertures : %d (zero-weight center element)\n', ...
     out.odd_aperture_count);
 
 %% 4. Figure 1: the same 2-D RTB data and SAME DAS display reference.
-figure('Color','w','Position',[50 60 1250 620]);
+figure('Color','w','Position',[50 60 1400 600], ...
+    'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 subplot(1,2,1);
 imagesc(x,z,out.das_db);
@@ -224,8 +225,8 @@ axis image;
 colormap gray;
 caxis([-60 0]);
 colorbar;
-xlabel('x (mm)'); ylabel('z (mm)');
-title('RTB-DAS, common reference');
+xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+title('RTB-DAS：共同幅度参考');
 
 subplot(1,2,2);
 imagesc(x,z,out.nsi_db_common);
@@ -234,28 +235,29 @@ axis image;
 colormap gray;
 caxis([-60 0]);
 colorbar;
-xlabel('x (mm)'); ylabel('z (mm)');
-title('RTB + receive NSI, normalized by dc');
+xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+title('RTB + 接收 NSI：先除以 δ');
 
 sgtitle({ ...
-    'Same RTB Tx/Rx delays, Tx compounding and dense 2D grid', ...
-    sprintf('NSI DC offset=%.2f, all outputs use RTB-DAS 0-dB reference', ...
+    '同一 RTB 延时、Tx 相干合成与密集二维网格', ...
+    sprintf('DC offset δ = %.2f；两图共用 RTB-DAS 的 0 dB 参考', ...
         dc_offset)});
 
 %% 5. Figure 2: profile and the actual three-envelope construction.
-figure('Color','w','Position',[80 80 1250 540]);
+figure('Color','w','Position',[80 80 1450 700], ...
+    'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 subplot(1,2,1);
 plot(x,clipped_db(profile_das,60),'LineWidth',1.8);
 hold on;
 plot(x,clipped_db(profile_nsi,60),'LineWidth',1.8);
-yline(-6.0206,'--','-6 dB');
+yline(-6.0206,'--','半幅（−6.02 dB）');
 yline(-20,':','-20 dB');
 grid on;
 xlim(target_x+[-2 2]);
 ylim([-60 3]);
-xlabel('x (mm)'); ylabel('Own-peak normalized amplitude (dB)');
-title('Lateral response, own peak');
+xlabel('横向 x（mm）'); ylabel('各自局部峰值归一化幅度（dB）');
+title('横向响应：各自峰值与各自峰值深度');
 legend('RTB-DAS','RTB-NSI','Location','best');
 
 subplot(1,2,2);
@@ -271,16 +273,16 @@ norm_ref=max(avgdc)+eps;
 plot(x,avgdc/norm_ref,'LineWidth',1.8);
 hold on;
 plot(x,zm/norm_ref,'LineWidth',1.8);
-plot(x,nsi/norm_ref,'LineWidth',2.0);
+plot(x,nsi/norm_ref,'LineWidth',2.0,'Color',[0.15 0.5 0.2]);
 xlim(target_x+[-2 2]);
 ylim([0 1.05]);
 grid on;
-xlabel('x (mm)'); ylabel('Envelope / max averaged DC envelope');
-title('Actual NSI envelope subtraction at DAS target depth');
-legend('mean(|DC1|,|DC2|)','|ZM|','NSI residual', ...
+xlabel('横向 x（mm）'); ylabel('包络 / 此剖面的 DC 平均包络最大值');
+title('DAS 目标深度处的实际包络相减');
+legend('两路 DC 包络的平均值','ZM 包络','NSI 残差', ...
     'Location','best');
 
-sgtitle('Why NSI creates a narrow residual by subtracting a null pattern');
+sgtitle('先对三路分别取包络，再相减，留下窄的非负残差');
 
 fprintf('\nScientific limitations:\n');
 fprintf('  - Only 2D point-target ROI, not full-field quantitative validation.\n');

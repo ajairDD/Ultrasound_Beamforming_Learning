@@ -1,0 +1,201 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Chapter 6: NSI lecture figures; independent images remain local/ignored.
+Point: [Nz Nx]=[181 281], dx=dz=0.025 mm, all focused Tx, delta=0.2.
+Full: 3 acquisitions, [Nz Nx]=[513 385], 5--45 mm, full Tx span, all Tx.
+Both existing experiments enable Chapter-1 complex RTB-DAS regression.
+Delta=0.8 views reuse exactly the same compounded complex D,Z branches.
+
+--- no_UFF_concepts ---
+NSI concepts: 8 figures; rng(6,twister); no UFF or acoustic simulation.
+Direct three-apodization / D,Z recombination max error: 7.324107e-15.
+Four-channel examples [D;Z;E;E/delta]: [4 3.2 0;0 0.8 4;0.8 0 0;4 0 0].
+Ideal / gain-imbalanced Z: [0 -0.4].
+Lower / upper envelope bound violations: 0.000000e+00 / 0.000000e+00.
+Coherent-first / envelope-first example E: 0.000000 / 0.200000.
+Ideal array half-amplitude widths in u, delta 0.2/0.8: [0.00289356235 0.00877087551].
+Coarse-grid peak values, centered/shifted: [1 0.397766046].
+Random-aperture median retention, delta 0.2/0.8: [0.0394163855 0.22167521].
+All algebra, bounds, ordering and sampling checks PASS.
+
+
+--- point_target ---
+NSI algebra / zero-mean aperture tests: PASS
+============================================================
+ Receive NSI vs Chapter-1 RTB-DAS
+============================================================
+UFF            : ../../data/L7_FI_TheGB.uff
+Grid [z,x]     : [181,281]
+dx/dz          : 0.02500 / 0.02500 mm
+DC offset      : 0.2000
+Tx used        : 128 of 128
+Tx 1 / 128
+Tx 13 / 128
+Tx 25 / 128
+Tx 37 / 128
+Tx 49 / 128
+Tx 61 / 128
+Tx 73 / 128
+Tx 85 / 128
+Tx 97 / 128
+Tx 109 / 128
+Tx 121 / 128
+
+RTB NSI runtime: 25.14 s
+Chapter-1 RTB-DAS max-peak complex error: 0.000000e+00
+
+==========================================================
+ RTB POINT-TARGET SUMMARY (descriptive only)
+==========================================================
+DC offset            : 0.200
+Grid dx/dz           : 0.0250 / 0.0250 mm
+RTB-DAS peak (x,z)   : -0.6750, 20.0500 mm
+RTB-NSI peak (x,z)   : -0.7250, 20.0750 mm
+NSI scaled peak/DAS  : -2.536 dB
+Lateral -6dB widths  : DAS 0.7063 mm | NSI 0.1609 mm
+Lateral -20dB widths : DAS 1.1482 mm | NSI 0.5629 mm
+Width / dx           : DAS 28.25 | NSI 6.44 pixels
+Odd active apertures : 373558 (zero-weight center element)
+
+Scientific limitations:
+  - Only 2D point-target ROI, not full-field quantitative validation.
+  - NSI uses coherent Tx combination BEFORE envelope subtraction.
+  - Scaled NSI output E/dc is bounded by DAS envelope pointwise.
+  - Narrower lateral FWHM is not automatically true resolving power.
+  - Very low DC offsets can severely distort speckle / contrast.
+
+
+--- full_FOV ---
+============================================================
+ Full-FOV RTB-DAS vs receive NSI
+============================================================
+Cases            : [1 2 3]
+Grid [z, x]      : [513, 385]
+Depth [mm]       : 5.00 to 45.00
+DC offset        : 0.200
+Tx wave stride   : 1
+RTB reference    : 1
+
+------------------------------------------------------------
+ Case 1/3: TheGB 体模
+------------------------------------------------------------
+============================================================
+ Receive NSI vs Chapter-1 RTB-DAS
+============================================================
+UFF            : ../../data/L7_FI_TheGB.uff
+Grid [z,x]     : [513,385]
+dx/dz          : 0.09855 / 0.07812 mm
+DC offset      : 0.2000
+Tx used        : 128 of 128
+Tx 1 / 128
+Tx 13 / 128
+Tx 25 / 128
+Tx 37 / 128
+Tx 49 / 128
+Tx 61 / 128
+Tx 73 / 128
+Tx 85 / 128
+Tx 97 / 128
+Tx 109 / 128
+Tx 121 / 128
+Chapter-1 RTB-DAS scaled complex error: 0.000000e+00
+
+FULL-FOV SUMMARY: TheGB 体模
+  runtime                     : 44.40 s
+  lateral / axial spacing     : 0.0986 / 0.0781 mm
+  NSI global peak vs DAS      : -5.569 dB
+  foreground pixels           : 148940 / 197505
+  median NSI/DAS ratio        : 0.0699 (DAS >= -40dB)
+  foreground ratio < 0.25     : 88.4%
+
+------------------------------------------------------------
+ Case 2/3: 颈动脉横断面 1
+------------------------------------------------------------
+============================================================
+ Receive NSI vs Chapter-1 RTB-DAS
+============================================================
+UFF            : ../../data/L7_FI_carotid_cross_1.uff
+Grid [z,x]     : [513,385]
+dx/dz          : 0.09855 / 0.07812 mm
+DC offset      : 0.2000
+Tx used        : 128 of 128
+Tx 1 / 128
+Tx 13 / 128
+Tx 25 / 128
+Tx 37 / 128
+Tx 49 / 128
+Tx 61 / 128
+Tx 73 / 128
+Tx 85 / 128
+Tx 97 / 128
+Tx 109 / 128
+Tx 121 / 128
+Chapter-1 RTB-DAS scaled complex error: 0.000000e+00
+
+FULL-FOV SUMMARY: 颈动脉横断面 1
+  runtime                     : 39.47 s
+  lateral / axial spacing     : 0.0986 / 0.0781 mm
+  NSI global peak vs DAS      : -3.177 dB
+  foreground pixels           : 37329 / 197505
+  median NSI/DAS ratio        : 0.0635 (DAS >= -40dB)
+  foreground ratio < 0.25     : 88.2%
+
+------------------------------------------------------------
+ Case 3/3: 颈动脉横断面 2
+------------------------------------------------------------
+============================================================
+ Receive NSI vs Chapter-1 RTB-DAS
+============================================================
+UFF            : ../../data/L7_FI_carotid_cross_2.uff
+Grid [z,x]     : [513,385]
+dx/dz          : 0.09855 / 0.07812 mm
+DC offset      : 0.2000
+Tx used        : 128 of 128
+Tx 1 / 128
+Tx 13 / 128
+Tx 25 / 128
+Tx 37 / 128
+Tx 49 / 128
+Tx 61 / 128
+Tx 73 / 128
+Tx 85 / 128
+Tx 97 / 128
+Tx 109 / 128
+Tx 121 / 128
+Chapter-1 RTB-DAS scaled complex error: 0.000000e+00
+
+FULL-FOV SUMMARY: 颈动脉横断面 2
+  runtime                     : 38.59 s
+  lateral / axial spacing     : 0.0986 / 0.0781 mm
+  NSI global peak vs DAS      : -1.976 dB
+  foreground pixels           : 51193 / 197505
+  median NSI/DAS ratio        : 0.0636 (DAS >= -40dB)
+  foreground ratio < 0.25     : 88.1%
+
+============================================================
+ Interpretation
+============================================================
+  - Strong dark holes in NSI are expected for c=0.2, not proof of clutter removal.
+  - Vessel lumen can become darker, but check BOTH vessel walls and tissue speckle.
+  - TheGB phantom and carotid acquisitions use their OWN DAS 0-dB reference.
+  - Quick grid/Tx stride is for morphology, not accurate NSI lateral FWHM.
+  - The ratio map describes algorithm suppression, not ground-truth image quality.
+
+Optional second carotid acquisition: dataset_indices=[1 2 3];
+Optional all-Tx run: wave_stride=1; compare_full_fov_rtb_das_vs_nsi
+
+
+--- same_D_Z_diagnostics ---
+NSI same-output checks PASS: finite [z,x], offset bounds, common masks, effective x bounds.
+Point half-amplitude widths [DAS NSI] mm: [0.706322226 0.160893908].
+Point widths / dx: [28.252889 6.43575633]; dx=0.025000000 mm.
+Full case 1: foreground=148940; recombine error=0.000000e+00.
+  median retention delta 0.2 / 0.8: 0.069908366 / 0.374562008.
+  fraction retention <0.25: 0.884403115 / 0.324036525.
+Full case 2: foreground=37329; recombine error=0.000000e+00.
+  median retention delta 0.2 / 0.8: 0.063514378 / 0.376895962.
+  fraction retention <0.25: 0.881968443 / 0.323260736.
+Full case 3: foreground=51193; recombine error=0.000000e+00.
+  median retention delta 0.2 / 0.8: 0.063560730 / 0.374642912.
+  fraction retention <0.25: 0.881194695 / 0.335553689.
+TheGB NSI delta0.2 global peak relative to DAS: -5.569395791 dB.
+No ground-truth image-quality or clinical superiority claim is made.

@@ -91,9 +91,9 @@ datasets = { ...
     '../../data/L7_FI_carotid_cross_2.uff'};
 
 names = { ...
-    'TheGB phantom', ...
-    'In-vivo carotid cross 1', ...
-    'In-vivo carotid cross 2'};
+    'TheGB 体模', ...
+    '颈动脉横断面 1', ...
+    '颈动脉横断面 2'};
 
 ncase=numel(dataset_indices);
 results=cell(ncase,1);
@@ -158,6 +158,7 @@ for k=1:ncase
     fig_z{k}=z;
 
     % Optional independent Chapter-1 complex RTB-DAS regression.
+    scaled_error=NaN;
     if run_rtb_reference_check
         if isempty(which('reconstruct_fi_rtb_manual'))
             addpath('../01_DAS_Real_UFF');
@@ -215,6 +216,7 @@ for k=1:ncase
 
     reports{k}=struct( ...
         'dataset',label, ...
+        'reference_complex_error',scaled_error, ...
         'runtime_s',runtime, ...
         'dx_mm',median(diff(x)), ...
         'dz_mm',median(diff(z)), ...
@@ -248,7 +250,8 @@ end
 % Within a row, the two algorithms share that reference and dynamic range.
 % -------------------------------------------------------------------------
 figure('Color','w', ...
-       'Position',[40 30 1300 max(440,340*ncase)]);
+       'Position',[40 30 1500 max(600,560*ncase)], ...
+       'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 for k=1:ncase
     out=results{k};
@@ -261,7 +264,7 @@ for k=1:ncase
     caxis([-60 0]);
     colormap gray;
     colorbar;
-    xlabel('x (mm)'); ylabel('z (mm)');
+    xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
     title(sprintf('%s | RTB-DAS',label));
 
     subplot(ncase,2,2*k);
@@ -271,13 +274,13 @@ for k=1:ncase
     caxis([-60 0]);
     colormap gray;
     colorbar;
-    xlabel('x (mm)'); ylabel('z (mm)');
-    title(sprintf('%s | RTB-NSI, c=%.2f',label,dc_offset));
+    xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+    title(sprintf('%s | RTB-NSI，δ = %.2f',label,dc_offset));
 end
 
 sgtitle({ ...
-    'Full focused-Tx lateral span, z=5-45 mm | same DAS reference within each row', ...
-    sprintf('wave stride=%d, n_x=%d, n_z=%d, no inter-dataset brightness comparison', ...
+    '完整聚焦 Tx 横向范围，z = 5–45 mm；每行两图共用该数据的 DAS 参考', ...
+    sprintf('Tx 步长 = %d，n_x = %d，n_z = %d；不跨数据集比较绝对亮度', ...
         wave_stride,n_x,n_z)});
 
 %% ------------------------------------------------------------------------
@@ -285,7 +288,8 @@ sgtitle({ ...
 % The analytic NSI construction ensures ratio in [0,1].
 % -------------------------------------------------------------------------
 figure('Color','w', ...
-       'Position',[60 70 max(550,530*ncase) 630]);
+       'Position',[60 70 max(650,600*ncase) 800], ...
+       'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 for k=1:ncase
     out=results{k};
@@ -298,13 +302,11 @@ for k=1:ncase
     caxis([0 1]);
     colormap parula;
     colorbar;
-    xlabel('x (mm)'); ylabel('z (mm)');
-    title(sprintf('%s | median ratio %.2f', ...
-        reports{k}.dataset,reports{k}.median_ratio));
+    xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+    title({reports{k}.dataset,sprintf('δ = %.2f；保留比中位数 = %.2f', ...
+        dc_offset,reports{k}.median_ratio)});
 end
-sgtitle({ ...
-    'NSI amplitude / RTB-DAS amplitude after division by DC offset', ...
-    'Grey: DAS below -40 dB or no valid Tx; small ratio indicates strong NSI suppression'});
+% The caption defines the common mask; short panel titles avoid crowding.
 
 fprintf('\n============================================================\n');
 fprintf(' Interpretation\n');

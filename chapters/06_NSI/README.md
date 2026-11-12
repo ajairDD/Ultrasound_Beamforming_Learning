@@ -1,117 +1,306 @@
-# 第 6 章：NSI（Null Subtraction Imaging）
+# 第 6 章：NSI——先制造中心零点，再用包络相减留下窄响应
 
-**状态：已完成教学实验（TheGB 密集二维点目标 + 全视野体模 + 两组真实人体颈动脉）。** 核心发现是窄点目标响应与严重组织/speckle 抑制之间的取舍；尚无独立临床有效性或 CNR/gCNR 优势证据。
+前一章的 SLSC 把“幅度有多大”换成了“阵元间有多相似”。这一章的 NSI（Null Subtraction Imaging）仍然形成幅度图，但它不只用一套接收权重：**把同一份通道数据分别加权成三路，再对三路包络做非线性组合。**
 
-本章结构：一节完整原理、一组分阶段二维实验（点目标到完整体模及人体验证）、一个总结。不再扩展 NSI 变体。
+可以先记住一个问题：**如果接收方向图在中心有一个很尖的零点，能不能利用零点附近的变化，留下比普通 DAS 更窄的响应？** NSI 的三套孔径和包络相减，就是围绕这个问题设计的。
 
-## 一、原理：制造中心零点，再留下窄主瓣
+本章的主线是：
 
-### 1. 出发点
+> **同一份 RF → 正确延时与接收孔径 → ZM / DC1 / DC2 三路加权 → 各路跨 Tx 相干合成 → 分别取包络 → DC 包络平均减 ZM 包络 → 显示与实验判断。**
 
-传统 receive apodization 降低旁瓣时常伴随主瓣变宽。NSI 的思路不同：**设计一个中心为零的接收方向图（null），再从两个带 DC bias 的方向图里减去它**，从而得到窄的有效横向响应。Reeg 和 Oelze 在 2015 年提出 NSI，Agarwal 等人在 2019 年深入研究了宽度、旁瓣、speckle 和对比度的取舍。
+第 1–8 节先讲清机制，并配合可以手算的例子和 MATLAB 图；第 9 节给出运行入口；第 10–11 节解读点目标、完整体模与两组人体颈动脉；最后集中查实现细节和容易混淆的地方。
 
-### 2. 三套接收孔径
+[MATLAB 运行说明](../../matlab/06_NSI/README.md) · [配图与课件索引](figures/README.md) · [上一章：SLSC](../05_SLSC/README.md)
 
-在同一 Tx/Rx delay、fractional interpolation 和 active Rx aperture 下得到复数接收向量：
+## 1. 先看全貌：NSI 改的是接收组合，不是传播时间
 
-$$
-\mathbf s=[s_1,\ldots,s_M]^T.
-$$
+假设正在重建像素 P。先沿用[第 1 章](../01_DAS_Real_UFF/README.md)的 Tx/Rx 时间、插值和孔径选择，得到对应这个像素的接收样本。本章从实数 RF 构造解析信号，再得到**保留相位的复数通道向量**：
 
-DAS：
+$$ \mathbf s(P)=[s_1(P),\ldots,s_M(P)]^{\mathsf T}\in\mathbb C^M. $$
 
-$$
-D=\sum_{i=1}^{M}s_i.
-$$
+DAS 用全一接收权重求和；NSI 则从同样的 M 个有效阵元，形成三套接收权重的输出。
 
-对偶数 active aperture，零均值（ZM）权重：
+![图 1：接收 NSI 的完整数据流程](figures/nsi_pipeline_concept.png)
 
-$$
-\mathbf w_{\rm ZM}
-=[\underbrace{+1,\ldots,+1}_{M/2},
-  \underbrace{-1,\ldots,-1}_{M/2}]^T.
-$$
+**图 1 怎么讲：** 先走完共同前端，再沿三路分别走到包络。强调三点：数据没有重新采三次，三路使用同样的几何，跨 Tx 相干合成在取包络之前完成。最后的方格是显示图标，不是实测图像。
 
-若理想 on-axis 目标在延时后所有通道同相、等幅，ZM 输出恰好为 0，形成中心 Null。
+本章采用的是 **FI 数据上的 RTB + receive NSI**。RTB 决定哪些 Tx 可以为同一像素提供数据、怎样计算传播时间并相干合成；NSI 改变接收加权和最终包络组合。两者承担不同的工作。
 
-用常数 $c>0$ 构造：
+NSI 的早期工作可追溯到 Reeg 与 Oelze 的 [2015 年论文](https://www.brl.uiuc.edu/Publications/2015/IUS_NSI_2015.pdf)；三路接收孔径与包络组合也见 [Agarwal 等人的方法论文](https://pmc.ncbi.nlm.nih.gov/articles/PMC6350248/)。这里复用仓库的 focused-FI / RTB 前端，不把它说成原论文的相同采集序列。
 
-$$
-\mathbf w_{\rm DC1}=\mathbf w_{\rm ZM}+c\mathbf 1,\quad
-\mathbf w_{\rm DC2}=-\mathbf w_{\rm ZM}+c\mathbf 1.
-$$
+## 2. 什么叫中心 Null？先用四个数理解
 
-相应复数 beamformed signals 为：
+### 2.1 DAS 保留同相相加的部分
 
-$$
-Z=\mathbf w_{\rm ZM}^T\mathbf s,\quad
-DC1=Z+cD,\quad DC2=-Z+cD.
-$$
+暂时省略 P。普通接收 DAS 为：
 
-本项目使用 DC offset $c=0.2$，只作为教学默认值，**不是全数据最优值**。
+$$ D=\sum_{i=1}^{M}s_i. $$
 
-**奇数 active M 的实现约定**：左右各取 floor(M/2) 个元素分别为 +1、-1，中央元素 ZM 权重为 0，仍然保证权重总和为零。这是为了适配 dynamic F-number 的工程约定，区别于文献中常展示的理想偶数孔径。
+如果四条通道都是 1，DAS 输出就是 4。
 
-### 3. 先 envelope，后非相干相减
+### 2.2 把后半孔径反号，就可能在中心相消
 
-NSI 图像来自：
+现在使用权重 `[+1,+1,−1,−1]`：
 
-$$
-\boxed{
-E_{\rm NSI}=
-\frac{|DC1|+|DC2|}{2}-|Z|.
-}
-$$
+$$ Z=s_1+s_2-s_3-s_4. $$
 
-**不是**对原始 RF 直接相减，也不是对 log-compressed B-mode 做 unsharp masking。
+在理想聚焦、同相等幅的例子中：
 
-核心直觉：ZM 在中心产生 null；DC1/DC2 在中心填入一条小桥。离开中心后，ZM 与 DC 两个 beam patterns 的相似部分通过 envelope subtraction 消去，留下比常规 DAS 更窄的有效主瓣。
+$$ \mathbf s=[1,1,1,1]^{\mathsf T}\quad\Longrightarrow\quad D=4,\quad Z=0. $$
 
-对任意复数 $D,Z$，三角不等式保证：
+**Null 是这个接收加权输出的零点，不是说该位置没有散射体。** 我们刻意让本来同相的信号在正负两半孔径间抵消。
 
-$$
-\boxed{0\le E_{\rm NSI}\le c|D|.}
-$$
+![图 2：理想同相等幅通道在 ZM 权重下相消](figures/nsi_null_intuition.png)
 
-因此本项目用 $E_{\rm NSI}/c$ 与 DAS 在同一个 DAS 0-dB reference 上显示。理想 on-axis 且 $Z=0$ 时 $E_{\rm NSI}/c=|D|$。**除以 $c$ 是显示尺度约定，不是物理幅度校准。**
+**图 2 怎么讲：** 四个相量原先同向；乘 −1 等价于反向。把正负两组的和放在一起，就能看到零点的来源。下方方向图只说明中心 Null，角度变量 θ 与后文的 DC offset δ 不同。
 
-DC offset 越小通常主瓣越窄，但也容易产生不充分的 speckle、暗孔洞和对比损失。反之大 offset 更接近 DAS；无法只凭点目标越窄就判定更好。
+真实通道存在幅度不均、相位误差或多个散射体时，Z 不一定为零。下面只把最后一条通道的幅度从 1 改成 1.4，就留下了非零残差：
 
-### 4. 为什么选择 RTB，而不是 conventional FI？
+![图 3：理想均匀输入与单通道增益失配的加权结果](figures/demo_nsi_building_blocks_02.png)
 
-我们在第 3 章 MVDR 看到了 conventional FI 横向采样间距约 0.298 mm，可能把很窄的响应显示成单条 scanline。NSI 常产生同样甚至更强的横向收窄，因此本章保留 Chapter 1 的 **RTB blended Tx delay、Tx Tukey25、Tx F#=2、Rx F#=1.7 和 coherent Tx compounding**，采用密集二维 ROI。
+**图 3 怎么讲：** 左边看哪一项不再抵消，右边对照 D 与 Z。零均值的是权重，不是任意实际输入经过加权后都必须等于零。
 
-这只是对现有 focused-FI/RTB UFF 的 receive-NSI 教学应用，**不是说原始 NSI 论文也采用完全相同的 Tx sequence**。
+## 3. 从 ZM 到三套孔径：δ 加在哪里？
 
-### 5. 与之前算法的本质区别
+### 3.1 零均值接收权重
 
-| 算法 | 核心机制 |
-|---|---|
-| CF/GCF | DAS 后乘全孔径相干权重 |
-| MVDR | covariance 估计 + adaptive receive linear weights |
-| DMAS/fDMAS | 通道对非线性乘积 + 二倍频带通 |
-| SLSC | 短阵元间距的轴向 RF normalized correlation |
-| **NSI** | **三个接收孔径方向图的 envelope subtraction** |
+对偶数 M，取前半为 +1、后半为 −1：
 
----
+$$ \mathbf w_{\mathrm{ZM}}=[\underbrace{+1,\ldots,+1}_{M/2},\underbrace{-1,\ldots,-1}_{M/2}]^{\mathsf T},\qquad \sum_i w_{\mathrm{ZM},i}=0. $$
 
-## 二、唯一实验：RTB-DAS vs RTB + receive NSI
+ZM 即 zero mean，表示这些权重的均值为零。由它形成 Z：
 
-### 1. 条件
+$$ Z=\mathbf w_{\mathrm{ZM}}^{\mathsf T}\mathbf s. $$
 
-默认 TheGB 约 20.1 mm 点目标的 **密集二维 ROI**：
+### 3.2 两路带偏置的权重
+
+给定正数 δ：
+
+$$ \mathbf w_{\mathrm{DC1}}=\mathbf w_{\mathrm{ZM}}+\delta\mathbf1,\qquad \mathbf w_{\mathrm{DC2}}=-\mathbf w_{\mathrm{ZM}}+\delta\mathbf1. $$
+
+这里的 **DC offset 是加在孔径权重上的常数**，不是给 RF 波形添加直流电压。本章用 δ 对应代码参数 `dc_offset`；原文和旧日志常把它记为 c。统一换符号，是为了避免与传播声速 c 混淆，不改变代码参数或算法。
+
+![图 4：八个有效阵元的 ZM、DC1、DC2 权重](figures/nsi_three_apodizations.png)
+
+**图 4 怎么讲：** 按列读一遍：同一个接收样本，被三套不同权重重复使用。δ=0.2 时，+1 加偏置变成 1.2，−1 加偏置变成 −0.8；DC2 则先翻转 ZM 的符号，再加同一个 δ。
+
+### 3.3 两路复数分量足以重组三路输出
+
+因为接收加权是线性的：
+
+$$ DC1=Z+\delta D,\qquad DC2=-Z+\delta D. $$
+
+所以核心只独立计算 D 和 Z，再按上式形成 DC1、DC2。这与分别计算三套接收加权的数学定义一致；没有省略后面需要的非线性步骤。
+
+### 3.4 动态孔径出现奇数 M，怎么办？
+
+本项目让左右各 floor(M/2) 个阵元使用 +1 / −1，中间的 ZM 权重为 0。例如：
 
 ~~~text
-x: -4 ~ +3 mm      n_x=281   dx=0.025 mm
-z: 18 ~ 22.5 mm    n_z=181   dz=0.025 mm
-
-same UFF / RTB blended Tx delay / Tx Tukey25 / Rx F#1.7
-same interpolation / active Rx / coherent cross-Tx compounding
-all focused Tx, wave_stride=1
-NSI offset c=0.2
+M = 7：
+ZM   = [ 1,  1,  1, 0, -1, -1, -1]
+DC1  = [1.2,1.2,1.2,0.2,-0.8,-0.8,-0.8]
+DC2  = [-0.8,-0.8,-0.8,0.2,1.2,1.2,1.2]
 ~~~
 
-RTB-DAS 和 RTB-NSI 在所有几何、延时和采样条件上相同，只改变 receive apodization / envelope combination。
+中间阵元仍然参与 DAS；在 DC1 / DC2 中，它的权重是 δ。**不是把中间通道从所有路径都删除。** 这是本项目适配动态接收孔径的约定。
+
+![图 5：偶数与奇数有效孔径下的三套离散权重](figures/demo_nsi_building_blocks_01.png)
+
+**图 5 怎么讲：** 上排看八阵元，下排看七阵元。先检查 ZM 权重和为零，再检查两路 DC 的中间项与正负两半。无需先研究复杂图像，就能验证孔径是否写对。
+
+## 4. 最关键的一步：先分别取包络，再做相减
+
+### 4.1 NSI 的输出公式
+
+三路复数结果分别取模，得到包络，再组合：
+
+$$ \boxed{E_{\mathrm{NSI}}=\frac{|DC1|+|DC2|}{2}-|Z|.} $$
+
+![图 6：三路分别取包络，再平均与相减](figures/nsi_envelope_subtraction.png)
+
+**图 6 怎么讲：** 顺着三个取模符号往下读。先形成两路 DC 包络的平均，再减 ZM 包络。图中的小波形只解释运算次序；具体响应形状看 MATLAB 图。
+
+取模是非线性操作，不能把顺序随意交换。若先把两路 DC 的**复数值**平均：
+
+$$ \frac{DC1+DC2}{2}=\delta D. $$
+
+这只得到缩放后的 DAS 分量，失去了需要的包络组合。对 dB 图做减法，也不是上面的 NSI 定义。
+
+### 4.2 用同相的四通道例子手算
+
+取 δ=0.2，始终使用权重 `[+1,+1,−1,−1]`：
+
+| 通道向量 s | D | Z | DC1 / DC2 | E | E/δ |
+|---|---:|---:|---|---:|---:|
+| `[1,1,1,1]` | 4 | 0 | 0.8 / 0.8 | 0.8 | 4 |
+| `[1,1,0.6,0.6]` | 3.2 | 0.8 | 1.44 / −0.16 | 0 | 0 |
+| `[1,1,−1,−1]` | 0 | 4 | 4 / −4 | 0 | 0 |
+
+第二行很有启发：四条信号仍然同相，DAS 也有较大幅度，但左右幅度不平衡就可以使 NSI 输出被完全抵消。**被压低的响应，不能自动被认定为噪声或杂波。** 这些只是代数输入，不代表某种组织必然如此。
+
+### 4.3 为什么相减后能留下窄响应？
+
+在理想阵列的中心附近，ZM 包络从零点快速升起，两路 DC 包络为这个零点增加了非零的中心响应。远离中心时，参与相减的包络可能十分接近，留下较小残差。
+
+![图 7：均匀线阵的窄带阵列因子与包络相减](figures/demo_nsi_building_blocks_03.png)
+
+**图 7 怎么讲：** 左图先分清 DAS 中心主瓣与 ZM 中心 Null；右图看蓝色 DC 平均包络与橙色 ZM 包络之间的差。输出是二者的残差，不是把某条曲线简单“倒过来”。
+
+这张图直接求和一个理想的 64 阵元窄带模型：
+
+$$ s_n(u)=\exp(j2\pi n u). $$
+
+u 表示相邻阵元的相位变化量，以“相位转过多少圈”为尺度；**它不是毫米**。这不是 TheGB 的声场仿真，也不是宽带点目标 PSF，不能把图上的宽度直接当成实验分辨率。
+
+## 5. 接到 RTB 上：为什么跨 Tx 合成必须在包络之前？
+
+RTB 允许多个 focused Tx 为同一个像素提供数据。每个 Tx 都先得到自己的 Dₜ 和 Zₜ，再用相同的 Tx 权重 αₜ 做相干合成：
+
+$$ D(P)=\frac{\sum_t\alpha_t(P)D_t(P)}{\sum_t\alpha_t(P)},\qquad Z(P)=\frac{\sum_t\alpha_t(P)Z_t(P)}{\sum_t\alpha_t(P)}. $$
+
+δ 对所有 Tx 相同，三路还共用 Tx 权重及归一化，因此在线性阶段可以先合成 D、Z，再用 `Z+δD`、`−Z+δD` 重组。之后才取包络和相减。
+
+![图 8：RTB 的三路相干 Tx 合成与包络次序](figures/nsi_tx_order.png)
+
+**图 8 怎么讲：** 按颜色跟踪同一分支经过不同 Tx 的贡献。不同 Tx 的相位一直保留到该分支合成完成；不能把每次 Tx 的包络提前相加，再期待得到同一个结果。
+
+用两次 Tx 的极简反例就能看出区别：`D₁=1、D₂=−1`，两路 Z 都为零，Tx 等权平均，δ=0.2。正确次序先得到 D=0，NSI 包络为 0；如果每次先取包络，再平均，就会得到 0.2。
+
+![图 9：同样输入在两种运算次序下得到不同结果](figures/demo_nsi_building_blocks_05.png)
+
+**图 9 怎么讲：** 左图先让读者预测两个带相反符号的数相加，右图再看取模改变了什么。这个例子只说明运算不交换，不是新增采集序列或人体实验。
+
+## 6. 输出为什么非负？为什么还要除以 δ？
+
+### 6.1 两个三角不等式给出上下界
+
+对于任意复数 D、Z 和 δ>0：
+
+$$ |Z+\delta D|+|Z-\delta D|\ge2|Z|. $$
+
+所以 E≥0。另一方面，每一项都不大于 `|Z|+δ|D|`，于是：
+
+$$ \boxed{0\le E_{\mathrm{NSI}}\le\delta|D|.} $$
+
+这不要求 D、Z 都是实数。代码中的极小负值裁剪只处理浮点舍入，不是再对残差取一次绝对值。
+
+![图 10：随机复数对的边界检查，以及相对相位的影响](figures/demo_nsi_building_blocks_04.png)
+
+**图 10 怎么讲：** 左图所有点都在上界线下面；右图固定 D=1，改变 Z 的幅度与相位。一般复数情形下，仅看 |D| 和 |Z| 还不够，不能一律简化成两个实数幅度的截断差。
+
+### 6.2 把显示尺度写清楚
+
+本项目用：
+
+$$ A_{\mathrm{NSI}}=\frac{E_{\mathrm{NSI}}}{\delta},\qquad 0\le A_{\mathrm{NSI}}\le|D|. $$
+
+理想中心 Z=0 时，`A_NSI=|D|`，这样可以与 DAS 使用同一个幅度参考。**除以 δ 是明确的显示尺度约定，不是声压或反射强度的物理标定。**
+
+真实二维图共用该数据集 DAS 包络的全局峰值 P_D：
+
+$$ B_{\mathrm{DAS}}=20\log_{10}\frac{|D|}{P_D},\qquad B_{\mathrm{NSI}}=20\log_{10}\frac{E/\delta}{P_D}. $$
+
+因此在这套共同参考下，NSI 比 DAS 暗是数学上允许、也很常见的结果。接下来要问的是**哪些结构受到抑制、是否有利于当前任务**，而不是把黑色自动解释为干净。
+
+## 7. δ 越小越好吗？先分开响应宽度与组织保留
+
+### 7.1 用同一个理想模型，只改变 δ
+
+![图 11：较小与较大 DC offset 的取舍](figures/nsi_offset_tradeoff.png)
+
+**图 11 怎么讲：** δ 改变的是 DC 权重相对 ZM 的偏置，ZM 权重本身不变。图中的窄宽只作理想机制示意；不要把 δ=0.8 讲成通用最优值。
+
+![图 12：同一窄带阵列因子下 δ=0.2 与 0.8 的响应](figures/demo_nsi_building_blocks_06.png)
+
+**图 12 怎么讲：** 三条曲线使用同一中心增益参考，NSI 已除以各自 δ。在这个理想模型里，小 δ 形成更窄的响应；这尚未回答散斑或血管壁是否被保留。
+
+### 7.2 大 δ 为什么逐渐接近 DAS？
+
+把上式除以 δ 后写成：
+
+$$ \frac{E}{\delta}=\frac{|D+Z/\delta|+|D-Z/\delta|}{2}-\frac{|Z|}{\delta}. $$
+
+当 δ 越来越大，`Z/δ` 越来越小，因而 `E/δ` 趋向 `|D|`。所以增大 δ 后的亮度恢复，部分来自运算本身向 DAS 靠近，不能独立当作成像质量提高的证明。
+
+### 7.3 相减也可能压低正常的散斑成分
+
+![图 13：独立复高斯孔径向量的代数抑制示例](figures/demo_nsi_building_blocks_08.png)
+
+**图 13 怎么讲：** 左图看同一输入的 DAS 与归一化 NSI 幅度，右图看保留比的累计分布。这是指定随机孔径模型，不含真实组织的空间相关结构，因此不预测人体数据的具体 median 数值。
+
+它只提醒我们：非线性相减不会自动识别“该留下的组织”与“该去掉的杂波”。方法论文也讨论了窄响应与对比度表现之间的取舍；本章用自己的三份 UFF 检查这一点，而不照搬论文的性能数字。[原始方法与实验](https://pmc.ncbi.nlm.nih.gov/articles/PMC6350248/)。
+
+## 8. 响应窄了，输出网格和成像任务还要分别检查
+
+![图 14：响应宽度、输出网格与组织连续性是三个问题](figures/nsi_sampling_and_task.png)
+
+**图 14 怎么讲：** 从左到右依次问：响应是否窄、网格是否采到它、组织是否仍连续。中间的曲线与点均为示意，最后一列也不是人体测量。
+
+第 1 章 conventional FI 的横向扫描线间隔约 0.298 mm。对窄 NSI 响应，这样的网格可能只命中一两个点，甚至错过峰值。本章因此用 RTB 在候选像素上重新计算，点目标 ROI 的横向间隔为 0.025 mm。
+
+**加密输出网格不会新增采集数据，但能减少输出采样过粗造成的误读。**
+
+![图 15：同一连续模型在稀疏网格命中或错开峰值时的表现](figures/demo_nsi_building_blocks_07.png)
+
+**图 15 怎么讲：** 两边的底层曲线完全相同，只有网格位置不同。命中峰值时的最高点为 1，错开半格后本例只采到约 0.398。连线插值不能凭空恢复未采到的真实峰值。
+
+还需要分清三个结论：
+
+| 观察到什么 | 可以说明什么 | 还不能说明什么 |
+|---|---|---|
+| 单个目标的响应更窄 | 该数据、切片和归一化下的形状改变 | 两个相邻目标的可分辨距离同比改善 |
+| 背景变暗 | 算法压低了响应 | 被压低的全部都是杂波 |
+| 增大 δ 后图像变亮 | 在同一参考下保留了更多幅度 | 散斑、壁面或任务指标必然更好 |
+
+理论主线到这里已经完整。下面按“小例子 → 密集点目标 → 全视野体模与人体”把公式、代码和图像一一对上。
+
+## 9. 先运行八个不需要 UFF 的小实验
+
+从仓库根目录运行：
+
+~~~matlab
+addpath('matlab/06_NSI');
+report = demo_nsi_building_blocks;
+~~~
+
+不需要 USTB、外部数据或声学仿真器。使用固定随机种子 `rng(6,'twister')`：
+
+| 生成顺序 | 先预测，再看图 | 对应正文 |
+|---|---|---|
+| 01 | 七阵元的中间权重在三路中分别是多少？ | 三套孔径与奇数 M |
+| 02 | 改变一个通道的增益，Z 还等于零吗？ | Null 的理想条件 |
+| 03 | DC 平均包络减 ZM 包络，留下哪部分？ | 窄带阵列因子 |
+| 04 | 随机复数 D、Z 是否总满足边界？ | 三角不等式与相位 |
+| 05 | 相反符号的 Tx 分量何时还能抵消？ | 相干合成与包络次序 |
+| 06 | 同一模型只改变 δ，响应怎样变化？ | offset 的取舍 |
+| 07 | 稀疏网格命中或错开峰值，结果一样吗？ | 输出采样 |
+| 08 | 非线性相减会保留每个随机孔径的全部幅度吗？ | 抑制强度与解释边界 |
+
+导出中文 PNG：
+
+~~~matlab
+export_chapter6_figures('concepts');
+~~~
+
+这些图分别是代数、窄带阵列因子或指定随机模型。它们用于理解运算，不代替真实 UFF 实验。
+
+## 10. 第一阶段：密集二维点目标实验
+
+### 10.1 先固定共同前端
+
+默认使用 `data/L7_FI_TheGB.uff`，第 1 帧、全部 128 个 focused Tx。DAS 与 NSI 共享以下设置：
+
+| 项目 | 点目标实验设置 |
+|---|---|
+| 横向 ROI | −4 至 3 mm，281 点，Δx=0.025 mm |
+| 深度 ROI | 18 至 22.5 mm，181 点，Δz=0.025 mm |
+| Tx 时间模型 | 第 1 章 RTB blended 模型，`blending_power=0.5` |
+| Tx 权重 | Tukey25、Tx F#=2、最小孔径参数 3 mm |
+| Rx 孔径 | F#=1.7，当前有效孔径内的三套权重 |
+| 跨 Tx 合成 | 同一权重、同一归一化，保留复数相位 |
+| DC offset | δ=0.2 |
+| 图像参考 | NSI 先除以 δ，与 DAS 共用本 ROI 的 DAS 全局峰值 |
 
 运行：
 
@@ -121,160 +310,232 @@ cd matlab/06_NSI
 compare_rtb_das_vs_nsi
 ~~~
 
-输出：
+这不是换一种发射采集，而是在同一份 FI 通道数据上重建更密的候选像素。
 
-- Figure 1：RTB-DAS vs RTB-NSI，**共同 DAS 0 dB reference**，NSI 先除以 $c$；
-- Figure 2：点目标 own-peak 横向 profile；同一深度的 DC envelope、ZM envelope 与相减后的 NSI envelope；
-- Console：峰值位置、-6 dB 与 -20 dB lateral width、FWHM/grid spacing、执行时间。
+### 10.2 先看共同参考的二维图
 
-### 2. 验证
+![图 16：密集 RTB 点目标 ROI 的 DAS 与 NSI 共同参考图](figures/compare_rtb_das_vs_nsi_01.png)
 
-脚本先检查：
+**图 16 怎么讲：** 左右使用相同空间范围、相同 dB 范围和同一个 DAS 0 dB 参考。先找点目标，再看它周围的连续 speckle 是否也被削弱，不能只放大最窄的亮点。
 
-1. 理想 on-axis 均匀孔径的 ZM 为零；
-2. NSI envelope 满足 $0\le E\le c|D|$；
-3. 新代码算出的 complex RTB-DAS 与 Chapter 1 独立 RTB core 在同一网格的 max-peak scaled error 小于 $10^{-10}$。
+本次点目标的 NSI 横向响应明显变窄，同时背景出现大片暗区与不连续纹理。这个现象既展示了窄残差，也提醒我们继续检查完整体模与人体组织。
 
-核心算法只需计算 **DAS 和 ZM 两路复数 Tx-compounded 图像**；DC1/DC2 通过 $Z+cD$、$-Z+cD$ 得到，与独立计算三套线性 receive apodizations 再作相同 coherent Tx compounding 的数学定义等价。
+### 10.3 把形状变化和包络相减拆开
 
-### 3. 如何解读结果？
+![图 17：各自峰值归一化的横向剖面与实际三路包络构造](figures/compare_rtb_das_vs_nsi_02.png)
 
-- 若 NSI 形成很窄的 lateral profile，先看 FWHM 占多少横向采样点；过窄时不能给出高精度物理宽度结论。
-- 同时检查 -20 dB lateral skirts、局部 speckle、异常暗孔洞及峰值损失。
-- 不把点目标 FWHM 缩小直接解释为两个紧邻目标的实际 resolvability 提高相同比例。
-- 论文已经报告：NSI 可明显压窄主瓣，却可能造成 speckle underdevelopment 与 CNR 损失。我们不重复扩展调参来追求视觉效果。
+**图 17 怎么讲：** 左图比较各自局部峰值和峰值深度处的形状；右图固定在 DAS 目标深度，三条曲线使用同一 DC 平均包络参考。它们回答的问题不同：左图看响应形状，右图追溯相减过程。
 
-第一阶段为点目标的 **dense 2D RTB ROI**，用于隔离横向响应；随后追加全视野 TheGB / carotid 实验，检查是否会普遍损伤 speckle 或真实组织结构。
+本次实际运行得到：
 
-### 4. TheGB 点目标初步结果：响应很窄，但明显过度抑制
+| 描述性结果 | RTB-DAS | RTB-NSI，δ=0.2 |
+|---|---:|---:|
+| 局部峰值位置 (x,z)，mm | (−0.675,20.050) | (−0.725,20.075) |
+| 半幅横向宽度，mm | 约 0.7063 | 约 0.1609 |
+| 半幅宽度 / Δx | 28.25 个间隔 | 6.44 个间隔 |
+| −20 dB 横向宽度，mm | 约 1.1482 | 约 0.5629 |
 
-用户在 MATLAB 运行默认点目标密集 RTB-NSI，给出 Figure 1 和 Figure 2 截图：
+这里的半幅指**包络幅度降为局部峰值的 0.5**，对应约 −6.02 dB，不是功率减半。交点由相邻网格值线性插值得到；各自峰值位置和深度不同，已显式记录。
 
-- **Figure 1**：与 RTB-DAS 相比，NSI 的点目标在 x 方向明显收窄；但附近背景出现大片近黑的断裂/不连续纹理。
-- **Figure 2 左**：NSI 横向 profile 的 -6 dB 主瓣明显更窄，-20 dB 以外的横向响应也出现强抑制；这显示了 NSI 借 Null cancellation 产生窄有效响应的特点。
-- **Figure 2 右**：ZM 与 mean(DC1,DC2) 两条 envelope 曲线几乎重合，仅在目标中心附近留下一个小残差，符合 \(E_{\rm NSI}\) 是两个近似相等量相减得到的计算结构。**这也表明它容易对小的模型/噪声误差敏感。**
+![图 18：实际网格点、半幅交点与宽度所跨间隔](figures/nsi_diagnostics_01.png)
 
-但这些图**不能证明**“NSI 真实分辨率提高数倍”或“背景杂波被正确去除”。尤其是 speckle 大片变黑可能意味着真实组织信号一并被抑制。用户尚未提供本轮 Console 的精确 FWHM/回归误差，因此不编造数值。
+**图 18 怎么讲：** 圆点是真正算出的网格值，黑方块是插值交点。本例 NSI 半幅宽度跨约 6.44 个间隔，并非只有一条 scanline；但精确物理宽度仍依赖采样、模型和测量定义。单目标变窄不等于两目标可分辨能力同比提高。
 
-### 5. 第二阶段：全视野 TheGB 与真实 carotid
+### 10.4 本阶段验证了什么？
 
-新增：
+本次开启第 1 章 RTB-DAS 的复数回归，在相同网格、Tx 选择、延时和孔径下，最大峰值归一化误差为 **0**。这核对了共同前端与 DAS 分支。
 
-~~~text
-matlab/06_NSI/compare_full_fov_rtb_das_vs_nsi.m
-~~~
+NSI 另有三套权重与两路 D、Z 重组的代数检查，以及 `0≤E≤δ|D|` 的边界检查。它们不等于全图通过了独立 NSI 金标准，也不产生临床有效性结论。
 
-一键运行：
+## 11. 第二阶段：完整体模与两组真实颈动脉
 
-~~~matlab
-compare_full_fov_rtb_das_vs_nsi
-~~~
+### 11.1 为什么不能停在点目标？
 
-默认直接比较 **TheGB 全视野** 与 **L7_FI_carotid_cross_1 全视野**。为了快速判定结构破坏是否普遍存在，默认设置：
+点目标能把窄响应看清楚，却不能回答血管壁和散斑是否保留。因此继续使用三份独立采集：
 
 ~~~text
-x: full focused Tx span (UFF metadata -> automatic)
-z: 5–45 mm
-n_x=257, n_z=385
-wave_stride=2
-dc_offset=0.2 (与上一轮保持一致)
+data/L7_FI_TheGB.uff
+data/L7_FI_carotid_cross_1.uff
+data/L7_FI_carotid_cross_2.uff
 ~~~
 
-Figure 1 每组显示同一 DAS 0-dB reference 下的 RTB-DAS/NSI；Figure 2 显示经过阈值掩膜的 NSI/DAS amplitude ratio（0–1）。这两个图的意义不同：前者看组织形态，后者看算法抑制强度，而不是以“黑”自动判断是否正确。
+本章“全视野”具体指：**各 UFF 全部 focused Tx 的横向范围，以及 5–45 mm 的深度范围**。横向边界从 metadata 自动读取，不是把点目标 ROI 放大，也不表示覆盖了人体所有深度。
 
-可选第二份独立 carotid：
+当前直接运行 `compare_full_fov_rtb_das_vs_nsi`，默认是体模加第一组颈动脉、257×385 网格、每隔一次选 Tx 的快速形态预览。本章新配图使用更密的固定设置，并为三份数据都开启参考回归：
 
 ~~~matlab
-dataset_indices=[1 2 3];
+dataset_indices = [1 2 3];
+n_x = 385;
+n_z = 513;
+wave_stride = 1;                  % 全部 focused Tx
+dc_offset = 0.2;
+run_rtb_reference_check = true;
 compare_full_fov_rtb_das_vs_nsi
 ~~~
 
-如果需要最终检查 all-Tx 而不仅是半数 Tx 快速预览：
+本次各图为 513×385，横向间隔约 0.09855 mm、深度间隔 0.078125 mm。**这套全视野网格用于形态观察，不用来替代密集点目标 ROI 的窄响应测量。**
 
-~~~matlab
-wave_stride=1;
-n_x=385;
-n_z=513;
-compare_full_fov_rtb_das_vs_nsi
-~~~
+### 11.2 δ=0.2：窄亮点背后，大量组织也变暗
 
-第二阶段先固定 c=0.2，随后用户额外以 c=0.8 进行了单变量对照；比较结果见下一节。更大 c 使输出逐渐接近 DAS，不应将这种亮度恢复直接视作 NSI 效果更好。
+![图 19：三份数据在 δ=0.2 下的全视野共同参考图](figures/full_fov_delta02_01.png)
 
-**以上全视野实验已经在用户 MATLAB 环境运行并提供 Figure 1 / Figure 2 截图。** 下面记录可由图直接支持的观察；由于没有完整 Console，不记录运行时间、精确 DAS regression error、CNR/gCNR 等未知数值。
+**图 19 怎么讲：** 每一行只在同一数据集内比较 DAS 与 NSI，先看体模散斑，再看两组颈动脉的近壁、远壁和周围组织。不同数据行各自有自己的 DAS 全局参考，不能跨行直接比较声能或绝对幅度。
 
-### 6. 最终全视野验证：c=0.2 与 c=0.8（2026-11-12）
+TheGB 的点目标仍突出，但连续 speckle 被大范围削弱。两组颈动脉的腔内变暗，同时壁面和周围组织也出现显著断裂或抑制。因此不能把所有变黑区域都认定为已正确去除的杂波。
 
-用户提供了 **3 组完整 Figure 1 + Figure 2**，均覆盖 TheGB、carotid cross 1、carotid cross 2：
+### 11.3 幅度保留比：它衡量抑制，不是衡量质量
 
-| 对照条件 | TheGB median ratio | Carotid 1 | Carotid 2 |
+在同一像素上定义：
+
+$$ r(P)=\frac{E(P)/\delta}{|D(P)|},\qquad 0\le r(P)\le1. $$
+
+只统计 **DAS≥−40 dB 且有 Tx 权重覆盖** 的像素。这个集合不是人工分割出的组织真值，只是为了排除很低幅度或无覆盖位置的显示与统计不稳定性。
+
+![图 20：δ=0.2 的幅度保留比及固定有效性遮罩](figures/full_fov_delta02_02.png)
+
+**图 20 怎么讲：** 蓝色表示保留幅度较少，黄色表示较多；灰色被遮罩排除，不等于算法结果为零。小 r 说明压低了 DAS 响应，不能说明压低的必然是杂波。
+
+### 11.4 保持 D、Z 不变，只把 δ 改为 0.8
+
+δ 只参与后面的线性重组与包络组合，不改变已经形成的 D、Z。课件工具因此保存同一组复数分量，直接按 δ=0.8 重算；无需再次插值 RF 或改变 Tx 合成。
+
+![图 21：同一复数 D、Z 在 δ=0.8 下的全视野图](figures/full_fov_delta08_01.png)
+
+**图 21 怎么讲：** 与图 19 对照时，一次只比较同一行。体模和周围组织幅度明显恢复，颈动脉壁更容易辨识，但 speckle 仍比 DAS 颗粒化或碎片化，结构连续性也没有因此得到独立真值验证。
+
+![图 22：δ=0.8 的幅度保留比，使用与 δ=0.2 完全相同的遮罩](figures/full_fov_delta08_02.png)
+
+**图 22 怎么讲：** 两种 δ 使用同样的 D、Z、DAS 参考和统计像素集合。颜色改变可以归因于本次 offset 的变化，而不是换了一组前景像素。
+
+以下是本次完整运行值，保留四位小数用于描述：
+
+| 数据 | 共同统计像素数 | median r，δ=0.2 | median r，δ=0.8 |
 |---|---:|---:|---:|
-| c=0.2；wave_stride=2；n_x=257, n_z=385 | **0.07** | **0.06** | **0.06** |
-| c=0.2；wave_stride=1；n_x=385, n_z=513 | **0.07** | **0.06** | **0.06** |
-| c=0.8；wave_stride=1；n_x=385, n_z=513 | **0.37** | **0.38** | **0.37** |
+| TheGB 体模 | 148940 | 0.0699 | 0.3746 |
+| 颈动脉横断面 1 | 37329 | 0.0635 | 0.3769 |
+| 颈动脉横断面 2 | 51193 | 0.0636 | 0.3746 |
 
-这些数据直接读取自截图的 Figure 2 标题（保留两位小数），其定义是：
+这与此前截图中约 0.06–0.07、0.37–0.38 的观察一致。**r 是幅度保留比，不是功率比、SNR、CNR、gCNR，也不是血管壁保真度。**
 
-$
-r(x,z)=\frac{E_{\rm NSI}(x,z)/c}{|D(x,z)|},\qquad 0\le r\le1,
-$
+### 11.5 中位数之外，再看同一集合的分布
 
-仅对 **DAS ≥ -40 dB、且有 Tx 覆盖** 的像素计算 median。**这是经过显示尺度修正的算法幅度保留比例，不是功率比例、不是信噪比，也不是图像质量指标。** 图 2 的灰色像素被 masking 排除，不等于这些区域的相关算法结果为 0。
+![图 23：两种 δ 在相同有效像素集合中的幅度保留比分布](figures/nsi_diagnostics_02.png)
 
-**观察 A：c=0.2 很激进，不是“全图杂波干净了”。**
+**图 23 怎么讲：** 横轴是保留比，纵轴是“不超过该保留比”的像素比例；曲线在 0.5 高度对应中位数。三份数据在 δ=0.2 时，约 88% 的统计像素 r<0.25；δ=0.8 时约为 32%–34%。这仍然只描述算法抑制强度。
 
-- 在 TheGB 中，点目标仍明显，但大量本来有连续 speckle 的背景接近全黑，正常 speckle 信息也被强烈抑制。
-- 在两组 carotid 中，血管腔变暗的同时，血管壁连续性和周围组织纹理也受到明显破坏。
-- 三组 foreground median ratio 仅约 0.06–0.07，即在所述有效像素集合下，归一化后的 NSI 幅度通常只有对应 DAS 幅度的很小一部分。**不能把这些受抑制成分都认定为 clutter。**
+先前还做过一组快速预览：δ=0.2、`wave_stride=2`、257×385 网格，截图中的三个 median r 约为 0.07、0.06、0.06。它与全部 Tx、更密网格的形态和中位数接近，支持“强抑制并不只是快速预览造成”的判断。
 
-**观察 B：增加 Tx 数量/提高网格分辨率没有解决强抑制。**
+但那次同时改变了 Tx 数量和网格密度，**不是分别隔离二者的严格单变量实验**。本次没有重新运行该快速预览，也不补写未知的精确数值或误差。
 
-在同一个 c=0.2 下，wave_stride=2（较粗输出网格）与 wave_stride=1（较密输出网格）的 Figure 1 形态和三组 median ratio 基本相同。这是两个条件同时改变的对照，**并非独立隔离 Tx 数量与图像采样间隔的严格实验**；但它支持“不是单纯因为快速预览太粗、Tx 太少才导致大片暗区”的判断。
+### 11.6 把 NSI 自己拉亮，会发生什么？
 
-**观察 C：c=0.8 能显著恢复幅度和组织结构，但未恢复成完整自然的 B-mode 纹理。**
+![图 24：TheGB 的 DAS、共同参考 NSI 与自身峰值参考 NSI](figures/nsi_diagnostics_03.png)
 
-- 三组 median ratio 提高到约 0.37–0.38；
-- TheGB 的组织纹理、目标周围回波恢复明显，但与 DAS 相比仍更碎片化、颗粒化；
-- carotid 近/远壁和周围实质组织比 c=0.2 更容易辨识，但仍有非自然的组织间断和纹理改变；
-- 对照 c=0.2 与 c=0.8 的 wave_stride=1, n_x=385, n_z=513，可以较好隔离 **DC offset** 的影响。
+**图 24 怎么讲：** 中图与右图来自完全相同的 NSI 包络，只改变 0 dB 参考。右图更亮不代表数据恢复，也不改变此前被压低的结构。为比较幅度保留，前面的主图都使用共同 DAS 参考。
 
-机制上，c 增大后 DC 分量 $cD$ 相对 ZM 分量 $Z$ 更强，$E_{\rm NSI}/c$ 趋向 DAS envelope；亮度恢复是算法本身的数学结果，并不自动代表更高的分辨率或对比度。
+### 11.7 本次实际验证与结论
 
-#### 对第 6 章的最终科研判断
+完整数值与检查记录见[MATLAB 日志](figures/matlab_all_results.txt)。本次点目标和三份全视野都开启第 1 章 RTB-DAS 回归，四个最大峰值归一化复数误差均为 **0**。从保存的 D、Z 重算 δ=0.2，与核心输出的归一化最大差值也为 **0**；两种 δ 的统计遮罩完全一致。
 
-> **NSI 在 TheGB point-target RTB 上展示了强 lateral narrowing，但完整体模与两组真实 carotid 显示，在当前 receive-NSI / RTB 实现和这些数据下，c=0.2 导致严重组织回波损失，c=0.8 虽明显改善但仍损伤 speckle 和结构连续性。不能把本次 NSI 认定为更好的通用人体 B-mode 方案。**
+本章没有改动 `reconstruct_fi_rtb_nsi_manual.m` 的核心算法。新增代码负责教学例子、中文图、导出和诊断。验证覆盖了共同 RTB-DAS、孔径代数、包络边界和显示约定；未运行独立全图 NSI 金标准，未测量 CNR/gCNR 或临床性能。
 
-这一判断适用于**本次实现、发射/接收模型和三份数据**，不否定 NSI 在其他专门序列、孔径设计、参数或任务下的潜在价值。
+图像和断言完成后，本机 MATLAB 退出阶段仍提示无法识别 `Settings`。该已有环境问题与数值检查、图片导出的完成状态分别记录，不描述为无报错退出。
 
-本轮全视野脚本的 run_rtb_reference_check 默认是 false。已有点目标脚本设置了 DAS regression，但本轮未提供完整 Console；**全视野图像成功显示不等于已经独立数值验证全视野 RTB-DAS 分支**。本章完成的是教学目标和定性鲁棒性判断，不是独立标准 phantom 量化 benchmark。
+本次可以收住的结论是：**NSI 在密集点目标 ROI 形成了更窄的响应；在当前 RTB 接收实现与三份数据上，小 offset 同时造成很强的组织和散斑抑制，较大 offset 恢复部分幅度，但不能由此判定整体人体 B-mode 更好。** 这个结论限定于当前实现、序列和数据，不否定它在其他任务中的价值。
 
----
+## 12. 理解主线后，再逐项对照实现
 
-## 三、本章总结
-
-**记住三点就足够：**
-
-1. **NSI 不是更复杂的自适应延时，而是人为设计带中心 Null 的 receive apodization，利用 envelope subtraction 形成很窄的横向响应。**
-2. **DC offset 是核心取舍参数**：本次 c=0.2 的 median amplitude retention 仅约 0.06–0.07；增到 c=0.8 后约 0.37–0.38，组织恢复但仍出现明显 speckle/结构破坏。
-3. **运算顺序至关重要**：同一 RF/Tx/Rx alignment → 三路复数 receive weighting → coherent Tx compounding（若有）→ 三路 envelope → NSI subtraction → log display。
-
-不继续扩展 dDC-NSI、3D/directional NSI、angle-domain NSI 等路线，除非将来有明确的工程需求。
-
-### 主要来源
-
-- Reeg J., Oelze M. (2015), Improving Lateral Resolution in Ultrasonic Imaging by Utilizing Nulls in the Beam Pattern, IEEE IUS. https://www.brl.uiuc.edu/Publications/2015/IUS_NSI_2015.pdf
-- Agarwal A. et al. (2019), Improving Spatial Resolution Using Incoherent Subtraction of Receive Beams Having Different Apodizations, IEEE TUFFC. https://doi.org/10.1109/TUFFC.2018.2876285
-- Taylor-Series-Based Derivation of the Resolution of Null Subtraction Imaging for a Uniform Linear Array (2025). https://doi.org/10.1109/OJUFFC.2025.3550096
-
-### 代码入口
+### 12.1 代码入口和数据流
 
 ~~~text
-matlab/06_NSI/
-  reconstruct_fi_rtb_nsi_manual.m  % 同一 RTB baseline 上的 receive NSI
-  compare_rtb_das_vs_nsi.m         % 点目标密集二维对照 + DAS 复数回归验证
-  compare_full_fov_rtb_das_vs_nsi.m % 全视野体模/人体形态鲁棒性
-  README.md
+compare_rtb_das_vs_nsi.m               密集点目标，默认开启 DAS 回归
+compare_full_fov_rtb_das_vs_nsi.m      全视野，交互默认关闭回归以便预览
+    ↓
+reconstruct_fi_rtb_nsi_manual.m
+    ├─ 读取实数 RF → 沿时间构造解析信号
+    ├─ Tx/Rx 延时、插值、当前有效接收孔径
+    ├─ 每个 Tx 的 D 与 Z → 共用 Tx 权重相干合成
+    └─ 重组 DC1/DC2 → 三路包络 → 相减 → 显示
+
+demo_nsi_building_blocks.m             八张无数据教学图
+export_chapter6_figures.m              固定设置，导出中文图与日志
+inspect_nsi_outputs.m                  同一 D、Z 的 offset 对照与三个诊断
 ~~~
 
-**当前已完成 TheGB 点目标、TheGB 全视野和两组真实 carotid 全视野的教学实验。** 截图支持形态和 median-ratio 的定性结论，但缺少完整 Console 与独立 ground-truth 指标，不填写或猜测 CNR、gCNR、精确 FWHM 或临床性能提升数字。
+USTB 在这里负责 UFF 读取与 metadata，不调用其 NSI beamformer。`export_chapter6_figures('all')` 为课件固定使用全部三份全视野数据、全部 Tx，并显式开启回归；它与交互脚本的快速默认值有意不同。
 
-下一章为 **第 7 章：统一 Benchmark**。
+### 12.2 关键数组、维度与单位
+
+| 数组 | 形状 / 类型 | 解释 |
+|---|---|---|
+| `cd.data` | `[sample,Rx,Tx,frame]`，实数 RF | 采集数据 |
+| `analytic_wave` | `[sample,Rx]`，复数 | 单次 Tx 的解析 RF |
+| `samples` / `S` | `[当前有效横向像素,Rx]`，复数 | 固定深度、固定 Tx 的插值样本与孔径内数据 |
+| `M` | 每个横向像素一个整数 | 当前有效 Rx 数，可能随深度、横向位置和采样有效性变化 |
+| `D` / `Z`（循环内） | 每个有效横向像素一个复数 | 该 Tx 的 DAS 与 ZM 接收和 |
+| `rtb_das_analytic` / `zero_mean_analytic` | `[Nz,Nx]`，复数 | 跨 Tx 合成并归一化后的 D、Z |
+| `nsi_envelope` | `[Nz,Nx]`，非负实数 | 原始包络残差 E |
+| `nsi_envelope_das_scale` | `[Nz,Nx]`，非负实数 | E/δ，用于共同参考显示 |
+| `tx_weight_sum` | `[Nz,Nx]`，实数 | 是否有 Tx 覆盖及归一化分母 |
+| `x_axis` / `z_axis` | 米 | 绘图时乘 `1e3` 转为 mm |
+
+### 12.3 容易写错的地方集中查
+
+| 容易混淆 | 本章的处理 |
+|---|---|
+| 零均值权重保证任何输入都为零 | 它只保证权重和为零；理想均匀同相信号会相消，实际失配可留下 Z |
+| 把 DC offset 加到 RF 电压 | δ 加在权重上；对应复数输出增加 δD |
+| 奇数 M 时删掉中间通道 | ZM 中间权重为 0，DC 中为 δ，DAS 仍使用该通道 |
+| 先把三路复数或 dB 图相减 | 先分别取包络，再按公式平均和相减 |
+| 每次 Tx 先取包络再合成 | 本实现先在每一路相干合成 Tx，之后才取包络 |
+| 最后对 E 再取绝对值 | 理论 E 非负；代码只裁掉舍入产生的极小负值 |
+| 正负两半按任意压缩列编号划分 | 有效 Rx 必须保持物理连续，不能把不相邻阵元当成连续孔径 |
+| `E/δ≤|D|` 说明压低的都是杂波 | 它只约束算法幅度，没有识别组织来源 |
+| 宽度越窄就能宣布分辨率同比提高 | 要核对实际网格、归一化、切片、双目标任务与真值 |
+| 全视野交互脚本画出图，就等于回归通过 | 需明确开启 `run_rtb_reference_check` 并检查日志；本次课件导出已开启 |
+| 灰色遮罩或无 Tx 像素就是零组织信号 | 它们是未纳入本次显示或统计的位置 |
+
+此外，三路等价重组依赖相同 Tx 权重、相同归一化及同一个 δ；不能只更换其中一路的合成规则，再继续套用简化式。
+
+## 13. 课件讲解顺序与自检
+
+建议用这条顺序串成一节课：
+
+1. 图 1 定位 NSI：共同聚焦前端，三路接收组合。
+2. 图 2–5 配合四个数手算，讲清 Null、权重与奇数孔径。
+3. 图 6–10 解释包络相减、Tx 次序、非负边界和共同幅度参考。
+4. 图 11–15 讲 δ、采样与成像任务，避免只追求最窄亮点。
+5. 图 16–18 回到真实点目标，标出实际网格点和宽度定义。
+6. 图 19–24 检查体模、两组颈动脉、幅度保留与显示参考，收住性能结论。
+
+不看正文，回答：
+
+- 权重和为零，是否意味着任意实际通道数据的 Z 都为零？
+- δ=0.2 时，−1 权重变为多少？奇数孔径的中间 DC 权重呢？
+- 为什么先平均 DC1、DC2 的复数值不会得到 NSI？
+- 两个相反相位的 Tx，先取包络还能相消吗？
+- `0≤E≤δ|D|` 能证明杂波被正确去除吗？
+- 点目标半幅宽跨 6.44 个网格间隔，与只采到一条 scanline 有何区别？
+- 两种 δ 的 median r 应在怎样的像素集合和参考下比较？
+
+<details>
+<summary>参考答案</summary>
+
+1. 不能。均匀同相输入是相消的理想例子，实际幅度和相位关系也参与计算。
+2. −0.8；中间 DC 权重为 0.2，而 ZM 中间权重为 0。
+3. 两路复数平均等于 δD；NSI 要的是分别取模后的平均再减 |Z|。
+4. 通常不能；取包络提前丢失相位，运算次序改变。
+5. 不能，它只给出幅度边界。
+6. 当前网格对响应有多点采样支撑，但精确宽度和真实可分辨能力仍需另外验证。
+7. 使用同一 D、Z、同一 DAS 参考和相同前景遮罩；不同数据集分别使用自己的 DAS 峰值。
+
+</details>
+
+本章要带走的是：**NSI 用正负接收孔径和包络非线性相减制造窄响应；窄响应、采样充分和组织保真必须分别判断。** 下一章用统一数据、参数、显示和任务指标，把这些判断组织成可比较的 **Benchmark**。
+
+## 文献与代码
+
+- Reeg J., Oelze M. 2015. *Improving Lateral Resolution in Ultrasonic Imaging by Utilizing Nulls in the Beam Pattern.* IEEE IUS。[作者公开 PDF](https://www.brl.uiuc.edu/Publications/2015/IUS_NSI_2015.pdf)。
+- Agarwal A., Reeg J., Podkowa A. S., Oelze M. L. 2019. *Improving Spatial Resolution Using Incoherent Subtraction of Receive Beams Having Different Apodizations.* IEEE TUFFC, 66(1), 5–17。[DOI](https://doi.org/10.1109/TUFFC.2018.2876285) · [开放全文](https://pmc.ncbi.nlm.nih.gov/articles/PMC6350248/)。
+- 进一步阅读：*Taylor-Series-Based Derivation of the Resolution of Null Subtraction Imaging for a Uniform Linear Array*（2025）。[DOI](https://doi.org/10.1109/OJUFFC.2025.3550096)。本章未复现该文的 Taylor 推导或性能数字。
+- [NSI 核心](../../matlab/06_NSI/reconstruct_fi_rtb_nsi_manual.m) · [点目标实验](../../matlab/06_NSI/compare_rtb_das_vs_nsi.m) · [全视野实验](../../matlab/06_NSI/compare_full_fov_rtb_das_vs_nsi.m) · [运行与复现说明](../../matlab/06_NSI/README.md)。
