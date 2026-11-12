@@ -108,6 +108,10 @@ function out = reconstruct_fi_slsc_manual(filename,opts)
     end
     half_kernel=floor(kernel_points/2);
 
+    % Actual spatial window span is the distance between its first and
+    % last depth samples: (kernel_points-1)*dz, not kernel_points*dz.
+    kernel_span_lambda=(kernel_points-1)*dz/lambda;
+
     das=complex(zeros(opts.n_z,Nwaves));
     slsc_sum=zeros(opts.n_z,Nwaves);
     slsc_mean=zeros(opts.n_z,Nwaves);
@@ -127,7 +131,7 @@ function out = reconstruct_fi_slsc_manual(filename,opts)
         fprintf('dz              : %.5f mm\n',dz*1e3);
         fprintf('lambda          : %.5f mm\n',lambda*1e3);
         fprintf('axial kernel    : %d samples (%.3f lambda)\n', ...
-            kernel_points,kernel_points*dz/lambda);
+            kernel_points,kernel_span_lambda);
         fprintf('lag fraction Q  : %.3f of active Rx\n',opts.lag_fraction);
         fprintf('max lag         : %d elements\n',opts.max_lag);
         fprintf('Rx F#           : %.3f\n\n',opts.receive_f_number);
@@ -280,7 +284,7 @@ function out = reconstruct_fi_slsc_manual(filename,opts)
     out.initial_time=t0;
     out.sound_speed=c;
     out.axial_kernel_samples=kernel_points;
-    out.axial_kernel_lambda_actual=kernel_points*dz/lambda;
+    out.axial_kernel_lambda_actual=kernel_span_lambda;
     out.options=opts;
 end
 
