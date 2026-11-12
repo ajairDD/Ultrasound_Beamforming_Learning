@@ -1,5 +1,5 @@
 %% compare_fi_das_vs_fdmas.m
-% Chapter 4: ONE complete 2-D real-UFF experiment.
+% Chapter 4: one complete 2-D real-UFF experiment.
 %
 % DAS vs filtered DMAS (fDMAS) with identical conventional-FI Tx/Rx delays,
 % identical Rx F#, and the same output grid.
@@ -9,7 +9,8 @@
 %   y = 0.5*((sum(u))^2-sum(u.^2))
 %
 % fDMAS filters the output around 2*f0 BEFORE envelope detection.
-% The depth grid is automatically oversampled to avoid 2*f0 aliasing.
+% The depth grid is automatically refined so the chosen 2*f0 band fits.
+% This does not guarantee that every nonlinear harmonic is alias-free.
 %
 % Run from matlab/04_DMAS:
 %   addpath(genpath('D:/YOUR_USTB_PATH'));
@@ -148,16 +149,21 @@ if ~isempty(ix_roi) && ~isempty(iz_roi)
     das_profile=out.das_envelope(iz_das,:);
     fd_profile=out.fdmas_envelope(iz_fd,:);
 
-    das_profile=das_profile/(max(das_profile)+eps);
-    fd_profile=fd_profile/(max(fd_profile)+eps);
+    % Normalize to the selected LOCAL target peak, not a stronger target
+    % elsewhere on the same depth row. Widths refer to this local target.
+    das_profile=das_profile/(out.das_envelope(iz_das,ix_das)+eps);
+    fd_profile=fd_profile/(out.fdmas_envelope(iz_fd,ix_fd)+eps);
 
     [das_width,das_samples]=fwhm(x,das_profile,ix_das);
     [fd_width,fd_samples]=fwhm(x,fd_profile,ix_fd);
 
     fprintf('\nPoint-target lateral profile (conventional FI):\n');
-    fprintf('  DAS FWHM       : %.4f mm  (%.2f scanlines)\n', ...
+    fprintf('  Selected DAS peak   : x=%.5f mm, z=%.5f mm\n',x(ix_das),z(iz_das));
+    fprintf('  Selected fDMAS peak : x=%.5f mm, z=%.5f mm\n',x(ix_fd),z(iz_fd));
+    fprintf('  Lateral spacing    : %.6f mm\n',median(diff(x)));
+    fprintf('  DAS FWHM       : %.4f mm  (%.2f grid intervals)\n', ...
         das_width,das_samples);
-    fprintf('  fDMAS FWHM     : %.4f mm  (%.2f scanlines)\n', ...
+    fprintf('  fDMAS FWHM     : %.4f mm  (%.2f grid intervals)\n', ...
         fd_width,fd_samples);
     fprintf('  Note: these FWHM estimates are sampling-limited.\n');
 else
@@ -183,10 +189,10 @@ figure('Color','w','Position',[80 80 1200 530]);
 
 subplot(1,2,1);
 if ~isempty(das_profile)
-    plot(x,20*log10(das_profile+eps),'LineWidth',1.8);
+    plot(x,20*log10(das_profile+eps),'-o','LineWidth',1.8,'MarkerSize',4);
     hold on;
-    plot(x,20*log10(fd_profile+eps),'LineWidth',1.8);
-    yline(-6.0206,'--','-6 dB');
+    plot(x,20*log10(fd_profile+eps),'-s','LineWidth',1.8,'MarkerSize',4);
+    yline(-6.0206,'--','Half amplitude');
     xlim(target_x+[-3 3]);
     ylim([-60 3]);
     legend('DAS','fDMAS','Location','best');
@@ -194,15 +200,17 @@ else
     text(0.15,0.5,'Known target is outside z ROI','Units','normalized');
 end
 xlabel('x (mm)'); ylabel('Relative amplitude (dB)');
-title('Point-target lateral profile (own-peak)');
+title('Local target: each method uses its own peak / slice');
 grid on;
 
 subplot(1,2,2);
 plot(freq/1e6,before_db,'LineWidth',1.3);
 hold on;
 plot(freq/1e6,after_db,'LineWidth',1.3);
-xline(out.nominal_f0/1e6,'--','f_0');
-xline(2*out.nominal_f0/1e6,'--','2f_0');
+xline(out.nominal_f0/1e6,'--','f_0', ...
+    'LabelVerticalAlignment','bottom','LabelOrientation','horizontal');
+xline(2*out.nominal_f0/1e6,'--','2f_0', ...
+    'LabelVerticalAlignment','bottom','LabelOrientation','horizontal');
 xlim([0 3.2*out.nominal_f0/1e6]);
 ylim([-80 5]);
 xlabel('Axial image-time frequency (MHz)');
@@ -214,8 +222,8 @@ grid on;
 fprintf('\nScientific interpretation:\n');
 fprintf(['  DMAS/fDMAS uses channel-pair nonlinear combination; it does not\n' ...
          '  estimate an MVDR covariance matrix.\n']);
-fprintf(['  fDMAS requires real RF and 2*f0 band-pass, which is why the\n' ...
-         '  output z grid was oversampled.\n']);
+fprintf(['  This real-RF fDMAS uses a 2*f0 band-pass; the chosen band fits\n' ...
+         '  below output-grid Nyquist. Higher harmonics need separate care.\n']);
 fprintf(['  Images are independently peak-normalized because fDMAS has a\n' ...
          '  DIFFERENT amplitude response. Do not infer gain or loss in dB\n' ...
          '  from the side-by-side self-normalized images.\n']);

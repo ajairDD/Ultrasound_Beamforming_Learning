@@ -1,0 +1,6 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Input: data/L7_FI_TheGB.uff, frame 1.
+Semantic RF shape [sample Rx Tx frame]: [1920 128 128 1].
+Real=1; modulation frequency=0 Hz; c=1540 m/s.
+Expected error for 5--45 mm, Nz=128: fDMAS 2*f0 band aliases on the image-depth grid. Reduce dz / increase n_z. fs_z/2=1.222 MHz, F4=14.323 MHz.
+PASS: actual core rejected the coarse image grid before reconstruction.

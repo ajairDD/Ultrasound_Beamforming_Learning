@@ -1,0 +1,15 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Concepts: deterministic real-RF toy examples, rng(4); no acoustic PSF.
+UFF: TheGB, frame 1, all 128 focused scanlines; 5--45 mm.
+Rx F#=1.7; automatic dz <= lambda/16; real-RF signed-sqrt receive DMAS.
+Pair normalization 2/(M-1), M>=2; FFT raised-cosine edges [1.5 1.75 2.5 2.75]*nominal f0.
+Images use separate global peaks; target profiles use separate local peaks.
+
+--- demo_dmas_building_blocks ---
+Deterministic real-RF examples; rng(4); no UFF data.
+Four-channel DMAS sums: [6 6 -2].
+Pair identity max absolute / scaled error: 7.105427e-14 / 6.855828e-17.
+Identical-RF normalized M*abs(s) error: 5.329071e-15.
+Low stopband mask maximum: 0.000000e+00.
+Image Nyquist / f0, coarse / fine: 1.0 / 4.0.
+PASS: explicit pairs, reduction, global-sign invariance, absolute scaling, coherent aperture scaling, sampling examples.

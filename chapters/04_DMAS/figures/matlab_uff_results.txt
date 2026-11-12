@@ -1,0 +1,61 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Concepts: deterministic real-RF toy examples, rng(4); no acoustic PSF.
+UFF: TheGB, frame 1, all 128 focused scanlines; 5--45 mm.
+Rx F#=1.7; automatic dz <= lambda/16; real-RF signed-sqrt receive DMAS.
+Pair normalization 2/(M-1), M>=2; FFT raised-cosine edges [1.5 1.75 2.5 2.75]*nominal f0.
+Images use separate global peaks; target profiles use separate local peaks.
+
+--- compare_fi_das_vs_fdmas ---
+Signed-sqrt DMAS pair identity: PASS (error 0.000e+00)
+FI DAS / DMAS / fDMAS
+  [Nz Nx]        : [2166 128]
+  z spacing      : 0.01848 mm
+  image fs_z     : 41.676 MHz (two-way depth-time approximation)
+  nominal f0     : 5.208 MHz
+  filter edges   : [7.81 9.11 13.02 14.32] MHz
+  Tx 1 / 128
+  Tx 13 / 128
+  Tx 25 / 128
+  Tx 37 / 128
+  Tx 49 / 128
+  Tx 61 / 128
+  Tx 73 / 128
+  Tx 85 / 128
+  Tx 97 / 128
+  Tx 109 / 128
+  Tx 121 / 128
+Runtime: 27.70 s
+DAS regression max-peak scaled error: 5.113478e-18
+
+Point-target lateral profile (conventional FI):
+  Selected DAS peak   : x=-0.74495 mm, z=20.07621 mm
+  Selected fDMAS peak : x=-0.74495 mm, z=19.96536 mm
+  Lateral spacing    : 0.297981 mm
+  DAS FWHM       : 0.7236 mm  (2.43 grid intervals)
+  fDMAS FWHM     : 0.7023 mm  (2.36 grid intervals)
+  Note: these FWHM estimates are sampling-limited.
+
+Scientific interpretation:
+  DMAS/fDMAS uses channel-pair nonlinear combination; it does not
+  estimate an MVDR covariance matrix.
+  This real-RF fDMAS uses a 2*f0 band-pass; the chosen band fits
+  below output-grid Nyquist. Higher harmonics need separate care.
+  Images are independently peak-normalized because fDMAS has a
+  DIFFERENT amplitude response. Do not infer gain or loss in dB
+  from the side-by-side self-normalized images.
+  Better-looking speckle/contrast does not prove a clinical gain.
+
+
+--- uff_diagnostics ---
+Array checks PASS: finite [z,x], real DMAS, analytic envelopes, valid integer M.
+Analytic-transform real-part scaled error: 3.063196e-16.
+Input RF fs=20.833333969 MHz; nominal f0=5.208333492 MHz.
+[Nz Nx]=[2166 128]; dx=0.297980965 mm; dz=0.018475751 mm.
+Image fs,z=41.676250458 MHz; Nyquist=20.838125229 MHz; band top=14.322916985 MHz.
+Active Rx M range: 5--89.
+DAS target local peak (x,z)=(-0.744952355,20.076212471) mm.
+fDMAS target local peak (x,z)=(-0.744952355,19.965357968) mm.
+Lateral half-amplitude width DAS/fDMAS: 0.723634913/0.702282398 mm, 2.4285/2.3568 grid intervals.
+Axial half-amplitude width DAS/fDMAS: 0.445320469/0.607210753 mm, 24.1030/32.8653 grid intervals.
+Widths use each method local peak/slice; lateral estimates are sampling-limited.
+No CNR/gCNR/SNR improvement is inferred; fDMAS amplitudes are uncalibrated to DAS.
