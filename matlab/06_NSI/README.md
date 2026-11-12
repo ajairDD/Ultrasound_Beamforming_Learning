@@ -1,8 +1,8 @@
 # Chapter 6 MATLAB — Null Subtraction Imaging
 
-本章只保留一个 core 和一键密集二维 RTB ROI 对照实验，不继续扩展 NSI 变体。
+本章保留一个 NSI core，以及点目标和全视野两种对照入口；不继续扩展 NSI 变体。
 
-## 一键运行
+## 1. 点目标密集二维实验
 
 ~~~matlab
 addpath(genpath('D:/你的USTB路径'));
@@ -28,6 +28,7 @@ Rx F#1.7, wave_stride=1
 ~~~text
 reconstruct_fi_rtb_nsi_manual.m
 compare_rtb_das_vs_nsi.m
+compare_full_fov_rtb_das_vs_nsi.m
 README.md
 ~~~
 
@@ -53,6 +54,78 @@ E_NSI = (abs(DC1)+abs(DC2))/2-abs(Z)
 
 NSI 显示 E/c 用于与 DAS 比较；不是物理声压标定。参考论文指出窄主瓣可能伴随 speckle underdevelopment 与 CNR 下降。
 
-**真实 UFF+MATLAB 尚未执行。** 结果合理外观不等于独立数值/物理正确性验证。
+**用户已运行 TheGB 的点目标 RTB-NSI 实验并提供图像。** 结果显示 NSI 横向响应比 DAS 明显窄，但背景出现严重暗区和 speckle 断裂；这可能是 NSI 在 c=0.2 时过度抑制组织，也可能有数据/模型因素，不能据此认为 NSI 临床成像更好。由于未提供完整 Console 数字，本文件不记录 FWHM 或回归误差的猜测值。
 
 详细见 [第 6 章教程](../../chapters/06_NSI/README.md)。
+
+
+---
+
+## 2. 全视野 TheGB + 人体颈动脉实验（新增）
+
+直接运行：
+
+~~~matlab
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+默认一键处理两个 UFF：
+
+~~~text
+1. ../../data/L7_FI_TheGB.uff
+2. ../../data/L7_FI_carotid_cross_1.uff
+~~~
+
+**不是将 cropped ROI 放大**：x 轴范围自动从各 UFF 的全部 focused Tx source.x 读取；深度 5–45 mm。
+
+为了先查看组织结构是否被破坏，默认用中等网格/半数 Tx：
+
+~~~text
+n_x = 257               % full focused Tx lateral span
+n_z = 385               % z=5..45 mm
+wave_stride = 2          % every second focused Tx
+dc_offset = 0.2          % 与点目标实验保持一致
+run_rtb_reference_check = false
+~~~
+
+当需要第二份独立颈动脉数据：
+
+~~~matlab
+dataset_indices = [1 2 3];
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+如果需要 all-Tx / 更密网格的最终形态确认：
+
+~~~matlab
+dataset_indices = [1 2];
+wave_stride = 1;
+n_x = 385;
+n_z = 513;
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+两张主要输出：
+
+- **Figure 1**：每份 UFF 的 RTB-DAS / RTB-NSI 全视野；同一数据集的两图使用相同 DAS 0-dB reference，**不同数据集不共用参考峰值**；
+- **Figure 2**：NSI/DAS 幅度保留比 \((E_{\rm NSI}/c)/|D|\)（被限制到 0–1）；只显示 DAS 高于 -40 dB 的 foreground，灰色为低幅度/无 Tx 数据。值小意味着 **NSI 压掉了大量 DAS 响应，不等于这些响应一定是 clutter**。
+
+控制台输出峰值变化、foreground 的 median ratio 和 ratio<0.25 的像素比例。这些仅为**算法抑制强度统计**，不等于 CNR、gCNR 或血管壁保真度。
+
+该全视野脚本默认不重复执行完整 Chapter-1 RTB regression（会显著增加运行时间）；先前点目标脚本仍默认执行该回归。如确需全视野重新检查，可在运行前设置：
+
+~~~matlab
+run_rtb_reference_check = true;
+compare_full_fov_rtb_das_vs_nsi
+~~~
+
+### 重点观察
+
+- **TheGB**：其它体模目标是否出现断裂，正常背景 speckle 是否被大片抑制，点目标之外有没有异常暗孔洞；
+- **Carotid**：血管腔是否更干净、近壁和远壁是否连续、周围肌肉/腺体等实质组织是否变得不自然；
+- **Cross-acquisition**：第二份颈动脉重复数据是否呈现类似规律；
+- **采样限制**：默认约 0.1–0.15 mm 的横向全视野采样用于 morphology 预览，**不能用来精确估计极窄 NSI 点目标 FWHM**。
+
+如果 c=0.2 在全视野也过度抑制组织，后续可以**仅作为单变量检查**设置较大的 DC offset，例如 c=0.5；但先完成固定 c=0.2 的基线比较，不要为了让图变好看就立刻调参。
+
+**当前状态**：全视野脚本已提交 GitHub，但尚未在用户 MATLAB/USTB 环境实际执行；这里不填写任何未运行的全视野成像性能结论。
