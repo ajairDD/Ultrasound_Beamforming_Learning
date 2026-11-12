@@ -132,9 +132,9 @@ S_{\rm mean}(x,z)
 \sum_{\text{valid short lags}}\widehat R(m;x,z).
 $$
 
-- \`out.slsc_sum\`：未除以 lag 数的原始积分结果；
-- \`out.slsc_mean\`：为当前动态 Rx F# 设置提供的**平均 short-lag coherence**；
-- \`out.slsc_display\`：将 \`slsc_mean\` 的负值裁为 0，并以最大正值归一化，用于线性灰度显示。
+- `out.slsc_sum`：未除以 lag 数的原始积分结果；
+- `out.slsc_mean`：为当前动态 Rx F# 设置提供的**平均 short-lag coherence**；
+- `out.slsc_display`：将 `slsc_mean` 的负值裁为 0，并以最大正值归一化，用于线性灰度显示。
 
 这是**本项目的显示归一化约定**，不能把平均值与原论文的 raw sum 数字混作同一结果。负相关值不应在科学计算阶段直接丢掉。
 
@@ -218,7 +218,7 @@ Figure 2 辅助显示 short-lag correlation 随 m 的变化，以及使用 dynam
 
 1. 用确定性 RF 小向量验证 normalized correlation 的幅度缩放不变性与正/负相关边界；
 2. 检查 signed mean coherence 在 [-1,1] 之间、有效 lag 数不超过请求 lag 数；
-3. 与 Chapter 1 的 \`reconstruct_fi_scanline_manual.m\` 对**复数 DAS 数据**做 max-peak scaled regression test，要求小于 \(10^{-10}\)；
+3. 与 Chapter 1 的 `reconstruct_fi_scanline_manual.m` 对**复数 DAS 数据**做 max-peak scaled regression test，要求小于 \(10^{-10}\)；
 4. 输出 2-D DAS/SLSC 两幅图和 lag behavior。
 
 **目前状态**：核心文件和脚本已提交 GitHub；尚未在用户本地 MATLAB + TheGB UFF 环境中执行，因此未记录或虚构 PSF/FWHM、CNR、SNR 或提升百分比。
