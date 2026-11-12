@@ -1,6 +1,6 @@
 # Chapter 5 MATLAB — SLSC
 
-本章保持精简：一个 core + 一个完整二维一键实验。
+**已完成本章教学用一次 TheGB 真实 UFF 二维对照（2026-11-12）。** 保持精简：一个 core + 一个完整二维一键实验，不增加新的参数扫描。
 
 ## 一键运行
 
@@ -57,6 +57,16 @@ x/z axes                  [m]
 
 **不执行** USTB SLSC postprocessor，不需要 USTB MEX 来完成本项目算法。USTB 仅负责 UFF 读取。
 
-尚未用用户本地 TheGB UFF + MATLAB 实际运行。第一次运行以 Console 的 regression/pass checks 和两张 Figure 为验收依据；图像看起来合理不代表算法已完成严谨物理验证。
+用户已在本地 MATLAB 完整运行并提供 Figure 1/2 截图；正常显示说明执行到绘图阶段。由于默认 DAS regression 和 sanity asserts 在绘图之前执行，若未关闭 `run_das_reference_check`，说明这些检查已通过。**未提供 Console 数值，因此不记录具体误差、runtime 或性能提升百分比。**
+
+### 本次结果（截图级定性结论）
+
+- **Figure 1：** SLSC 保留体模主要空间结构，但 15–35 mm 区域呈大片高相干亮度，组织散斑外观与 DAS 显著不同；SLSC 为 linear coherence、DAS 为 dB amplitude，**不可按同一灰度直接比较信号强度**。
+- **Figure 2：** 中央 ROI（z=15–30 mm）Lag 1 平均相关约 0.90，Lag 4–5 约 0.54，Lag 6–8 略回升；各 lag 的有效像素集合随 Q、深度和动态孔径变化，**回升不等于更远的阵元物理上更相干**；Lag 9–12 在该 ROI 没有有效点，并不是相关性为零。
+- requested-lag map 随深度明显增加，符合 dynamic F-number 的孔径定义。
+
+**一个已修正的显示细节：** 原图标题显示 `kernel=1.23 lambda`，原 core 用 `K*dz/lambda` 计算窗口跨度，正确应为 `(K-1)*dz/lambda`。现已修正打印和输出 metadata，**未改变实际窗口采样、RF 数据或 SLSC 图像**。不必为此重跑实验。
+
+本章的结论是：**SLSC 能构建与 DAS 不同的相干性图像，但本次观察不能证明它优于 DAS**。该实验满足教学收尾需求，但不是独立 SLSC 数值金标准/临床有效性验证。
 
 详细原理见 [第 5 章教程](../../chapters/05_SLSC/README.md)。
