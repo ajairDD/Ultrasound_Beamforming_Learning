@@ -35,7 +35,7 @@
 | 第 2 章 | CF / GCF | **已完成** |
 | 第 3 章 | MV / MVDR / Capon | **已完成** |
 | 第 4 章 | DMAS / fDMAS | **已完成** |
-| 第 5 章 | SLSC | **进行中** |
+| 第 5 章 | SLSC | **已完成** |
 | 第 6 章 | NSI | 计划中 |
 | 第 7 章 | 统一 benchmark | 计划中 |
 
@@ -149,16 +149,16 @@ TheGB 实验观察到：部分点目标横向响应被压低，但 fDMAS speckle
 
 阅读：**[第 5 章：SLSC（Short-Lag Spatial Coherence）](./chapters/05_SLSC/README.md)**
 
-本章按“原理 → 一次完整二维实验 → 总结”进行。SLSC 不是 RF 幅度图，而是近邻接收通道在短轴向窗口中的 normalized correlation image。
+本章已经完成原理、TheGB 完整二维 DAS/SLSC 成像和 short-lag correlation 曲线实验。
 
 ~~~matlab
 cd matlab/05_SLSC
 compare_fi_das_vs_slsc
 ~~~
 
-它包含同一 FI Tx/Rx delay 的 DAS 基线、Chapter-1 DAS 复数回归验证、线性 SLSC 图像和 short-lag 相关曲线。由于动态 Rx F# 导致 lag 数随深度变化，本项目保留经典 short-lag sum，同时使用 mean-across-lags 做教学显示。
+实验观察到：短 Lag 相关性总体高于较长 Lag（例如中央 ROI Lag 1 约 0.90、Lag 4–5 约 0.54）；SLSC 图像的深部组织呈较高的相干亮度，散斑与 DAS 幅度图明显不同。**线性 SLSC coherence 不等同于 log-compressed DAS amplitude；本次没有证据证明 SLSC 整体优于 DAS。**
 
-**目前代码和文档已提交，真实 UFF 输出等待本地 MATLAB 验证，因此状态为进行中。**
+当前实现同时保留经典 short-lag sum 和适应动态 Rx F# 的 mean-across-lags 显示约定；已修正轴向 kernel 真实跨度的文字计算，未改动实际 RF 计算过程。
 
 ---
 
@@ -204,6 +204,6 @@ $$
 
 ## 下一章
 
-当前第 5 章：**SLSC**（Short-Lag Spatial Coherence）正在进行。
+第 5 章 SLSC 已完成。下一步进入 **第 6 章：NSI（Null Subtraction Imaging）**。
 
-完成一次完整二维 DAS/SLSC 对照和回归验证后，进入第 6 章 NSI（Null Subtraction Imaging）。
+继续按照“完整原理 → 一次核心实验 → 总结”的效率优先节奏进行。
