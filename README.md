@@ -149,14 +149,15 @@ TheGB 实验观察到：部分点目标横向响应被压低，但 fDMAS speckle
 
 阅读：**[第 5 章：SLSC（Short-Lag Spatial Coherence）](./chapters/05_SLSC/README.md)**
 
-本章已经完成原理、TheGB 完整二维 DAS/SLSC 成像和 short-lag correlation 曲线实验。
+本章按“原理主线 → 数值小例子 → TheGB 完整二维实验 → 实现注意事项”组织，包含 6 张中文 AI 概念图与 14 张可复现 MATLAB 图。独立配图只在本地保存，生成步骤见[运行说明](./matlab/05_SLSC/README.md)。
 
 ~~~matlab
 cd matlab/05_SLSC
+demo_slsc_building_blocks       % 无需 USTB / UFF 的八个小例子
 compare_fi_das_vs_slsc
 ~~~
 
-实验观察到：短 Lag 相关性总体高于较长 Lag（例如中央 ROI Lag 1 约 0.90、Lag 4–5 约 0.54）；SLSC 图像的深部组织呈较高的相干亮度，散斑与 DAS 幅度图明显不同。**线性 SLSC coherence 不等同于 log-compressed DAS amplitude；本次没有证据证明 SLSC 整体优于 DAS。**
+实验观察到：中央 ROI Lag 1 约 0.8901、Lag 4 约 0.5419；较大 lag 的统计像素集合发生变化，固定共同有效像素后曲线也会改变。SLSC 散斑与 DAS 幅度图明显不同。**线性相干性不等同于 dB 幅度，本次没有证据证明 SLSC 整体优于 DAS。** DAS 分支回归、逐 lag 聚合及一个真实 RF 窗口的独立复算均已实际验证。
 
 当前实现同时保留经典 short-lag sum 和适应动态 Rx F# 的 mean-across-lags 显示约定；已修正轴向 kernel 真实跨度的文字计算，未改动实际 RF 计算过程。
 

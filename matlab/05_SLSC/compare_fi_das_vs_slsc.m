@@ -128,7 +128,8 @@ end
 x=out.x_axis*1e3;
 z=out.z_axis*1e3;
 
-figure('Color','w','Position',[60 60 1250 660]);
+figure('Color','w','Position',[60 60 1350 800], ...
+    'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 subplot(1,2,1);
 imagesc(x,z,out.das_db);
@@ -137,8 +138,8 @@ axis image;
 colormap gray;
 caxis([-60 0]);
 colorbar;
-xlabel('x (mm)'); ylabel('z (mm)');
-title('DAS: RF envelope (dB, own peak)');
+xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+title('DAS：RF 包络（dB，自身全局峰值）');
 
 subplot(1,2,2);
 imagesc(x,z,out.slsc_display);
@@ -147,13 +148,13 @@ axis image;
 colormap gray;
 caxis([0 1]);
 colorbar;
-xlabel('x (mm)'); ylabel('z (mm)');
-title('SLSC: positive short-lag coherence (linear, scaled)');
+xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+title('SLSC：正相干性（线性，最大值归一化）');
 
 sgtitle({ ...
-    'Chapter 5: same FI Tx/Rx delays and dynamic Rx aperture', ...
-    sprintf(['SLSC kernel=%.2f lambda, Q=%.2f active Rx, ' ...
-             'maximum lag=%d'], ...
+    '同一 FI 数据、Tx/Rx 延时与动态接收孔径；左右灰度含义不同', ...
+    sprintf(['实际窗口跨度 = %.2f λ，q = %.2f（相对有效 Rx），' ...
+             '最大 lag = %d'], ...
         out.axial_kernel_lambda_actual, ...
         lag_fraction,max_lag)});
 
@@ -198,16 +199,17 @@ fprintf('signed coherence range   : [%.4f, %.4f]\n', ...
     min(out.slsc_mean(:)),max(out.slsc_mean(:)));
 fprintf('positive display peak    : scaled to 1 (linear)\n');
 
-figure('Color','w','Position',[80 90 1180 540]);
+figure('Color','w','Position',[80 90 1350 700], ...
+    'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
 
 subplot(1,2,1);
 plot(1:max_lag,mean_lag,'o-','LineWidth',1.8);
 hold on;
 yline(0,'--');
 grid on;
-xlabel('Receive-element lag (number of pitches)');
-ylabel('Mean normalized correlation');
-title('Short-lag behavior: central ROI, z=15–30 mm');
+xlabel('空间 lag（阵元间距数）');
+ylabel('平均归一化相关');
+title('中央 ROI，z = 15–30 mm；各 lag 的样本集合可不同');
 if max_lag>1
     xlim([1 max_lag]);
 end
@@ -217,11 +219,11 @@ subplot(1,2,2);
 imagesc(x,z,out.requested_lag_count);
 set(gca,'YDir','reverse');
 axis image;
-xlabel('x (mm)'); ylabel('z (mm)');
-title('Number of requested lags (dynamic aperture)');
+xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+title('请求的 lag 数量（动态孔径）');
 colorbar;
 
-sgtitle('Lag dependence and spatial support; not an image-quality metric');
+sgtitle('先理解 lag 与有效范围；这些诊断不直接评价图像优劣');
 
 fprintf('\nInterpretation rules:\n');
 fprintf('  1) DAS is an amplitude/dB image; SLSC is a coherence/linear image.\n');

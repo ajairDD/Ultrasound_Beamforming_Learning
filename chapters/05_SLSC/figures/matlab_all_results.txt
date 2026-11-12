@@ -1,0 +1,74 @@
+MATLAB 9.11.0.1769968 (R2021b)
+Chapter 5: eight seeded algebra/statistics examples; no acoustic simulator.
+UFF: TheGB frame 1, same FI delays/grid/aperture for DAS and SLSC.
+n_z=768, z=5--45 mm, Rx F#=1.7, q=0.15 active Rx, max lag=12.
+Real signed RF correlations, nominal axial kernel=1 lambda; span=(K-1)*dz.
+
+--- demo_slsc_building_blocks ---
+SLSC concepts: 8 figures; rng(5,twister); no UFF or acoustic simulator.
+Pair counts for M=6: [5 4 3 2 1].
+Exact normalized inner products: [1 1 -1 0].
+Shared/noisy/independent mean correlations: [1 0.499925 0.000103847].
+Covariance toy maximum sample-vs-model error: 0.0085962.
+M=20/40 requested lag counts: [3 6].
+All deterministic algebra, bounds and support-bias checks PASS.
+
+
+--- compare_fi_das_vs_slsc ---
+Normalized correlation sanity check: PASS
+===========================================================
+ Manual FI-DAS vs Short-Lag Spatial Coherence
+===========================================================
+UFF             : D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+shape [z,x]     : [768,128]
+dz              : 0.05215 mm
+lambda          : 0.29568 mm
+axial kernel    : 7 samples (1.058 lambda)
+lag fraction Q  : 0.150 of active Rx
+max lag         : 12 elements
+Rx F#           : 1.700
+
+Tx 1 / 128 ...
+Tx 13 / 128 ...
+Tx 25 / 128 ...
+Tx 37 / 128 ...
+Tx 49 / 128 ...
+Tx 61 / 128 ...
+Tx 73 / 128 ...
+Tx 85 / 128 ...
+Tx 97 / 128 ...
+Tx 109 / 128 ...
+Tx 121 / 128 ...
+
+Runtime: 26.82 s
+Chapter-1 DAS max-peak scaled complex error: 5.225506e-18
+
+===========================================================
+ DESCRIPTIVE STATS (NOT a DAS/SLSC amplitude comparison)
+===========================================================
+lambda                   : 0.2957 mm
+axial kernel             : 7 depth samples
+valid SLSC pixels        : 98304 / 98304
+requested lag median     : 6.0 elements
+signed coherence range   : [-0.6848, 0.9855]
+positive display peak    : scaled to 1 (linear)
+
+Interpretation rules:
+  1) DAS is an amplitude/dB image; SLSC is a coherence/linear image.
+  2) SLSC may suppress incoherent clutter but alters speckle statistics.
+  3) Point targets can have limited conspicuity in classic SLSC.
+  4) In-vivo or phantom superiority requires separate controlled metrics.
+
+
+--- same_uff_diagnostics ---
+Same-output checks PASS: [z,x], signed bounds, count maps, sum/mean and display.
+SLSC sum/mean reconstruction errors: 0.000000e+00 / 0.000000e+00.
+Active Rx range: 5--89; requested lags: 1--12.
+dz=0.052151239 mm; lambda=0.295679986 mm; K=7; actual span=1.058263779 lambda.
+Available-support ROI means: [0.89013224 0.76960912 0.64453445 0.54192851 0.53269534 0.56746209 0.58857562 0.58134217 NaN NaN NaN NaN].
+Available-support ROI counts: [29664 29664 29664 29664 24925 18307 11268 3962 0 0 0 0].
+Common support: 18307 pixels, first 6 lags; means=[0.91239602 0.83856437 0.76065436 0.69582007 0.62541794 0.56746209].
+Signed mean range: [-0.684833307, 0.985490810]; negative valid pixels: 1747.
+Independent interp1 RF gate check max correlation error: 0.000000e+00.
+Gate at (x,z)=(-0.148990453,20.019556714) mm: 7 samples x 39 Rx; R=[0.97578552 0.94121192 0.87976611 0.80737004 0.70946306].
+These are descriptive diagnostics, not CNR/gCNR/SNR or clinical evidence.
