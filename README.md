@@ -36,7 +36,7 @@
 | 第 3 章 | MV / MVDR / Capon | **已完成** |
 | 第 4 章 | DMAS / fDMAS | **已完成** |
 | 第 5 章 | SLSC | **已完成** |
-| 第 6 章 | NSI | 计划中 |
+| 第 6 章 | NSI | **进行中** |
 | 第 7 章 | 统一 benchmark | 计划中 |
 
 ---
@@ -162,6 +162,23 @@ compare_fi_das_vs_slsc
 
 ---
 
+## 第 6 章
+
+阅读：**[第 6 章：NSI（Null Subtraction Imaging）](./chapters/06_NSI/README.md)**
+
+本章继续按“原理 → 一次二维实验 → 总结”推进。NSI 利用 zero-mean receive apodization 构造 Null，再通过两幅 DC-offset envelope 平均后减去 ZM envelope 形成窄横向响应。
+
+~~~matlab
+cd matlab/06_NSI
+compare_rtb_das_vs_nsi
+~~~
+
+默认对 TheGB 的 20.1 mm 点目标附近进行密集 RTB 二维 ROI 重建。新 NSI 核心与第 1 章 RTB-DAS 使用相同 Tx/Rx timing、Tx weights、Rx F# 与 coherent Tx compounding，脚本包含 Chapter-1 RTB 复数数据回归验证。
+
+**代码、教学说明已提交；真实 UFF 输出尚待本地运行验证，故暂标记“进行中”。**
+
+---
+
 ## 统一数学框架
 
 候选 pixel：
@@ -204,6 +221,4 @@ $$
 
 ## 下一章
 
-第 5 章 SLSC 已完成。下一步进入 **第 6 章：NSI（Null Subtraction Imaging）**。
-
-继续按照“完整原理 → 一次核心实验 → 总结”的效率优先节奏进行。
+当前第 6 章 **NSI** 正在进行，完成 TheGB 二维 DAS/NSI 验证后进入 **第 7 章：统一 Benchmark**。
