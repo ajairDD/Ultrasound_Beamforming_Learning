@@ -1,8 +1,8 @@
 # 第 6 章：NSI（Null Subtraction Imaging）
 
-**状态：TheGB 点目标实验已由用户在 MATLAB 运行并提供图像；全视野体模与人体对照实验待运行。**
+**状态：已完成教学实验（TheGB 密集二维点目标 + 全视野体模 + 两组真实人体颈动脉）。** 核心发现是窄点目标响应与严重组织/speckle 抑制之间的取舍；尚无独立临床有效性或 CNR/gCNR 优势证据。
 
-本章结构：一节完整原理、一次密集二维 RTB-DAS/NSI 对照实验、一个总结。不做大量参数扫描或派生变体。
+本章结构：一节完整原理、一组分阶段二维实验（点目标到完整体模及人体验证）、一个总结。不再扩展 NSI 变体。
 
 ## 一、原理：制造中心零点，再留下窄主瓣
 
@@ -156,7 +156,7 @@ compare_rtb_das_vs_nsi
 
 但这些图**不能证明**“NSI 真实分辨率提高数倍”或“背景杂波被正确去除”。尤其是 speckle 大片变黑可能意味着真实组织信号一并被抑制。用户尚未提供本轮 Console 的精确 FWHM/回归误差，因此不编造数值。
 
-### 5. 下一步：全视野 TheGB 与真实 carotid，而不是继续调点目标
+### 5. 第二阶段：全视野 TheGB 与真实 carotid
 
 新增：
 
@@ -198,9 +198,54 @@ n_z=513;
 compare_full_fov_rtb_das_vs_nsi
 ~~~
 
-默认保持 c=0.2，不马上调大。只有当全视野显示出类似过度抑制、需要定位 DC offset 的敏感性时，再做 c=0.5 之类的**单变量对照**；不能通过调参让图变亮就宣称更准确。
+第二阶段先固定 c=0.2，随后用户额外以 c=0.8 进行了单变量对照；比较结果见下一节。更大 c 使输出逐渐接近 DAS，不应将这种亮度恢复直接视作 NSI 效果更好。
 
-**目前 full-FOV 代码尚未在用户 MATLAB 环境运行，不把这一阶段当成已经完成的实验。**
+**以上全视野实验已经在用户 MATLAB 环境运行并提供 Figure 1 / Figure 2 截图。** 下面记录可由图直接支持的观察；由于没有完整 Console，不记录运行时间、精确 DAS regression error、CNR/gCNR 等未知数值。
+
+### 6. 最终全视野验证：c=0.2 与 c=0.8（2026-11-12）
+
+用户提供了 **3 组完整 Figure 1 + Figure 2**，均覆盖 TheGB、carotid cross 1、carotid cross 2：
+
+| 对照条件 | TheGB median ratio | Carotid 1 | Carotid 2 |
+|---|---:|---:|---:|
+| c=0.2；wave_stride=2；n_x=257, n_z=385 | **0.07** | **0.06** | **0.06** |
+| c=0.2；wave_stride=1；n_x=385, n_z=513 | **0.07** | **0.06** | **0.06** |
+| c=0.8；wave_stride=1；n_x=385, n_z=513 | **0.37** | **0.38** | **0.37** |
+
+这些数据直接读取自截图的 Figure 2 标题（保留两位小数），其定义是：
+
+$
+r(x,z)=\frac{E_{\rm NSI}(x,z)/c}{|D(x,z)|},\qquad 0\le r\le1,
+$
+
+仅对 **DAS ≥ -40 dB、且有 Tx 覆盖** 的像素计算 median。**这是经过显示尺度修正的算法幅度保留比例，不是功率比例、不是信噪比，也不是图像质量指标。** 图 2 的灰色像素被 masking 排除，不等于这些区域的相关算法结果为 0。
+
+**观察 A：c=0.2 很激进，不是“全图杂波干净了”。**
+
+- 在 TheGB 中，点目标仍明显，但大量本来有连续 speckle 的背景接近全黑，正常 speckle 信息也被强烈抑制。
+- 在两组 carotid 中，血管腔变暗的同时，血管壁连续性和周围组织纹理也受到明显破坏。
+- 三组 foreground median ratio 仅约 0.06–0.07，即在所述有效像素集合下，归一化后的 NSI 幅度通常只有对应 DAS 幅度的很小一部分。**不能把这些受抑制成分都认定为 clutter。**
+
+**观察 B：增加 Tx 数量/提高网格分辨率没有解决强抑制。**
+
+在同一个 c=0.2 下，wave_stride=2（较粗输出网格）与 wave_stride=1（较密输出网格）的 Figure 1 形态和三组 median ratio 基本相同。这是两个条件同时改变的对照，**并非独立隔离 Tx 数量与图像采样间隔的严格实验**；但它支持“不是单纯因为快速预览太粗、Tx 太少才导致大片暗区”的判断。
+
+**观察 C：c=0.8 能显著恢复幅度和组织结构，但未恢复成完整自然的 B-mode 纹理。**
+
+- 三组 median ratio 提高到约 0.37–0.38；
+- TheGB 的组织纹理、目标周围回波恢复明显，但与 DAS 相比仍更碎片化、颗粒化；
+- carotid 近/远壁和周围实质组织比 c=0.2 更容易辨识，但仍有非自然的组织间断和纹理改变；
+- 对照 c=0.2 与 c=0.8 的 wave_stride=1, n_x=385, n_z=513，可以较好隔离 **DC offset** 的影响。
+
+机制上，c 增大后 DC 分量 $cD$ 相对 ZM 分量 $Z$ 更强，$E_{\rm NSI}/c$ 趋向 DAS envelope；亮度恢复是算法本身的数学结果，并不自动代表更高的分辨率或对比度。
+
+#### 对第 6 章的最终科研判断
+
+> **NSI 在 TheGB point-target RTB 上展示了强 lateral narrowing，但完整体模与两组真实 carotid 显示，在当前 receive-NSI / RTB 实现和这些数据下，c=0.2 导致严重组织回波损失，c=0.8 虽明显改善但仍损伤 speckle 和结构连续性。不能把本次 NSI 认定为更好的通用人体 B-mode 方案。**
+
+这一判断适用于**本次实现、发射/接收模型和三份数据**，不否定 NSI 在其他专门序列、孔径设计、参数或任务下的潜在价值。
+
+本轮全视野脚本的 run_rtb_reference_check 默认是 false。已有点目标脚本设置了 DAS regression，但本轮未提供完整 Console；**全视野图像成功显示不等于已经独立数值验证全视野 RTB-DAS 分支**。本章完成的是教学目标和定性鲁棒性判断，不是独立标准 phantom 量化 benchmark。
 
 ---
 
@@ -209,7 +254,7 @@ compare_full_fov_rtb_das_vs_nsi
 **记住三点就足够：**
 
 1. **NSI 不是更复杂的自适应延时，而是人为设计带中心 Null 的 receive apodization，利用 envelope subtraction 形成很窄的横向响应。**
-2. **DC offset 是核心取舍参数**：更窄可能伴随 speckle 和对比度明显损失。
+2. **DC offset 是核心取舍参数**：本次 c=0.2 的 median amplitude retention 仅约 0.06–0.07；增到 c=0.8 后约 0.37–0.38，组织恢复但仍出现明显 speckle/结构破坏。
 3. **运算顺序至关重要**：同一 RF/Tx/Rx alignment → 三路复数 receive weighting → coherent Tx compounding（若有）→ 三路 envelope → NSI subtraction → log display。
 
 不继续扩展 dDC-NSI、3D/directional NSI、angle-domain NSI 等路线，除非将来有明确的工程需求。
@@ -230,6 +275,6 @@ matlab/06_NSI/
   README.md
 ~~~
 
-**当前仅有 TheGB 点目标的 MATLAB 成像截图，尚无本次 Console 精确 FWHM 或全视野/人体结果，不填写或猜测 CNR、gCNR、临床性能提升数字。**
+**当前已完成 TheGB 点目标、TheGB 全视野和两组真实 carotid 全视野的教学实验。** 截图支持形态和 median-ratio 的定性结论，但缺少完整 Console 与独立 ground-truth 指标，不填写或猜测 CNR、gCNR、精确 FWHM 或临床性能提升数字。
 
 下一章为 **第 7 章：统一 Benchmark**。
