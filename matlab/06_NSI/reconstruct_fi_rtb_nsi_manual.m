@@ -35,6 +35,7 @@ function out = reconstruct_fi_rtb_nsi_manual(filename,opts)
 %
 % opts:
 %   x_min / x_max       default -4e-3 / 3e-3
+%   use_full_tx_span    default false; true -> auto x bounds from UFF Tx
 %   z_min / z_max       default 18e-3 / 22.5e-3
 %   n_x / n_z           default 281 / 181
 %   dc_offset           default 0.2, strictly >0
@@ -97,11 +98,24 @@ function out = reconstruct_fi_rtb_nsi_manual(filename,opts)
     assert(max(abs(src_y))<1e-9, ...
         'This teaching core expects 2D x-z focused imaging.');
 
-    assert(opts.x_min>=min(src_x)-1e-12 && ...
-           opts.x_max<=max(src_x)+1e-12, ...
+    % Full-field mode derives the lateral limits from the actual UFF
+    % focused transmit positions; it does not hard-code phantom or
+    % carotid coordinates. Default point-target ROI remains unchanged.
+    if opts.use_full_tx_span
+        x_min=min(src_x);
+        x_max=max(src_x);
+    else
+        x_min=opts.x_min;
+        x_max=opts.x_max;
+    end
+
+    assert(x_max>x_min, ...
+        'Focused Tx positions do not define a valid lateral range.');
+    assert(x_min>=min(src_x)-1e-12 && ...
+           x_max<=max(src_x)+1e-12, ...
         'The RTB ROI must lie inside focused-Tx lateral coverage.');
 
-    x_axis=linspace(opts.x_min,opts.x_max,opts.n_x).';
+    x_axis=linspace(x_min,x_max,opts.n_x).';
     z_axis=linspace(opts.z_min,opts.z_max,opts.n_z).';
     selected_waves=1:opts.wave_stride:Nw;
 
@@ -256,6 +270,7 @@ function out = reconstruct_fi_rtb_nsi_manual(filename,opts)
 
     out.x_axis=x_axis;
     out.z_axis=z_axis;
+    out.full_tx_span=logical(opts.use_full_tx_span);
     out.tx_weight_sum=tx_weight_sum;
     out.active_tx_count=active_tx_count;
     out.selected_waves=selected_waves;
@@ -265,6 +280,7 @@ end
 
 function opts=apply_defaults(opts)
     d=struct('x_min',-4e-3,'x_max',3e-3,'n_x',281, ...
+        'use_full_tx_span',false, ...
         'z_min',18e-3,'z_max',22.5e-3,'n_z',181, ...
         'dc_offset',0.2,'frame_index',1, ...
         'tx_f_number',2,'tx_min_aperture',3e-3, ...
@@ -278,6 +294,12 @@ function opts=apply_defaults(opts)
             opts.(key)=d.(key);
         end
     end
+    assert(isscalar(opts.use_full_tx_span) && ...
+           (islogical(opts.use_full_tx_span) || ...
+            (isnumeric(opts.use_full_tx_span) && ...
+             isfinite(opts.use_full_tx_span) && ...
+             ismember(opts.use_full_tx_span,[0 1]))), ...
+        'use_full_tx_span must be a scalar logical.');
     assert(opts.x_max>opts.x_min && opts.z_max>opts.z_min, ...
         'Invalid ROI range.');
     assert(isnumeric(opts.n_x) && isscalar(opts.n_x) && ...
