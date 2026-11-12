@@ -1,0 +1,88 @@
+[
+  {
+    "id": "00_Fundamentals",
+    "file": "第00章_波束合成共同基础.pdf",
+    "pages": 46,
+    "images": 20,
+    "bytes": 5014185,
+    "sha256": "d78c6d81307eb26b88e98cce1ed2604123d14cf4292de50157a4a7ac95264885",
+    "internal_links": 35,
+    "external_links": 7,
+    "embedded_chinese_fonts": [
+      "/AAAAAA+DengXian-Bold",
+      "/AAAAAA+DengXian",
+      "/AAAAAA+MicrosoftYaHei-Bold",
+      "/BAAAAA+MicrosoftYaHei"
+    ],
+    "unparsed_emphasis": 0
+  },
+  {
+    "id": "01_DAS_Real_UFF",
+    "file": "第01章_FI-DAS与RTB.pdf",
+    "pages": 44,
+    "images": 32,
+    "bytes": 18776647,
+    "sha256": "5d5ede806ff7eb023c0b9f51e6ee4a6276e87d79535c700e35e6d839d4bbd797",
+    "internal_links": 26,
+    "external_links": 15,
+    "embedded_chinese_fonts": [
+      "/AAAAAA+DengXian-Bold",
+      "/AAAAAA+DengXian",
+      "/AAAAAA+MicrosoftYaHei-Bold",
+      "/BAAAAA+MicrosoftYaHei"
+    ],
+    "unparsed_emphasis": 0
+  },
+  {
+    "id": "02_CF_GCF",
+    "file": "第02章_CF与GCF.pdf",
+    "pages": 41,
+    "images": 32,
+    "bytes": 15971014,
+    "sha256": "6e272c4b2144822372e1853eb9632639d963c33141b63f6ea0943138bc00e566",
+    "internal_links": 26,
+    "external_links": 15,
+    "embedded_chinese_fonts": [
+      "/AAAAAA+DengXian-Bold",
+      "/AAAAAA+DengXian",
+      "/AAAAAA+MicrosoftYaHei-Bold",
+      "/BAAAAA+MicrosoftYaHei"
+    ],
+    "unparsed_emphasis": 0
+  },
+  {
+    "id": "03_MVDR",
+    "file": "第03章_MVDR.pdf",
+    "pages": 28,
+    "images": 25,
+    "bytes": 15206776,
+    "sha256": "404a379906ae77e345a023dfa6537afe20fee4c780748a93ef3df44f2bee244e",
+    "internal_links": 28,
+    "external_links": 15,
+    "embedded_chinese_fonts": [
+      "/AAAAAA+DengXian-Bold",
+      "/AAAAAA+DengXian",
+      "/AAAAAA+MicrosoftYaHei-Bold",
+      "/BAAAAA+MicrosoftYaHei"
+    ],
+    "unparsed_emphasis": 0
+  },
+  {
+    "id": "04_DMAS",
+    "file": "第04章_DMAS与fDMAS.pdf",
+    "pages": 26,
+    "images": 18,
+    "bytes": 14168243,
+    "sha256": "47d10f632ff350cc9137127f7758142854b12a594497fe8186ddc4e45957f6b5",
+    "internal_links": 13,
+    "external_links": 21,
+    "embedded_chinese_fonts": [
+      "/AAAAAA+DengXian-Bold",
+      "/AAAAAA+DengXian",
+      "/AAAAAA+MicrosoftYaHei-Bold",
+      "/CAAAAA+MicrosoftYaHei",
+      "/NAAAAA+MicrosoftYaHei"
+    ],
+    "unparsed_emphasis": 0
+  }
+]

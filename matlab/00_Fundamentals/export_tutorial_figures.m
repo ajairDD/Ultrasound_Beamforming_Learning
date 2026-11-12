@@ -3,6 +3,7 @@ function export_tutorial_figures
 % Run from MATLAB: export_tutorial_figures
 % The demos clear their workspace and close figures; run in a fresh session.
 demo_dir = fileparts(mfilename('fullpath'));
+addpath(fileparts(demo_dir)); % Shared Chinese figure export.
 out_dir = fullfile(demo_dir, '..', '..', 'chapters', '00_Fundamentals', 'figures');
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 old_visibility = get(groot, 'DefaultFigureVisible');
@@ -34,7 +35,7 @@ for k = 1:numel(demos)
         end
         drawnow;
         filename = sprintf('%s_%02d.png', demos{k}, j);
-        exportgraphics(figs(j), fullfile(out_dir, filename), 'Resolution', 150);
+        export_figure_zh_cn(figs(j), fullfile(out_dir, filename), 'Resolution', 150);
         fprintf('Exported %s\n', filename);
     end
 end

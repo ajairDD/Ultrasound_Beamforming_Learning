@@ -186,7 +186,7 @@ $$ Y_{\mathrm{RTB}}(P)=\frac{C(P)}{W(P)},\qquad W(P)>0. $$
 
 ~~~mermaid
 flowchart LR
-    A[一次 Tx 的多条 Rx 波形] --> B[该 Tx support 内的像素]
+    A[一次 Tx 的多条 Rx 波形] --> B[该 Tx 有效照射范围内的像素]
     B --> C[逐像素计算 Tx 和 Rx 时间并取样]
     C --> D[沿 Rx 相干求和]
     D --> E[乘 Tx 权重并累计到统一网格]

@@ -1,0 +1,400 @@
+[
+  {
+    "chapter": "00_Fundamentals",
+    "file": "plane_wave_concept.png",
+    "map": {
+      "Transmit": "发射",
+      "Receive": "接收"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"Transmit\":\"发射\",\"Receive\":\"接收\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "01_DAS_Real_UFF",
+    "file": "focused_acquisition.png",
+    "map": {
+      "One focused transmit": "一次聚焦发射",
+      "Record all receive channels": "记录所有接收通道",
+      "RF channels": "RF 通道",
+      "F: focus": "F：焦点",
+      "P: scatterer": "P：散射体"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"One focused transmit\":\"一次聚焦发射\",\"Record all receive channels\":\"记录所有接收通道\",\"RF channels\":\"RF 通道\",\"F: focus\":\"F：焦点\",\"P: scatterer\":\"P：散射体\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "01_DAS_Real_UFF",
+    "file": "virtual_source_geometry.png",
+    "map": {
+      "Before focus": "焦点之前",
+      "After focus": "焦点之后",
+      "Earlier than focus": "早于焦点参考时刻",
+      "Later than focus": "晚于焦点参考时刻"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"Before focus\":\"焦点之前\",\"After focus\":\"焦点之后\",\"Earlier than focus\":\"早于焦点参考时刻\",\"Later than focus\":\"晚于焦点参考时刻\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "01_DAS_Real_UFF",
+    "file": "coherent_processing.png",
+    "map": {
+      "Keep phase until the sum": "求和之前保留相位",
+      "1. Delayed channels": "1. 延时对齐后的通道",
+      "2. Coherent sum": "2. 相干求和",
+      "3. Envelope + dB": "3. 包络与 dB 显示"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"Keep phase until the sum\":\"求和之前保留相位\",\"1. Delayed channels\":\"1. 延时对齐后的通道\",\"2. Coherent sum\":\"2. 相干求和\",\"3. Envelope + dB\":\"3. 包络与 dB 显示\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "01_DAS_Real_UFF",
+    "file": "conventional_vs_rtb.png",
+    "map": {
+      "Conventional FI": "常规 FI",
+      "Three Tx contribute to pixel P": "三次 Tx 共同贡献于像素 P",
+      "One Tx reconstructed at many pixels": "一次 Tx 在多个像素处重建",
+      "One Tx -> one line": "一次 Tx → 一条扫描线",
+      "One Tx -> many pixels": "一次 Tx → 多个像素",
+      "Many Tx -> one pixel": "多次 Tx → 一个像素"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"Conventional FI\":\"常规 FI\",\"Three Tx contribute to pixel P\":\"三次 Tx 共同贡献于像素 P\",\"One Tx reconstructed at many pixels\":\"一次 Tx 在多个像素处重建\",\"One Tx -> one line\":\"一次 Tx → 一条扫描线\",\"One Tx -> many pixels\":\"一次 Tx → 多个像素\",\"Many Tx -> one pixel\":\"多次 Tx → 一个像素\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "01_DAS_Real_UFF",
+    "file": "tx_rx_apertures.png",
+    "map": {
+      "Tx support": "Tx 有效照射范围",
+      "Rx aperture": "Rx 接收孔径",
+      "Finite waist": "有限束腰",
+      "Eligible pixels": "参与重建的像素",
+      "Shallow: fewer channels": "浅部：接收通道较少",
+      "Deep: more channels": "深部：接收通道较多"
+    },
+    "prompt": "Use case: text-localization. Edit this existing ultrasound teaching illustration: replace ALL natural-language English text by Simplified Chinese. Exact replacements: {\"Tx support\":\"Tx 有效照射范围\",\"Rx aperture\":\"Rx 接收孔径\",\"Finite waist\":\"有限束腰\",\"Eligible pixels\":\"参与重建的像素\",\"Shallow: fewer channels\":\"浅部：接收通道较少\",\"Deep: more channels\":\"深部：接收通道较多\"}. Preserve the underlying illustration, layout, arrows and arrow directions, all waveforms, geometry, colors, formulas, numerical values, variable symbols and algorithm acronyms EXACTLY. Retain only specialist abbreviations or symbols such as RF, IQ, DAS, FI, RTB, Tx, Rx, dB, F and P. No English prose may remain. Use crisp, correctly spelled, comfortably readable Chinese sans-serif text, adjusting text size/line breaks to fit without overlap. Do not add scientific content or new decorative elements. This is a label-only localization, not a reconstruction or redrawing of data."
+  },
+  {
+    "chapter": "02_CF_GCF",
+    "file": "aligned_aperture_concept.png",
+    "map": {
+      "Record time increases to the right": "记录时间向右增加",
+      "Query times (schematic)": "查询时刻（示意）",
+      "Aligned complex samples": "对齐后的复数样本",
+      "Delay + interpolation": "延时与插值",
+      "ONE PIXEL P": "同一个像素 P",
+      "Same pixel. Different query times.": "同一像素，不同查询时刻。"
+    },
+    "prompt": "Use case: text-localization. Translate ALL natural-language English labels in this existing scientific teaching image to Simplified Chinese. Exact translations: {\"Record time increases to the right\":\"记录时间向右增加\",\"Query times (schematic)\":\"查询时刻（示意）\",\"Aligned complex samples\":\"对齐后的复数样本\",\"Delay + interpolation\":\"延时与插值\",\"ONE PIXEL P\":\"同一个像素 P\",\"Same pixel. Different query times.\":\"同一像素，不同查询时刻。\"}. Labels may span lines; translate any remaining English connective prose too. Preserve ALL underlying phasors and their directions, every dot, graph, plot stem, bin index and highlighted selection, arrow connection, formula, variable, number, CF/GCF/DC/FFT/Rx/Tx acronyms, and layout. Do not change data or scientific content. Use sharp readable Chinese sans-serif text; adjust text line breaks so nothing overlaps or clips. The rest of the illustration must remain unchanged. No English prose may remain; only industry acronyms, mathematical symbols and units can stay Latin."
+  },
+  {
+    "chapter": "02_CF_GCF",
+    "file": "cf_phasor_intuition.png",
+    "map": {
+      "A. Equal amplitude + phase": "A. 等幅同相",
+      "B. Phase cancellation": "B. 相位相消",
+      "C. One active contribution": "C. 仅一个通道非零",
+      "Resultant (sum)": "相量和",
+      "CF depends on phase AND amplitude distribution": "CF 同时取决于相位和幅值分布"
+    },
+    "prompt": "Use case: text-localization. Translate ALL natural-language English labels in this existing scientific teaching image to Simplified Chinese. Exact translations: {\"A. Equal amplitude + phase\":\"A. 等幅同相\",\"B. Phase cancellation\":\"B. 相位相消\",\"C. One active contribution\":\"C. 仅一个通道非零\",\"Resultant (sum)\":\"相量和\",\"CF depends on phase AND amplitude distribution\":\"CF 同时取决于相位和幅值分布\"}. Labels may span lines; translate any remaining English connective prose too. Preserve ALL underlying phasors and their directions, every dot, graph, plot stem, bin index and highlighted selection, arrow connection, formula, variable, number, CF/GCF/DC/FFT/Rx/Tx acronyms, and layout. Do not change data or scientific content. Use sharp readable Chinese sans-serif text; adjust text line breaks so nothing overlaps or clips. The rest of the illustration must remain unchanged. No English prose may remain; only industry acronyms, mathematical symbols and units can stay Latin."
+  },
+  {
+    "chapter": "02_CF_GCF",
+    "file": "cf_processing_pipeline.png",
+    "map": {
+      "Aligned Rx vector s": "对齐后的 Rx 向量 s",
+      "Sum over Rx": "沿 Rx 求和",
+      "conventional DAS": "常规 DAS",
+      "Complex DAS S": "复数 DAS 输出 S",
+      "CF or GCF": "CF 或 GCF",
+      "spatial coherence of aligned Rx": "对齐后 Rx 的空间相干性",
+      "Real weight W: 0 to 1": "实数权重 W：0 到 1",
+      "Weighted complex pixel": "加权后的复数像素",
+      "Envelope, then dB": "取包络，再转为 dB",
+      "One Tx. One pixel. Receive-domain weighting.": "一次 Tx，一个像素，在接收域乘权。"
+    },
+    "prompt": "Use case: text-localization. Translate ALL natural-language English labels in this existing scientific teaching image to Simplified Chinese. Exact translations: {\"Aligned Rx vector s\":\"对齐后的 Rx 向量 s\",\"Sum over Rx\":\"沿 Rx 求和\",\"conventional DAS\":\"常规 DAS\",\"Complex DAS S\":\"复数 DAS 输出 S\",\"CF or GCF\":\"CF 或 GCF\",\"spatial coherence of aligned Rx\":\"对齐后 Rx 的空间相干性\",\"Real weight W: 0 to 1\":\"实数权重 W：0 到 1\",\"Weighted complex pixel\":\"加权后的复数像素\",\"Envelope, then dB\":\"取包络，再转为 dB\",\"One Tx. One pixel. Receive-domain weighting.\":\"一次 Tx，一个像素，在接收域乘权。\"}. Labels may span lines; translate any remaining English connective prose too. Preserve ALL underlying phasors and their directions, every dot, graph, plot stem, bin index and highlighted selection, arrow connection, formula, variable, number, CF/GCF/DC/FFT/Rx/Tx acronyms, and layout. Do not change data or scientific content. Use sharp readable Chinese sans-serif text; adjust text line breaks so nothing overlaps or clips. The rest of the illustration must remain unchanged. No English prose may remain; only industry acronyms, mathematical symbols and units can stay Latin."
+  },
+  {
+    "chapter": "02_CF_GCF",
+    "file": "aperture_spatial_spectrum.png",
+    "map": {
+      "1. Constant vector": "1. 常量向量",
+      "All channels in phase (equal phasors)": "所有通道同相（相量相同）",
+      "2. One-bin phase ramp": "2. 单频点相位坡",
+      "Phase increases by 45° per channel (counterclockwise) (equal magnitude)": "每通道相位逆时针增加 45°（幅值相同）",
+      "3. Irregular phases": "3. 不规则相位",
+      "Random/unrelated phases (equal magnitude)": "随机或不相关相位（幅值相同）",
+      "Receive channel index (n)": "接收通道索引 n",
+      "FFT over Rx": "沿 Rx 进行 FFT",
+      "Magnitude": "幅值",
+      "Spatial bin k": "空间频点 k",
+      "Structured variation": "规则变化",
+      "Energy spread": "能量分散",
+      "This FFT is across channels, not across time.": "这里沿通道做 FFT，而不是沿时间做 FFT。"
+    },
+    "prompt": "Use case: text-localization. Translate ALL natural-language English labels in this existing scientific teaching image to Simplified Chinese. Exact translations: {\"1. Constant vector\":\"1. 常量向量\",\"All channels in phase (equal phasors)\":\"所有通道同相（相量相同）\",\"2. One-bin phase ramp\":\"2. 单频点相位坡\",\"Phase increases by 45° per channel (counterclockwise) (equal magnitude)\":\"每通道相位逆时针增加 45°（幅值相同）\",\"3. Irregular phases\":\"3. 不规则相位\",\"Random/unrelated phases (equal magnitude)\":\"随机或不相关相位（幅值相同）\",\"Receive channel index (n)\":\"接收通道索引 n\",\"FFT over Rx\":\"沿 Rx 进行 FFT\",\"Magnitude\":\"幅值\",\"Spatial bin k\":\"空间频点 k\",\"Structured variation\":\"规则变化\",\"Energy spread\":\"能量分散\",\"This FFT is across channels, not across time.\":\"这里沿通道做 FFT，而不是沿时间做 FFT。\"}. Labels may span lines; translate any remaining English connective prose too. Preserve ALL underlying phasors and their directions, every dot, graph, plot stem, bin index and highlighted selection, arrow connection, formula, variable, number, CF/GCF/DC/FFT/Rx/Tx acronyms, and layout. Do not change data or scientific content. Use sharp readable Chinese sans-serif text; adjust text line breaks so nothing overlaps or clips. The rest of the illustration must remain unchanged. No English prose may remain; only industry acronyms, mathematical symbols and units can stay Latin."
+  },
+  {
+    "chapter": "02_CF_GCF",
+    "file": "gcf_bandwidth_tradeoff.png",
+    "map": {
+      "Wider band": "更宽的频带",
+      "Spectral energy": "频谱能量",
+      "Discrete frequency bin": "离散频点",
+      "CF: DC only": "CF：仅使用 DC",
+      "GCF: allow nearby bins": "GCF：纳入相邻频点",
+      "More energy included": "纳入更多能量",
+      "Wider band preserves more contributions": "更宽频带保留更多贡献",
+      "Wider band also weakens suppression": "更宽频带也会减弱抑制",
+      "The highlighted bins indicate which spectral components are included in the GCF ratio (low-spatial-frequency bandwidth choice).": "高亮频点表示 GCF 分子纳入的频谱分量（低空间频率带宽的选择）。",
+      "Weighting criterion, not phase correction.": "这是加权判据，不是相位校正。"
+    },
+    "prompt": "Use case: text-localization. Translate ALL natural-language English labels in this existing scientific teaching image to Simplified Chinese. Exact translations: {\"Wider band\":\"更宽的频带\",\"Spectral energy\":\"频谱能量\",\"Discrete frequency bin\":\"离散频点\",\"CF: DC only\":\"CF：仅使用 DC\",\"GCF: allow nearby bins\":\"GCF：纳入相邻频点\",\"More energy included\":\"纳入更多能量\",\"Wider band preserves more contributions\":\"更宽频带保留更多贡献\",\"Wider band also weakens suppression\":\"更宽频带也会减弱抑制\",\"The highlighted bins indicate which spectral components are included in the GCF ratio (low-spatial-frequency bandwidth choice).\":\"高亮频点表示 GCF 分子纳入的频谱分量（低空间频率带宽的选择）。\",\"Weighting criterion, not phase correction.\":\"这是加权判据，不是相位校正。\"}. Labels may span lines; translate any remaining English connective prose too. Preserve ALL underlying phasors and their directions, every dot, graph, plot stem, bin index and highlighted selection, arrow connection, formula, variable, number, CF/GCF/DC/FFT/Rx/Tx acronyms, and layout. Do not change data or scientific content. Use sharp readable Chinese sans-serif text; adjust text line breaks so nothing overlaps or clips. The rest of the illustration must remain unchanged. No English prose may remain; only industry acronyms, mathematical symbols and units can stay Latin."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "das_cf_mvdr_concept.png",
+    "map": {
+      "Where do the weights act?": "权重分别作用在哪里？",
+      "Six delayed complex Rx samples": "六个延时后的复数 Rx 样本",
+      "All weights = 1": "所有权重 = 1",
+      "Coherent sum": "相干求和",
+      "Envelope": "包络",
+      "Output pixel value": "输出像素值",
+      "Multiply by ONE real pixel weight": "乘一个实数像素权重",
+      "Calculate W (from input vector)": "由输入向量计算 W",
+      "Adaptive complex channel weights": "自适应复数通道权重",
+      "Covariance estimation (from input vector)": "由输入向量估计协方差"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"Where do the weights act?\":\"权重分别作用在哪里？\",\"Six delayed complex Rx samples\":\"六个延时后的复数 Rx 样本\",\"All weights = 1\":\"所有权重 = 1\",\"Coherent sum\":\"相干求和\",\"Envelope\":\"包络\",\"Output pixel value\":\"输出像素值\",\"Multiply by ONE real pixel weight\":\"乘一个实数像素权重\",\"Calculate W (from input vector)\":\"由输入向量计算 W\",\"Adaptive complex channel weights\":\"自适应复数通道权重\",\"Covariance estimation (from input vector)\":\"由输入向量估计协方差\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_distortionless_concept.png",
+    "map": {
+      "Preserve the expected pattern": "保留预期的通道模式",
+      "After delay alignment": "延时对齐之后",
+      "Expected target a": "预期目标模式 a",
+      "Six equal phasors (in phase)": "六个相同的同相相量",
+      "Other spatial pattern": "其他空间模式",
+      "Phase slope (across elements)": "阵元间的相位坡",
+      "Choose complex weights": "选择复数权重",
+      "Amplitude": "幅值",
+      "Phase": "相位",
+      "Minimize estimated output power": "最小化估计输出功率",
+      "One constraint": "一个约束",
+      "Gain = 1 for a": "对 a 的增益 = 1",
+      "Only for the expected steering pattern a": "仅保证预期导向模式 a",
+      "Other responses may be reduced": "其他响应可能被压低",
+      "Adaptive weights + a preservation constraint": "自适应权重与保留目标模式的约束"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"Preserve the expected pattern\":\"保留预期的通道模式\",\"After delay alignment\":\"延时对齐之后\",\"Expected target a\":\"预期目标模式 a\",\"Six equal phasors (in phase)\":\"六个相同的同相相量\",\"Other spatial pattern\":\"其他空间模式\",\"Phase slope (across elements)\":\"阵元间的相位坡\",\"Choose complex weights\":\"选择复数权重\",\"Amplitude\":\"幅值\",\"Phase\":\"相位\",\"Minimize estimated output power\":\"最小化估计输出功率\",\"One constraint\":\"一个约束\",\"Gain = 1 for a\":\"对 a 的增益 = 1\",\"Only for the expected steering pattern a\":\"仅保证预期导向模式 a\",\"Other responses may be reduced\":\"其他响应可能被压低\",\"Adaptive weights + a preservation constraint\":\"自适应权重与保留目标模式的约束\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_spatial_smoothing.png",
+    "map": {
+      "One aperture, several overlapping subarrays": "一个孔径，多个重叠子孔径",
+      "M = 6 channels": "M = 6 个通道",
+      "Average outer products to estimate R": "对外积取平均，估计 R"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"One aperture, several overlapping subarrays\":\"一个孔径，多个重叠子孔径\",\"M = 6 channels\":\"M = 6 个通道\",\"Average outer products to estimate R\":\"对外积取平均，估计 R\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_axial_covariance.png",
+    "map": {
+      "Neighbors estimate weights; the center forms the pixel": "邻近深度估计权重，当前深度形成像素",
+      "Complex Rx samples s(z,c)": "复数 Rx 样本 s(z,c)",
+      "Rx channel (c)": "Rx 通道 c",
+      "Seven selected depths": "选取的七个深度",
+      "h = 3 steps": "h = 3 个网格间距",
+      "Depth offset (grid steps)": "深度偏移（网格间距）",
+      "Current depth z0": "当前深度 z₀",
+      "Estimate R": "估计 R",
+      "Sample covariance (across depth and channels)": "在深度与通道上估计样本协方差",
+      "Solve for w": "求解 w",
+      "Beamforming weights (e.g., MV/Capon)": "波束合成权重（如 MV/Capon）",
+      "Only center row (z0)": "仅当前中心行（z₀）",
+      "Current subarrays X0": "当前深度的子孔径 X₀",
+      "Channel data at z0 (for all subarrays)": "z₀ 处全部子孔径的通道数据",
+      "Current pixel": "当前像素",
+      "Covariance averaging is not output image averaging": "协方差平均不等于输出图像平均"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"Neighbors estimate weights; the center forms the pixel\":\"邻近深度估计权重，当前深度形成像素\",\"Complex Rx samples s(z,c)\":\"复数 Rx 样本 s(z,c)\",\"Rx channel (c)\":\"Rx 通道 c\",\"Seven selected depths\":\"选取的七个深度\",\"h = 3 steps\":\"h = 3 个网格间距\",\"Depth offset (grid steps)\":\"深度偏移（网格间距）\",\"Current depth z0\":\"当前深度 z₀\",\"Estimate R\":\"估计 R\",\"Sample covariance (across depth and channels)\":\"在深度与通道上估计样本协方差\",\"Solve for w\":\"求解 w\",\"Beamforming weights (e.g., MV/Capon)\":\"波束合成权重（如 MV/Capon）\",\"Only center row (z0)\":\"仅当前中心行（z₀）\",\"Current subarrays X0\":\"当前深度的子孔径 X₀\",\"Channel data at z0 (for all subarrays)\":\"z₀ 处全部子孔径的通道数据\",\"Current pixel\":\"当前像素\",\"Covariance averaging is not output image averaging\":\"协方差平均不等于输出图像平均\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_diagonal_loading.png",
+    "map": {
+      "Diagonal loading stabilizes the weight calculation": "对角加载让权重求解更稳定",
+      "Estimated R": "估计的 R",
+      "Limited snapshots": "快照数量有限",
+      "Sensor index": "阵元索引",
+      "Sample covariance (conceptual)": "样本协方差（概念示意）",
+      "Add scaled identity": "加上缩放后的单位矩阵",
+      "identity matrix scaled by rho": "用 ρ 缩放的单位矩阵",
+      "Raise the eigenvalue floor": "抬高特征值下限",
+      "BEFORE (eigenvalues of R)": "加载前（R 的特征值）",
+      "AFTER (eigenvalues of R + rho I)": "加载后（R + ρI 的特征值）",
+      "Eigenvalue": "特征值",
+      "Index (sorted)": "排序后的索引",
+      "Every eigenvalue increases by rho": "每个特征值都增加 ρ",
+      "More loading: more stable solve, less adaptive freedom": "加载越强：求解更稳定，自适应自由度更低"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"Diagonal loading stabilizes the weight calculation\":\"对角加载让权重求解更稳定\",\"Estimated R\":\"估计的 R\",\"Limited snapshots\":\"快照数量有限\",\"Sensor index\":\"阵元索引\",\"Sample covariance (conceptual)\":\"样本协方差（概念示意）\",\"Add scaled identity\":\"加上缩放后的单位矩阵\",\"identity matrix scaled by rho\":\"用 ρ 缩放的单位矩阵\",\"Raise the eigenvalue floor\":\"抬高特征值下限\",\"BEFORE (eigenvalues of R)\":\"加载前（R 的特征值）\",\"AFTER (eigenvalues of R + rho I)\":\"加载后（R + ρI 的特征值）\",\"Eigenvalue\":\"特征值\",\"Index (sorted)\":\"排序后的索引\",\"Every eigenvalue increases by rho\":\"每个特征值都增加 ρ\",\"More loading: more stable solve, less adaptive freedom\":\"加载越强：求解更稳定，自适应自由度更低\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_rtb_pipeline.png",
+    "map": {
+      "Receive MVDR inside the RTB pipeline": "RTB 流程中的接收 MVDR",
+      "Pixel delay + Rx samples": "像素延时与 Rx 取样",
+      "Receive MVDR": "接收 MVDR",
+      "Shared Tx weight tk": "共用的 Tx 权重 tₖ",
+      "Coherent sum across Tx": "跨 Tx 相干求和",
+      "Normalize by sum of Tx weights": "除以 Tx 权重和归一化",
+      "RTB-MVDR pixel": "RTB-MVDR 像素",
+      "Weights w are estimated within each Tx": "在每次 Tx 内估计接收权重 w",
+      "RTB-DAS uses the same geometry and Tx weights": "RTB-DAS 使用相同几何与 Tx 权重"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"Receive MVDR inside the RTB pipeline\":\"RTB 流程中的接收 MVDR\",\"Pixel delay + Rx samples\":\"像素延时与 Rx 取样\",\"Receive MVDR\":\"接收 MVDR\",\"Shared Tx weight tk\":\"共用的 Tx 权重 tₖ\",\"Coherent sum across Tx\":\"跨 Tx 相干求和\",\"Normalize by sum of Tx weights\":\"除以 Tx 权重和归一化\",\"RTB-MVDR pixel\":\"RTB-MVDR 像素\",\"Weights w are estimated within each Tx\":\"在每次 Tx 内估计接收权重 w\",\"RTB-DAS uses the same geometry and Tx weights\":\"RTB-DAS 使用相同几何与 Tx 权重\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "03_MVDR",
+    "file": "mvdr_steering_mismatch.png",
+    "map": {
+      "The preservation constraint follows the assumed pattern": "保留约束针对的是假定模式",
+      "Assumed a": "假定模式 a",
+      "Actual a_true": "真实模式 a_true",
+      "Perfect delay alignment": "理想延时对齐",
+      "Residual phase error": "残余相位误差",
+      "may be < 1": "可能小于 1",
+      "A target can be attenuated when the assumed and actual patterns differ": "假定模式与真实模式不一致时，目标也可能被衰减"
+    },
+    "prompt": "Use case: text-localization. Translate ALL English explanatory labels in this ultrasound MVDR illustration to Simplified Chinese. Use these exact replacements, including text that is wrapped across lines or contains typographic subscripts: {\"The preservation constraint follows the assumed pattern\":\"保留约束针对的是假定模式\",\"Assumed a\":\"假定模式 a\",\"Actual a_true\":\"真实模式 a_true\",\"Perfect delay alignment\":\"理想延时对齐\",\"Residual phase error\":\"残余相位误差\",\"may be < 1\":\"可能小于 1\",\"A target can be attenuated when the assumed and actual patterns differ\":\"假定模式与真实模式不一致时，目标也可能被衰减\"}. Also translate every footer 'Concept illustration - not measured data' to '概念示意，非实测数据'. Translate remaining connective English prose; preserve all mathematical symbols, subscripts (including a_true and R_loaded), formulas, matrix entries, dimensions, numbers, all SIX phasors/channels, every subarray, graph bar, colored row, weight conjugate stars, arrows and their connections. Keep industry acronyms DAS/CF/GCF/MVDR/MV/Capon/RTB/Rx/Tx. Do not recompute or change scientific content. Chinese labels must be crisp, correctly spelled and readable with no overlap; adjust line breaks only. All non-specialist English must disappear."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "fdmas_pipeline_concept.png",
+    "map": {
+      "From delayed RF to an fDMAS image": "从延时后的 RF 到 fDMAS 图像",
+      "Linear ultrasound array (receive aperture)": "超声线阵（接收孔径）",
+      "Target P (in tissue)": "组织中的目标 P",
+      "Delayed RF (from different receive elements)": "不同接收阵元的原始 RF",
+      "Tx + Rx delays / interpolation / Rx aperture": "Tx 与 Rx 延时、插值及接收孔径",
+      "Aligned RF (shared starting data)": "对齐后的 RF（共同输入）",
+      "DAS (linear receive combination)": "DAS（线性接收组合）",
+      "Analytic RF samples": "解析 RF 样本",
+      "DAS: coherent sum": "DAS：相干求和",
+      "Envelope": "包络",
+      "fDMAS (nonlinear receive combination)": "fDMAS（非线性接收组合）",
+      "REAL RF samples": "实数 RF 样本",
+      "Signed-sqrt pair sum": "保留符号的平方根配对求和",
+      "Pair-count normalization": "通道对数量归一化",
+      "Bandpass near 2f0": "约 2f₀ 带通",
+      "Analytic envelope": "解析信号包络",
+      "Same geometry and aperture. Different receive combination.": "几何与孔径相同，接收组合方式不同。",
+      "The bandpass acts along depth AFTER the nonlinear pair sum.": "带通沿深度作用于非线性配对求和之后。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"From delayed RF to an fDMAS image\":\"从延时后的 RF 到 fDMAS 图像\",\"Linear ultrasound array (receive aperture)\":\"超声线阵（接收孔径）\",\"Target P (in tissue)\":\"组织中的目标 P\",\"Delayed RF (from different receive elements)\":\"不同接收阵元的原始 RF\",\"Tx + Rx delays / interpolation / Rx aperture\":\"Tx 与 Rx 延时、插值及接收孔径\",\"Aligned RF (shared starting data)\":\"对齐后的 RF（共同输入）\",\"DAS (linear receive combination)\":\"DAS（线性接收组合）\",\"Analytic RF samples\":\"解析 RF 样本\",\"DAS: coherent sum\":\"DAS：相干求和\",\"Envelope\":\"包络\",\"fDMAS (nonlinear receive combination)\":\"fDMAS（非线性接收组合）\",\"REAL RF samples\":\"实数 RF 样本\",\"Signed-sqrt pair sum\":\"保留符号的平方根配对求和\",\"Pair-count normalization\":\"通道对数量归一化\",\"Bandpass near 2f0\":\"约 2f₀ 带通\",\"Analytic envelope\":\"解析信号包络\",\"Same geometry and aperture. Different receive combination.\":\"几何与孔径相同，接收组合方式不同。\",\"The bandpass acts along depth AFTER the nonlinear pair sum.\":\"带通沿深度作用于非线性配对求和之后。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "dmas_pairs_concept.png",
+    "map": {
+      "Four receive channels make six unique pairs": "四个接收通道形成六个唯一通道对",
+      "Pairing table (Upper triangular, 4 x 4)": "通道配对表（4×4 上三角）",
+      "No self-pairs": "不与自身配对",
+      "No duplicates": "不重复计数",
+      "Aligned real RF": "对齐后的实数 RF",
+      "Signed square root in each channel": "各通道保留符号地取平方根",
+      "Multiply each unique pair": "每个唯一通道对相乘",
+      "Sum all pair contributions": "所有通道对贡献相加",
+      "Six pair terms do not mean six independent measurements.": "六个配对项不等于六次独立测量。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"Four receive channels make six unique pairs\":\"四个接收通道形成六个唯一通道对\",\"Pairing table (Upper triangular, 4 x 4)\":\"通道配对表（4×4 上三角）\",\"No self-pairs\":\"不与自身配对\",\"No duplicates\":\"不重复计数\",\"Aligned real RF\":\"对齐后的实数 RF\",\"Signed square root in each channel\":\"各通道保留符号地取平方根\",\"Multiply each unique pair\":\"每个唯一通道对相乘\",\"Sum all pair contributions\":\"所有通道对贡献相加\",\"Six pair terms do not mean six independent measurements.\":\"六个配对项不等于六次独立测量。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "dmas_sign_rectification.png",
+    "map": {
+      "Why DMAS loses the global RF sign": "为什么 DMAS 不保留 RF 的整体正负号",
+      "All channels aligned": "所有通道对齐",
+      "Same positive sample": "相同的正样本",
+      "Same negative sample": "相同的负样本",
+      "Products keep pair agreement": "乘积保留通道对的一致性",
+      "Every pair contributes +1": "每对贡献 +1",
+      "Unnormalized pair sum = 6": "未归一化的通道对之和 = 6",
+      "Full-wave-like output": "类似全波整流的输出",
+      "Normalized DMAS ~ |s|": "归一化 DMAS ~ |s|",
+      "For M identical RF samples: DAS = M s; normalized DMAS = M |s|.": "M 个相同 RF 样本：DAS = M s；归一化 DMAS = M |s|。",
+      "Global sign reversal gives the same DMAS output. Filtering must come before envelope detection.": "所有通道一起反号，DMAS 输出不变；取包络之前必须先滤波。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"Why DMAS loses the global RF sign\":\"为什么 DMAS 不保留 RF 的整体正负号\",\"All channels aligned\":\"所有通道对齐\",\"Same positive sample\":\"相同的正样本\",\"Same negative sample\":\"相同的负样本\",\"Products keep pair agreement\":\"乘积保留通道对的一致性\",\"Every pair contributes +1\":\"每对贡献 +1\",\"Unnormalized pair sum = 6\":\"未归一化的通道对之和 = 6\",\"Full-wave-like output\":\"类似全波整流的输出\",\"Normalized DMAS ~ |s|\":\"归一化 DMAS ~ |s|\",\"For M identical RF samples: DAS = M s; normalized DMAS = M |s|.\":\"M 个相同 RF 样本：DAS = M s；归一化 DMAS = M |s|。\",\"Global sign reversal gives the same DMAS output. Filtering must come before envelope detection.\":\"所有通道一起反号，DMAS 输出不变；取包络之前必须先滤波。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "fdmas_digital_frequency.png",
+    "map": {
+      "The 2f0 component is created digitally": "2f₀ 分量由数字运算产生",
+      "Transmit near f0": "在 f₀ 附近发射",
+      "Echo RF near f0": "f₀ 附近的回波 RF",
+      "Computer (digital processing)": "计算机（数字处理）",
+      "Signed-sqrt DMAS": "保留符号的平方根 DMAS",
+      "Low frequency + even harmonics": "低频与偶次谐波",
+      "Bandpass near 2f0": "约 2f₀ 带通",
+      "Filtered RF-like output": "滤波后的类 RF 输出",
+      "Qualitative spectra; no numeric frequency scale": "定性频谱示意，不使用数值频率刻度",
+      "Before multiplication": "相乘之前",
+      "After nonlinear pairing": "非线性配对之后",
+      "After bandpass": "带通之后",
+      "Input band near f0": "f₀ 附近的输入频带",
+      "Low frequency": "低频",
+      "Schematic, not to scale": "示意图，不按比例",
+      "Near 2f0": "2f₀ 附近",
+      "Higher even harmonics": "更高偶次谐波",
+      "Selected band near 2f0": "选取 2f₀ 附近频带",
+      "Frequency": "频率",
+      "Digital 2f0 is not evidence of tissue-generated second harmonic imaging.": "数字运算产生的 2f₀ 不能证明实现了组织二次谐波成像。",
+      "Signed square roots can create more than DC and 2f0.": "保留符号的平方根运算还会产生 DC 与 2f₀ 以外的分量。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"The 2f0 component is created digitally\":\"2f₀ 分量由数字运算产生\",\"Transmit near f0\":\"在 f₀ 附近发射\",\"Echo RF near f0\":\"f₀ 附近的回波 RF\",\"Computer (digital processing)\":\"计算机（数字处理）\",\"Signed-sqrt DMAS\":\"保留符号的平方根 DMAS\",\"Low frequency + even harmonics\":\"低频与偶次谐波\",\"Bandpass near 2f0\":\"约 2f₀ 带通\",\"Filtered RF-like output\":\"滤波后的类 RF 输出\",\"Qualitative spectra; no numeric frequency scale\":\"定性频谱示意，不使用数值频率刻度\",\"Before multiplication\":\"相乘之前\",\"After nonlinear pairing\":\"非线性配对之后\",\"After bandpass\":\"带通之后\",\"Input band near f0\":\"f₀ 附近的输入频带\",\"Low frequency\":\"低频\",\"Schematic, not to scale\":\"示意图，不按比例\",\"Near 2f0\":\"2f₀ 附近\",\"Higher even harmonics\":\"更高偶次谐波\",\"Selected band near 2f0\":\"选取 2f₀ 附近频带\",\"Frequency\":\"频率\",\"Digital 2f0 is not evidence of tissue-generated second harmonic imaging.\":\"数字运算产生的 2f₀ 不能证明实现了组织二次谐波成像。\",\"Signed square roots can create more than DC and 2f0.\":\"保留符号的平方根运算还会产生 DC 与 2f₀ 以外的分量。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "fdmas_depth_sampling.png",
+    "followup_prompt": "Replace the two purple labels ‘1.5 to 2.75 f_0’ with ‘1.5 至 2.75 f_0’; preserve all other content.",
+    "map": {
+      "A fine depth grid is needed AFTER beamforming": "波束合成后的深度网格也要足够细",
+      "Raw data sampling fs": "原始数据采样率 fₛ",
+      "Raw RF (one acquisition)": "原始 RF（同一次采集）",
+      "Output-grid refinement does not acquire new RF data": "加密输出网格不会新增采集 RF 数据",
+      "Fine output depth grid": "细输出深度网格",
+      "Coarse output depth grid": "粗输出深度网格",
+      "Sample spacing (schematic)": "采样间距（示意）",
+      "Nyquist": "奈奎斯特频率",
+      "Frequency": "频率",
+      "Filter band fits": "可容纳所选频带",
+      "Filter band does not fit": "无法容纳所选频带",
+      "Image-time approximation: t = 2z/c. This check covers the chosen band, not every nonlinear harmonic.": "图像时间近似：t = 2z/c。本检查仅覆盖所选频带，不覆盖全部非线性谐波。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"A fine depth grid is needed AFTER beamforming\":\"波束合成后的深度网格也要足够细\",\"Raw data sampling fs\":\"原始数据采样率 fₛ\",\"Raw RF (one acquisition)\":\"原始 RF（同一次采集）\",\"Output-grid refinement does not acquire new RF data\":\"加密输出网格不会新增采集 RF 数据\",\"Fine output depth grid\":\"细输出深度网格\",\"Coarse output depth grid\":\"粗输出深度网格\",\"Sample spacing (schematic)\":\"采样间距（示意）\",\"Nyquist\":\"奈奎斯特频率\",\"Frequency\":\"频率\",\"Filter band fits\":\"可容纳所选频带\",\"Filter band does not fit\":\"无法容纳所选频带\",\"Image-time approximation: t = 2z/c. This check covers the chosen band, not every nonlinear harmonic.\":\"图像时间近似：t = 2z/c。本检查仅覆盖所选频带，不覆盖全部非线性谐波。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  },
+  {
+    "chapter": "04_DMAS",
+    "file": "dmas_dynamic_aperture.png",
+    "map": {
+      "More active channels also means more pairs": "有效通道越多，通道对也越多",
+      "Shallow pixel": "浅部像素",
+      "Deep pixel": "深部像素",
+      "Ultrasound probe (cross section)": "超声探头（剖面）",
+      "Depth": "深度",
+      "Unique pairs = 15": "唯一通道对 = 15",
+      "Unique pairs = 66": "唯一通道对 = 66",
+      "All active RF samples equal s": "全部有效 RF 样本均为 s",
+      "Pair sum": "通道对之和",
+      "Multiply by": "乘以",
+      "Normalized output": "归一化输出",
+      "For M >= 2. A project scaling convention, not the definition of DMAS.": "适用于 M ≥ 2。这是本项目的幅度约定，不是 DMAS 的定义。",
+      "Normalization removes the quadratic pair-count factor; it does not calibrate fDMAS brightness to DAS.": "归一化去掉配对数量的二次增长因子，但不把 fDMAS 亮度标定成 DAS。"
+    },
+    "prompt": "Use case: text-localization. Edit this existing scientific illustration: translate EVERY ordinary English title, panel label, axis phrase, annotation and footer into Simplified Chinese. Exact translations (match even where originals use mathematical subscripts and line breaks): {\"More active channels also means more pairs\":\"有效通道越多，通道对也越多\",\"Shallow pixel\":\"浅部像素\",\"Deep pixel\":\"深部像素\",\"Ultrasound probe (cross section)\":\"超声探头（剖面）\",\"Depth\":\"深度\",\"Unique pairs = 15\":\"唯一通道对 = 15\",\"Unique pairs = 66\":\"唯一通道对 = 66\",\"All active RF samples equal s\":\"全部有效 RF 样本均为 s\",\"Pair sum\":\"通道对之和\",\"Multiply by\":\"乘以\",\"Normalized output\":\"归一化输出\",\"For M >= 2. A project scaling convention, not the definition of DMAS.\":\"适用于 M ≥ 2。这是本项目的幅度约定，不是 DMAS 的定义。\",\"Normalization removes the quadratic pair-count factor; it does not calibrate fDMAS brightness to DAS.\":\"归一化去掉配对数量的二次增长因子，但不把 fDMAS 亮度标定成 DAS。\"}. Preserve all formulas and numbers EXACTLY, including M(M-1)|s|/2, 2/(M-1), M|s|, fs,z=c/(2dz), Nyquist values, 1.5--2.75 f0, f0/2f0 symbols, the six unique graph edges and six upper-triangle pair cells, signs, arrows, identical RF waveforms, and every underlying drawing. Formula variable names such as lambda/dz/fs,z may remain as mathematical identifiers; all surrounding prose must be Chinese. Keep only specialist acronyms such as RF, DAS, fDMAS, Tx, Rx, B-mode and DC in Latin. Do not alter processing order, waveform phase, channel counts or geometry. Use sharp correct readable Chinese sans-serif with carefully fitted line breaks, no clipped text or overlapping labels."
+  }
+]

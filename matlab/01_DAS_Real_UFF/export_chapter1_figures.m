@@ -6,6 +6,7 @@ function export_chapter1_figures(section)
 if nargin < 1, section = 'all'; end
 assert(~isempty(which('uff.read_object')), 'Add USTB to the MATLAB path first.');
 demo_dir = fileparts(mfilename('fullpath'));
+addpath(fileparts(demo_dir)); % Shared Chinese figure export.
 repo_dir = fileparts(fileparts(demo_dir));
 filename = fullfile(repo_dir, 'data', 'L7_FI_TheGB.uff');
 out_dir = fullfile(repo_dir, 'chapters', '01_DAS_Real_UFF', 'figures');
@@ -81,7 +82,7 @@ for k = 1:size(jobs,1)
             end
             set(figs(j),'Position',pos);
             drawnow;
-            exportgraphics(figs(j),fullfile(out_dir, ...
+            export_figure_zh_cn(figs(j),fullfile(out_dir, ...
                 sprintf('%s_%02d.png',name,j)),'Resolution',150);
         end
         if strcmp(name,'plot_raw_channel_overview_ustb')
@@ -101,7 +102,7 @@ for k = 1:size(jobs,1)
             cb = findall(figs(1),'Type','colorbar');
             cb(1).Label.String = 'RF / full-record peak';
             drawnow;
-            exportgraphics(figs(1),fullfile(out_dir, ...
+            export_figure_zh_cn(figs(1),fullfile(out_dir, ...
                 'raw_channel_echo_zoom.png'),'Resolution',150);
         end
     end

@@ -1,0 +1,9 @@
+{
+  "name": "ultrasound-course-pdf",
+  "private": true,
+  "description": "Reproducible Chinese chapter PDF export",
+  "dependencies": {
+    "markdown-it": "14.1.0",
+    "katex": "0.16.22"
+  }
+}

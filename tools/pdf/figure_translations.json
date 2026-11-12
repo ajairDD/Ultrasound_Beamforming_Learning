@@ -1,0 +1,1602 @@
+{
+  "exact": [
+    {
+      "source": "DAS weight energy",
+      "target": "DAS 权重能量"
+    },
+    {
+      "source": "Expected target",
+      "target": "预期目标"
+    },
+    {
+      "source": "Interference",
+      "target": "干扰"
+    },
+    {
+      "source": "Image-grid Nyquist",
+      "target": "输出网格奈奎斯特频率"
+    },
+    {
+      "source": "Focus depth",
+      "target": "焦深"
+    },
+    {
+      "source": "Strong target",
+      "target": "强目标"
+    },
+    {
+      "source": "Weak target",
+      "target": "弱目标"
+    },
+    {
+      "source": "True depth",
+      "target": "真实深度"
+    },
+    {
+      "source": "True target x",
+      "target": "目标真实横向位置"
+    },
+    {
+      "source": "-6 dB amplitude",
+      "target": "−6 dB 幅值"
+    },
+    {
+      "source": "Half amplitude",
+      "target": "半幅值"
+    },
+    {
+      "source": "CURRENT pixel",
+      "target": "当前像素"
+    },
+    {
+      "source": "2/(M-1) removes coherent quadratic count scaling; it is not brightness calibration",
+      "target": "2/(M-1) 去掉相干配对数量的二次增长因子；这不是亮度标定"
+    },
+    {
+      "source": "Line segments connect actual grid samples; interpolation cannot add measured scanlines",
+      "target": "折线连接实际网格样本；插值不能增加实测扫描线"
+    },
+    {
+      "source": "Separate local peaks and slices: morphology only, not absolute amplitude",
+      "target": "分别定位局部峰值并提取剖面：仅比较形态，不比较绝对幅值"
+    },
+    {
+      "source": "The same active Rx set is used for DAS and DMAS",
+      "target": "DAS 与 DMAS 使用同一组有效 Rx"
+    },
+    {
+      "source": "TheGB target: display crop only; separate global-peak references",
+      "target": "TheGB 目标：仅裁剪显示区域；各自采用全局峰值参考"
+    },
+    {
+      "source": "Padded spectrum Y and Y times H BEFORE cropping",
+      "target": "裁剪之前：填充后的频谱 Y 与 Y×H"
+    },
+    {
+      "source": "Aberrated channels",
+      "target": "存在相位畸变的通道"
+    },
+    {
+      "source": "Absolute time (\\mus)",
+      "target": "绝对时间（\\mus）"
+    },
+    {
+      "source": "Active-element index",
+      "target": "有效阵元索引"
+    },
+    {
+      "source": "Added delay error (ns)",
+      "target": "附加延时误差（ns）"
+    },
+    {
+      "source": "Amplitude relative to each target peak (dB)",
+      "target": "相对各自目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Amplitude relative to selected target peak (dB)",
+      "target": "相对所选目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Amplitude relative to target peak (dB)",
+      "target": "相对目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Axial PSF: pulse duration / bandwidth",
+      "target": "轴向 PSF：脉冲时长与带宽"
+    },
+    {
+      "source": "Axial focus depth (mm)",
+      "target": "轴向聚焦深度（mm）"
+    },
+    {
+      "source": "Blended",
+      "target": "混合模型"
+    },
+    {
+      "source": "Channel index",
+      "target": "通道索引"
+    },
+    {
+      "source": "Clean",
+      "target": "无噪声"
+    },
+    {
+      "source": "Click near its center; local peak will be refined automatically",
+      "target": "点击目标中心附近，随后自动定位局部峰值"
+    },
+    {
+      "source": "Conventional + display interpolation",
+      "target": "常规 FI 与显示插值"
+    },
+    {
+      "source": "Correct focus",
+      "target": "正确聚焦"
+    },
+    {
+      "source": "Correct focus: channel RF is aligned at relative time 0",
+      "target": "正确聚焦：通道 RF 在相对时间 0 处对齐"
+    },
+    {
+      "source": "Correct vs wrong sound-speed model",
+      "target": "正确与错误声速模型对照"
+    },
+    {
+      "source": "Depth (mm)",
+      "target": "深度（mm）"
+    },
+    {
+      "source": "Depth z (mm)",
+      "target": "深度 z（mm）"
+    },
+    {
+      "source": "Element centers and focused virtual sources",
+      "target": "阵元中心与聚焦虚拟源坐标"
+    },
+    {
+      "source": "Element lateral position (mm)",
+      "target": "阵元横向位置（mm）"
+    },
+    {
+      "source": "Exact sinusoid value",
+      "target": "正弦波精确取样值"
+    },
+    {
+      "source": "Failure mode A: two-target lateral resolution",
+      "target": "情形 A：两个目标的横向分辨"
+    },
+    {
+      "source": "Failure mode B: strong-target response can mask a weak target",
+      "target": "情形 B：强目标响应可能掩盖弱目标"
+    },
+    {
+      "source": "Failure mode D: sound-speed mismatch",
+      "target": "情形 D：声速不匹配"
+    },
+    {
+      "source": "Failure mode E: phase-aberration-like delay errors reduce coherence",
+      "target": "情形 E：相位畸变类延时误差降低相干性"
+    },
+    {
+      "source": "Full receive aperture",
+      "target": "完整接收孔径"
+    },
+    {
+      "source": "Ideal propagation",
+      "target": "理想传播"
+    },
+    {
+      "source": "Lateral PSF: aperture size with uniform weighting",
+      "target": "横向 PSF：矩形窗下的孔径大小"
+    },
+    {
+      "source": "Lateral PSF: apodization trade-off",
+      "target": "横向 PSF：加窗的权衡"
+    },
+    {
+      "source": "Lateral PSF: receive aperture",
+      "target": "横向 PSF：接收孔径"
+    },
+    {
+      "source": "Lateral focus position (mm)",
+      "target": "横向聚焦位置（mm）"
+    },
+    {
+      "source": "Lateral position (mm)",
+      "target": "横向位置（mm）"
+    },
+    {
+      "source": "Lateral position x (mm)",
+      "target": "横向位置 x（mm）"
+    },
+    {
+      "source": "Linear query",
+      "target": "线性插值取样"
+    },
+    {
+      "source": "Magnitude relative to clean peak (dB)",
+      "target": "相对无噪声峰值的幅度（dB）"
+    },
+    {
+      "source": "Magnitude relative to correct peak (dB)",
+      "target": "相对正确聚焦峰值的幅度（dB）"
+    },
+    {
+      "source": "Magnitude relative to strong-target peak (dB)",
+      "target": "相对强目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Manual conventional FI-DAS",
+      "target": "手工实现的常规 FI-DAS"
+    },
+    {
+      "source": "Nearest query",
+      "target": "最近邻取样"
+    },
+    {
+      "source": "Normalized RF + vertical offset",
+      "target": "归一化 RF 与纵向偏置"
+    },
+    {
+      "source": "Normalized amplitude (dB)",
+      "target": "归一化幅度（dB）"
+    },
+    {
+      "source": "Normalized magnitude (dB)",
+      "target": "归一化幅值（dB）"
+    },
+    {
+      "source": "Normalized weight",
+      "target": "归一化权重"
+    },
+    {
+      "source": "One Tx: F# 2, 3 mm minimum width, Tukey25",
+      "target": "单次 Tx：F# 2，最小宽度 3 mm，Tukey25"
+    },
+    {
+      "source": "One center line: Rx F# 1.7",
+      "target": "单条中心线：Rx F# 1.7"
+    },
+    {
+      "source": "Pixel depth z (mm)",
+      "target": "像素深度 z（mm）"
+    },
+    {
+      "source": "Pixel x (mm)",
+      "target": "像素 x（mm）"
+    },
+    {
+      "source": "Pixel z (mm)",
+      "target": "像素 z（mm）"
+    },
+    {
+      "source": "Plane",
+      "target": "平面模型"
+    },
+    {
+      "source": "RTB active transmit count per pixel",
+      "target": "RTB 各像素的有效 Tx 次数"
+    },
+    {
+      "source": "Raw channel RF: curved arrival-time trajectory",
+      "target": "原始通道 RF：弯曲的到达时间轨迹"
+    },
+    {
+      "source": "Raw channel RF: one point target",
+      "target": "原始通道 RF：单个点目标"
+    },
+    {
+      "source": "Receive apodization weights",
+      "target": "接收加窗权重"
+    },
+    {
+      "source": "Relative time after focusing (\\mus)",
+      "target": "聚焦后的相对时间（\\mus）"
+    },
+    {
+      "source": "Residual delay (ns)",
+      "target": "残余延时（ns）"
+    },
+    {
+      "source": "Residual delay after applying the candidate focusing law",
+      "target": "采用候选聚焦规则后的残余延时"
+    },
+    {
+      "source": "Rx element x (mm)",
+      "target": "Rx 阵元 x（mm）"
+    },
+    {
+      "source": "Scenario C: DAS suppresses independent noise by coherent averaging",
+      "target": "情形 C：DAS 通过相干平均抑制独立噪声"
+    },
+    {
+      "source": "Select one isolated point target",
+      "target": "选择一个孤立点目标"
+    },
+    {
+      "source": "Selected point-target ROI",
+      "target": "所选点目标 ROI"
+    },
+    {
+      "source": "Signed RF amplitude",
+      "target": "带符号的 RF 幅度"
+    },
+    {
+      "source": "Simple DAS lateral response at target depth",
+      "target": "目标深度处的简化 DAS 横向响应"
+    },
+    {
+      "source": "Spherical",
+      "target": "球面模型"
+    },
+    {
+      "source": "Stored samples / linear segments",
+      "target": "原始采样点与线性插值线段"
+    },
+    {
+      "source": "Strong + weak target",
+      "target": "强目标与弱目标"
+    },
+    {
+      "source": "Strong target only",
+      "target": "仅强目标"
+    },
+    {
+      "source": "Synthetic spatially-correlated channel delay error",
+      "target": "合成的空间相关通道延时误差"
+    },
+    {
+      "source": "The same ROI will be analyzed in both aperture settings",
+      "target": "两种孔径设置分析同一个 ROI"
+    },
+    {
+      "source": "The same target arrives at different times",
+      "target": "同一目标的回波在不同通道到达时刻不同"
+    },
+    {
+      "source": "The transmit timing offset is not zero",
+      "target": "发射时间偏置不为零"
+    },
+    {
+      "source": "Time (\\mus)",
+      "target": "时间（\\mus）"
+    },
+    {
+      "source": "Time (ns)",
+      "target": "时间（ns）"
+    },
+    {
+      "source": "Tx focus x (mm)",
+      "target": "Tx 焦点 x（mm）"
+    },
+    {
+      "source": "Tx time relative to focus (\\mus)",
+      "target": "相对焦点参考的 Tx 时间（\\mus）"
+    },
+    {
+      "source": "Underlying teaching sinusoid",
+      "target": "用于教学的连续正弦波"
+    },
+    {
+      "source": "Uniform",
+      "target": "矩形窗"
+    },
+    {
+      "source": "With independent complex noise",
+      "target": "叠加独立复数噪声"
+    },
+    {
+      "source": "Wrong focus",
+      "target": "错误聚焦"
+    },
+    {
+      "source": "Wrong lateral focus: residual delay remains across aperture",
+      "target": "横向聚焦错误：孔径内仍有残余延时"
+    },
+    {
+      "source": "2-D PSF, 64-element uniform receive aperture",
+      "target": "二维 PSF：64 阵元矩形接收孔径"
+    },
+    {
+      "source": "All plane (teaching-only)",
+      "target": "全部采用平面模型（仅用于教学）"
+    },
+    {
+      "source": "All spherical",
+      "target": "全部采用球面模型"
+    },
+    {
+      "source": "Blended (baseline)",
+      "target": "混合模型（基线）"
+    },
+    {
+      "source": "Common blended peak",
+      "target": "共用混合模型峰值参考"
+    },
+    {
+      "source": "Manual",
+      "target": "手工实现"
+    },
+    {
+      "source": "Manual FI-DAS",
+      "target": "手工 FI-DAS"
+    },
+    {
+      "source": "Normalized to own peak",
+      "target": "各自峰值归一化"
+    },
+    {
+      "source": "USTB FI-DAS reference",
+      "target": "USTB FI-DAS 参考"
+    },
+    {
+      "source": "USTB reference",
+      "target": "USTB 参考"
+    },
+    {
+      "source": "|Manual normalized envelope - USTB normalized envelope|",
+      "target": "|手工归一化包络 - USTB 归一化包络|"
+    },
+    {
+      "source": "|Plane - Blended| normalized envelope",
+      "target": "|平面模型 - 混合模型| 归一化包络"
+    },
+    {
+      "source": "|Spherical - Blended| normalized envelope",
+      "target": "|球面模型 - 混合模型| 归一化包络"
+    },
+    {
+      "source": "Active Rx channel",
+      "target": "有效 Rx 通道"
+    },
+    {
+      "source": "After correct delay, coherent echoes align across the receive aperture",
+      "target": "正确延时后，相干回波在接收孔径内对齐"
+    },
+    {
+      "source": "All panels use the SAME DAS amplitude reference",
+      "target": "所有子图共用同一个 DAS 幅度参考"
+    },
+    {
+      "source": "All panels use the same global DAS amplitude reference",
+      "target": "所有子图共用同一个全图 DAS 幅度参考"
+    },
+    {
+      "source": "Amplitude relative to each method's target peak (dB)",
+      "target": "相对各自方法目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Aperture FFT bin",
+      "target": "孔径 FFT 频点"
+    },
+    {
+      "source": "Aperture spatial spectrum",
+      "target": "孔径空间频谱"
+    },
+    {
+      "source": "Aperture spatial-frequency bin",
+      "target": "孔径空间频率索引"
+    },
+    {
+      "source": "Avoid point targets, strong boundaries, lesions, and probe edges",
+      "target": "避开点目标、强边界、病灶与探头边缘"
+    },
+    {
+      "source": "CF is the K=0 special case of the teaching GCF definition",
+      "target": "CF 是本教学 GCF 定义中 K=0 的特例"
+    },
+    {
+      "source": "CF map",
+      "target": "CF 权重图"
+    },
+    {
+      "source": "CF only rewards DC; GCF can include neighboring low spatial frequencies",
+      "target": "CF 仅考虑 DC；GCF 可纳入相邻低空间频率"
+    },
+    {
+      "source": "Coherence Factor intuition",
+      "target": "相干因子 CF 的直观解释"
+    },
+    {
+      "source": "Coherence weight",
+      "target": "相干权重"
+    },
+    {
+      "source": "DAS target ROI",
+      "target": "DAS 目标 ROI"
+    },
+    {
+      "source": "DAS × CF (same DAS amplitude reference)",
+      "target": "DAS × CF（共用 DAS 幅度参考）"
+    },
+    {
+      "source": "DAS × CF target ROI (same DAS reference)",
+      "target": "DAS × CF 目标 ROI（共用 DAS 参考）"
+    },
+    {
+      "source": "DAS × CF, self-normalized",
+      "target": "DAS × CF，各自峰值归一化"
+    },
+    {
+      "source": "DAS, self-normalized",
+      "target": "DAS，各自峰值归一化"
+    },
+    {
+      "source": "Envelope / ROI mean",
+      "target": "包络 / ROI 均值"
+    },
+    {
+      "source": "Fully coherent",
+      "target": "完全相干"
+    },
+    {
+      "source": "GCF low-frequency bandwidth sweep",
+      "target": "GCF 低频带宽变化实验"
+    },
+    {
+      "source": "Homogeneous speckle ROI",
+      "target": "匀质散斑 ROI（示例）"
+    },
+    {
+      "source": "How widening the low-frequency band changes GCF weight",
+      "target": "低频带加宽如何改变 GCF 权重"
+    },
+    {
+      "source": "Imag",
+      "target": "虚部"
+    },
+    {
+      "source": "Real",
+      "target": "实部"
+    },
+    {
+      "source": "Imaginary",
+      "target": "虚部"
+    },
+    {
+      "source": "In-vivo focused-imaging carotid comparison",
+      "target": "活体颈动脉聚焦成像对照"
+    },
+    {
+      "source": "Local DAS and CF peaks will be refined independently",
+      "target": "分别精确定位 DAS 与 CF 的局部峰值"
+    },
+    {
+      "source": "Low-frequency half-width K",
+      "target": "低频半宽 K"
+    },
+    {
+      "source": "M0=0: CF weight",
+      "target": "M0=0：CF 权重"
+    },
+    {
+      "source": "M0=0: DC only = CF",
+      "target": "M0=0：仅 DC，即 CF"
+    },
+    {
+      "source": "Manual DAS",
+      "target": "手工 DAS"
+    },
+    {
+      "source": "Manual blended RTB",
+      "target": "手工混合模型 RTB"
+    },
+    {
+      "source": "Manual receive-domain Coherence Factor",
+      "target": "手工实现的接收域相干因子"
+    },
+    {
+      "source": "Mean",
+      "target": "均值"
+    },
+    {
+      "source": "Median",
+      "target": "中位数"
+    },
+    {
+      "source": "Mean-normalized envelope distribution",
+      "target": "按均值归一化的包络分布"
+    },
+    {
+      "source": "Normalized complex phasors",
+      "target": "归一化复相量"
+    },
+    {
+      "source": "Normalized energy",
+      "target": "归一化能量"
+    },
+    {
+      "source": "Normalized spectral energy",
+      "target": "归一化频谱能量"
+    },
+    {
+      "source": "One conventional FI pixel = one Tx + many aligned Rx samples",
+      "target": "一个常规 FI 像素 = 一次 Tx + 多个对齐的 Rx 样本"
+    },
+    {
+      "source": "One strong outlier",
+      "target": "一个强离群通道"
+    },
+    {
+      "source": "Partially coherent",
+      "target": "部分相干"
+    },
+    {
+      "source": "Perfect coherence",
+      "target": "理想相干"
+    },
+    {
+      "source": "Phase (deg)",
+      "target": "相位（度）"
+    },
+    {
+      "source": "Point-target axial profile versus GCF bandwidth",
+      "target": "不同 GCF 带宽下的点目标轴向剖面"
+    },
+    {
+      "source": "Point-target comparison using a common amplitude reference",
+      "target": "共用幅度参考的点目标对照"
+    },
+    {
+      "source": "Point-target lateral profile versus GCF bandwidth",
+      "target": "不同 GCF 带宽下的点目标横向剖面"
+    },
+    {
+      "source": "Probability density",
+      "target": "概率密度"
+    },
+    {
+      "source": "REAL delay-aligned receive aperture vectors",
+      "target": "真实数据中延时对齐的接收孔径向量"
+    },
+    {
+      "source": "RF query time (\\mus)",
+      "target": "RF 查询时刻（\\mus）"
+    },
+    {
+      "source": "Random phase",
+      "target": "随机相位"
+    },
+    {
+      "source": "Receive channel",
+      "target": "接收通道"
+    },
+    {
+      "source": "Receive element index",
+      "target": "接收阵元索引"
+    },
+    {
+      "source": "Receive-domain CF map",
+      "target": "接收域 CF 权重图"
+    },
+    {
+      "source": "Receive-domain coherence weights",
+      "target": "接收域相干权重"
+    },
+    {
+      "source": "Right image uses the SAME amplitude reference as DAS",
+      "target": "右图与 DAS 共用同一个幅度参考"
+    },
+    {
+      "source": "Same DAS amplitude reference for all images",
+      "target": "所有图像共用同一个 DAS 幅度参考"
+    },
+    {
+      "source": "Select THREE pixels",
+      "target": "选择三个像素"
+    },
+    {
+      "source": "Select TWO opposite corners of a homogeneous speckle ROI",
+      "target": "选择散斑示例 ROI 的两个对角点"
+    },
+    {
+      "source": "Select one isolated point-like target",
+      "target": "选择一个孤立的点状目标"
+    },
+    {
+      "source": "Self-normalized comparison",
+      "target": "各自峰值归一化对照"
+    },
+    {
+      "source": "Smooth 1-bin phase ramp",
+      "target": "平滑的单频点相位坡"
+    },
+    {
+      "source": "Spatial spectrum",
+      "target": "空间频谱"
+    },
+    {
+      "source": "Suggested: bright target / speckle / weak or suspicious region",
+      "target": "建议：明亮目标、散斑、较弱或可疑区域"
+    },
+    {
+      "source": "USTB blended RTB",
+      "target": "USTB 混合模型 RTB"
+    },
+    {
+      "source": "Unwrapped phase (deg)",
+      "target": "展开后的相位（度）"
+    },
+    {
+      "source": "Use this figure for morphology; do NOT use it to judge absolute suppression",
+      "target": "本图用于比较形态，不用于判断绝对幅度抑制"
+    },
+    {
+      "source": "Use this figure to compare actual suppression",
+      "target": "本图用于比较实际幅度抑制"
+    },
+    {
+      "source": "Why GCF generalizes ordinary CF",
+      "target": "GCF 如何推广普通 CF"
+    },
+    {
+      "source": "Within each row, DAS / CF / GCF share that acquisition's DAS 0-dB reference",
+      "target": "同一行 DAS / CF / GCF 共用该次采集的 DAS 0 dB 参考"
+    },
+    {
+      "source": "|Manual RTB normalized envelope - USTB|",
+      "target": "|手工 RTB 归一化包络 - USTB|"
+    },
+    {
+      "source": "|aligned sample|",
+      "target": "|对齐后的样本|"
+    },
+    {
+      "source": "A more stable solve can weaken adaptive suppression",
+      "target": "更稳定的求解可能减弱自适应抑制"
+    },
+    {
+      "source": "Active Rx",
+      "target": "有效 Rx"
+    },
+    {
+      "source": "Active Rx channels M",
+      "target": "有效 Rx 通道数 M"
+    },
+    {
+      "source": "Active receive count M",
+      "target": "有效接收通道数 M"
+    },
+    {
+      "source": "Actual mask H",
+      "target": "实际滤波掩膜 H"
+    },
+    {
+      "source": "Actual pattern with residual phase slope",
+      "target": "存在残余相位坡的真实模式"
+    },
+    {
+      "source": "Actual target gain amplitude (dB)",
+      "target": "真实目标的增益幅度（dB）"
+    },
+    {
+      "source": "After bandpass",
+      "target": "带通之后"
+    },
+    {
+      "source": "Before bandpass",
+      "target": "带通之前"
+    },
+    {
+      "source": "Aligned signals can still have residual phase mismatch",
+      "target": "对齐后仍可能存在残余相位不匹配"
+    },
+    {
+      "source": "All +1",
+      "target": "全部为 +1"
+    },
+    {
+      "source": "All -1",
+      "target": "全部为 -1"
+    },
+    {
+      "source": "All eight channels have this same RF waveform",
+      "target": "八个通道具有相同的 RF 波形"
+    },
+    {
+      "source": "Alternating signs",
+      "target": "正负号交替"
+    },
+    {
+      "source": "Amplitude relative to each method peak (dB)",
+      "target": "相对各自方法峰值的幅度（dB）"
+    },
+    {
+      "source": "Assumed aligned pattern",
+      "target": "假定的对齐模式"
+    },
+    {
+      "source": "Axial + loading",
+      "target": "轴向邻域与加载"
+    },
+    {
+      "source": "Axial image-time frequency (MHz)",
+      "target": "轴向图像时间频率（MHz）"
+    },
+    {
+      "source": "Both preserve q = 0; other responses differ",
+      "target": "两者均保留 q = 0，其他响应不同"
+    },
+    {
+      "source": "CF IQR",
+      "target": "CF 四分位距"
+    },
+    {
+      "source": "CF median",
+      "target": "CF 中位数"
+    },
+    {
+      "source": "GCF IQR",
+      "target": "GCF 四分位距"
+    },
+    {
+      "source": "GCF median",
+      "target": "GCF 中位数"
+    },
+    {
+      "source": "Central 80% lateral field; outer scanlines excluded",
+      "target": "横向中央 80% 视野，排除边缘扫描线"
+    },
+    {
+      "source": "Chapter 3: receive-domain MVDR / Capon",
+      "target": "第 3 章：接收域 MVDR / Capon"
+    },
+    {
+      "source": "Chapter 4: conventional focused FI, identical delay/aperture",
+      "target": "第 4 章：常规聚焦 FI，延时与孔径相同"
+    },
+    {
+      "source": "Chosen filter gain",
+      "target": "所选滤波器增益"
+    },
+    {
+      "source": "Common DAS target-peak reference",
+      "target": "共用 DAS 目标峰值参考"
+    },
+    {
+      "source": "Common spectral reference shows removal of low frequency",
+      "target": "共用频谱参考，观察低频抑制"
+    },
+    {
+      "source": "Complex weight component",
+      "target": "复数权重分量"
+    },
+    {
+      "source": "Computed pair reduction",
+      "target": "快速配对求和结果"
+    },
+    {
+      "source": "DAS (own peak = 0 dB)",
+      "target": "DAS（自身峰值 = 0 dB）"
+    },
+    {
+      "source": "DAS level",
+      "target": "DAS 幅度"
+    },
+    {
+      "source": "DAS real",
+      "target": "DAS 实部"
+    },
+    {
+      "source": "MVDR real",
+      "target": "MVDR 实部"
+    },
+    {
+      "source": "DAS vs MVDR lateral target profiles",
+      "target": "DAS 与 MVDR 的目标横向剖面"
+    },
+    {
+      "source": "DAS: own GLOBAL peak = 0 dB",
+      "target": "DAS：自身全图峰值 = 0 dB"
+    },
+    {
+      "source": "DMAS output before vs after 2f_0 filtering",
+      "target": "DMAS 输出在 2f_0 滤波前后的对照"
+    },
+    {
+      "source": "DMAS(a s) = |a| DMAS(s): not a linear operator",
+      "target": "DMAS(a s) = |a| DMAS(s)：非线性算子"
+    },
+    {
+      "source": "Dense-grid target profiles: separate attenuation from width",
+      "target": "密网格目标剖面：区分幅度衰减与宽度变化"
+    },
+    {
+      "source": "Depth / wavelength",
+      "target": "深度 / 波长"
+    },
+    {
+      "source": "Depth offset (wavelengths)",
+      "target": "深度偏移（波长）"
+    },
+    {
+      "source": "Each curve / own maximum",
+      "target": "各曲线 / 自身最大值"
+    },
+    {
+      "source": "Each method uses a lateral/axial slice through its own local peak",
+      "target": "各方法使用通过自身局部峰值的横向与轴向切片"
+    },
+    {
+      "source": "Each method uses its own target peak",
+      "target": "各方法使用自身目标峰值"
+    },
+    {
+      "source": "Edges [1.5 1.75 2.5 2.75] f0",
+      "target": "频带边界 [1.5 1.75 2.5 2.75] f0"
+    },
+    {
+      "source": "Eigenvalue (linear power)",
+      "target": "特征值（线性功率）"
+    },
+    {
+      "source": "Eigenvalue index (sorted)",
+      "target": "特征值索引（已排序）"
+    },
+    {
+      "source": "Envelope without the bandpass",
+      "target": "未经带通的包络"
+    },
+    {
+      "source": "FFT filter mask gain",
+      "target": "FFT 滤波掩膜增益"
+    },
+    {
+      "source": "Filtered DMAS",
+      "target": "滤波后的 DMAS"
+    },
+    {
+      "source": "First eight channels: a versus a_{true}",
+      "target": "前八个通道：a 与 a_{true}"
+    },
+    {
+      "source": "Four-channel signed-sqrt examples: the upper triangle is the pair sum",
+      "target": "四通道保留符号的平方根示例：对上三角求和"
+    },
+    {
+      "source": "Frequency / f0",
+      "target": "频率 / f0"
+    },
+    {
+      "source": "Gray background: outside the DAS >= -40 dB / Tx-support mask",
+      "target": "灰色背景：在 DAS ≥ -40 dB 与 Tx 支持掩膜之外"
+    },
+    {
+      "source": "Image time approximately 2z/c; fs,z = c/(2 dz)",
+      "target": "图像时间近似为 2z/c；fs,z = c/(2 dz)"
+    },
+    {
+      "source": "In-vivo carotid: depth dependence of receive coherence",
+      "target": "活体颈动脉：接收相干性随深度的变化"
+    },
+    {
+      "source": "Indices in X: each column selects a subarray",
+      "target": "X 的索引：每列选取一个子孔径"
+    },
+    {
+      "source": "Input RF",
+      "target": "输入 RF"
+    },
+    {
+      "source": "Input pulse envelope",
+      "target": "输入脉冲包络"
+    },
+    {
+      "source": "Lateral x (mm)",
+      "target": "横向 x（mm）"
+    },
+    {
+      "source": "Linear-envelope amplitude (dB)",
+      "target": "线性包络幅度（dB）"
+    },
+    {
+      "source": "Loaded matrix condition number",
+      "target": "加载后矩阵的条件数"
+    },
+    {
+      "source": "Loading adds a scaled identity; it does not generate new observations",
+      "target": "加载是加入缩放后的单位矩阵，不会增加观测数据"
+    },
+    {
+      "source": "Local target: each method uses its own peak / slice",
+      "target": "局部目标：各方法使用自身峰值与切片"
+    },
+    {
+      "source": "M(z,x): aperture AND valid interpolation determine count",
+      "target": "M(z,x)：由孔径与有效插值共同确定通道数"
+    },
+    {
+      "source": "MVDR - DAS amplitude change (dB)",
+      "target": "MVDR - DAS 幅度变化（dB）"
+    },
+    {
+      "source": "MVDR changes amplitude AND phase before summation",
+      "target": "MVDR 在求和之前同时调整幅值和相位"
+    },
+    {
+      "source": "MVDR imaginary",
+      "target": "MVDR 虚部"
+    },
+    {
+      "source": "MVDR parameter trade-off near TheGB point target",
+      "target": "TheGB 点目标附近的 MVDR 参数权衡"
+    },
+    {
+      "source": "MVDR, self-normalized",
+      "target": "MVDR，各自峰值归一化"
+    },
+    {
+      "source": "Magnitude / raw-DMAS spectral peak (dB)",
+      "target": "幅值 / 未滤波 DMAS 频谱峰值（dB）"
+    },
+    {
+      "source": "Magnitude relative to unfiltered peak (dB)",
+      "target": "相对未滤波频谱峰值的幅值（dB）"
+    },
+    {
+      "source": "Manual MVDR / Capon (same DAS reference)",
+      "target": "手工 MVDR / Capon（共用 DAS 参考）"
+    },
+    {
+      "source": "Masked spectrum",
+      "target": "乘掩膜后的频谱"
+    },
+    {
+      "source": "Median DAS envelope (dB, profile normalized)",
+      "target": "DAS 包络中位数（dB，剖面归一化）"
+    },
+    {
+      "source": "Median active Rx count",
+      "target": "有效 Rx 通道数中位数"
+    },
+    {
+      "source": "Mismatch demonstration, not a diagnosis of the UFF target attenuation",
+      "target": "失配机制演示，不用于判定 UFF 目标衰减的具体原因"
+    },
+    {
+      "source": "More loading tends toward normalized DAS",
+      "target": "加载增强时趋向归一化 DAS"
+    },
+    {
+      "source": "Morphology and adaptive amplitude change",
+      "target": "形态与自适应幅度变化"
+    },
+    {
+      "source": "Narrowband vector model: same preservation constraint, different weights",
+      "target": "窄带向量模型：保留约束相同，权重不同"
+    },
+    {
+      "source": "Normalized DAS",
+      "target": "归一化 DAS"
+    },
+    {
+      "source": "Normalized DMAS BEFORE bandpass",
+      "target": "带通之前的归一化 DMAS"
+    },
+    {
+      "source": "Normalized output",
+      "target": "归一化输出"
+    },
+    {
+      "source": "Own LOCAL target-peak amplitude (dB)",
+      "target": "相对自身局部目标峰值的幅度（dB）"
+    },
+    {
+      "source": "Own-peak normalized: compare morphology, NOT absolute amplitude",
+      "target": "各自峰值归一化：比较形态，不能比较绝对幅度"
+    },
+    {
+      "source": "Own-peak spectral magnitude (dB)",
+      "target": "相对自身频谱峰值的幅值（dB）"
+    },
+    {
+      "source": "Pair outputs are even under global sign reversal",
+      "target": "所有通道一起反号时，配对输出不变"
+    },
+    {
+      "source": "Peak envelope / own q=0 reference (dB)",
+      "target": "峰值包络 / 自身 q=0 参考（dB）"
+    },
+    {
+      "source": "Plain cosine multiplication: DC and 2f0",
+      "target": "普通余弦相乘：DC 与 2f0"
+    },
+    {
+      "source": "Plain pair product",
+      "target": "普通通道对乘积"
+    },
+    {
+      "source": "Plain product ~ cos^2",
+      "target": "普通乘积 ~ cos^2"
+    },
+    {
+      "source": "Point-target lateral profile",
+      "target": "点目标横向剖面"
+    },
+    {
+      "source": "Project scaling: normalized output = M for s_i = +1",
+      "target": "项目幅度约定：s_i = +1 时，归一化输出 = M"
+    },
+    {
+      "source": "RF / full-record peak",
+      "target": "RF / 全记录峰值"
+    },
+    {
+      "source": "RF amplitude",
+      "target": "RF 幅度"
+    },
+    {
+      "source": "RTB + receive-MVDR (same RTB-DAS reference)",
+      "target": "RTB 与接收 MVDR（共用 RTB-DAS 参考）"
+    },
+    {
+      "source": "RTB-DAS, self-normalized",
+      "target": "RTB-DAS，各自峰值归一化"
+    },
+    {
+      "source": "RTB-MVDR, self-normalized",
+      "target": "RTB-MVDR，各自峰值归一化"
+    },
+    {
+      "source": "Raw DMAS contains a large non-oscillatory component",
+      "target": "未滤波 DMAS 含有较强的非振荡成分"
+    },
+    {
+      "source": "Raw pair sum for s_i = +1: M(M-1)/2",
+      "target": "s_i = +1 时的原始通道对之和：M(M-1)/2"
+    },
+    {
+      "source": "Raw scalar samples, not envelopes; the lower triangle and diagonal are excluded",
+      "target": "原始标量样本，不是包络；排除下三角与对角线"
+    },
+    {
+      "source": "Real RF sample",
+      "target": "实数 RF 样本"
+    },
+    {
+      "source": "Real input scale a",
+      "target": "实数输入缩放系数 a"
+    },
+    {
+      "source": "Real part of analytic DAS",
+      "target": "解析 DAS 的实部"
+    },
+    {
+      "source": "Real, even FFT mask",
+      "target": "实数且偶对称的 FFT 掩膜"
+    },
+    {
+      "source": "Receive-domain coherence weights on two in-vivo acquisitions",
+      "target": "两次活体采集的接收域相干权重"
+    },
+    {
+      "source": "Relative amplitude (dB)",
+      "target": "相对幅度（dB）"
+    },
+    {
+      "source": "Relative loading delta",
+      "target": "相对加载量 δ"
+    },
+    {
+      "source": "Residual phase (rad)",
+      "target": "残余相位（rad）"
+    },
+    {
+      "source": "Residual phase slope (cycles/channel)",
+      "target": "残余相位斜率（周/通道）"
+    },
+    {
+      "source": "Residual phase slope q (cycles/channel)",
+      "target": "残余相位斜率 q（周/通道）"
+    },
+    {
+      "source": "Response amplitude (dB)",
+      "target": "响应幅度（dB）"
+    },
+    {
+      "source": "Rx channel index (zero based)",
+      "target": "Rx 通道索引（从 0 开始）"
+    },
+    {
+      "source": "Same DAS amplitude reference; display cropped around the target",
+      "target": "共用 DAS 幅度参考，仅裁剪目标附近的显示"
+    },
+    {
+      "source": "Same RTB geometry; only receive combination changes",
+      "target": "RTB 几何相同，仅改变接收组合"
+    },
+    {
+      "source": "Sensitivity to phase agreement is not a truth detector",
+      "target": "对相位一致性敏感，不等于能分辨真假目标"
+    },
+    {
+      "source": "Seven rows estimate R; only the center row forms y",
+      "target": "七行用于估计 R，仅中心行用于形成 y"
+    },
+    {
+      "source": "Signed square roots add higher even harmonics",
+      "target": "保留符号的平方根运算产生更高偶次谐波"
+    },
+    {
+      "source": "Signed-sqrt ~ |cos|",
+      "target": "保留符号的平方根 ~ |cos|"
+    },
+    {
+      "source": "Spatial + axial",
+      "target": "空间与轴向平均"
+    },
+    {
+      "source": "Spatial only",
+      "target": "仅空间平均"
+    },
+    {
+      "source": "Spatial phase slope q (cycles/channel)",
+      "target": "空间相位斜率 q（周/通道）"
+    },
+    {
+      "source": "Spatial rank <= P=5; neighbors add sample diversity",
+      "target": "空间估计秩 ≤ P=5；邻近深度增加样本差异"
+    },
+    {
+      "source": "Spatial smoothing uses Rx subarrays, not separate transmit events",
+      "target": "空间平滑使用 Rx 子孔径，不使用不同发射事件"
+    },
+    {
+      "source": "Stage / own full-scanline maximum",
+      "target": "本阶段 / 该扫描线的最大绝对值"
+    },
+    {
+      "source": "Stage amplitude",
+      "target": "本阶段幅度"
+    },
+    {
+      "source": "Subarray",
+      "target": "子孔径"
+    },
+    {
+      "source": "Subarray / snapshot column",
+      "target": "子孔径 / 快照列"
+    },
+    {
+      "source": "Subarray channel",
+      "target": "子孔径内通道"
+    },
+    {
+      "source": "Synthetic fast time (us)",
+      "target": "合成快时间（μs）"
+    },
+    {
+      "source": "Synthetic periodic example: the 2f0 component is generated digitally",
+      "target": "合成周期示例：2f0 分量由数字运算产生"
+    },
+    {
+      "source": "Synthetic pulse: isolate the chosen band, then form its analytic envelope",
+      "target": "合成脉冲：先选取频带，再取解析信号包络"
+    },
+    {
+      "source": "Synthetic receive-vector experiment, not an acoustic PSF or SNR test",
+      "target": "合成接收向量实验，不是声学 PSF 或 SNR 测试"
+    },
+    {
+      "source": "The fast identity is exact algebra; floating-point results use a tolerance",
+      "target": "快速式在代数上严格等价；浮点结果使用数值容差"
+    },
+    {
+      "source": "The same coherent receive vector is treated identically whether it comes from a target or clutter",
+      "target": "只要接收向量相同，目标与杂波就会被同样处理"
+    },
+    {
+      "source": "Time relative to pulse center (us)",
+      "target": "相对脉冲中心的时间（μs）"
+    },
+    {
+      "source": "Toy covariance example: M=12, L=8, P=5, axial half-window=1.5 wavelengths",
+      "target": "协方差教学示例：M=12，L=8，P=5，轴向半窗=1.5 波长"
+    },
+    {
+      "source": "Unfiltered DMAS",
+      "target": "未滤波 DMAS"
+    },
+    {
+      "source": "Unfiltered normalized DMAS",
+      "target": "未滤波的归一化 DMAS"
+    },
+    {
+      "source": "Unfiltered spectrum",
+      "target": "未滤波频谱"
+    },
+    {
+      "source": "Unique pairs M(M-1)/2",
+      "target": "唯一通道对数量 M(M-1)/2"
+    },
+    {
+      "source": "Unit-gain response amplitude (dB)",
+      "target": "单位增益响应幅度（dB）"
+    },
+    {
+      "source": "Unnormalized DMAS sample",
+      "target": "未归一化 DMAS 样本"
+    },
+    {
+      "source": "Unnormalized output",
+      "target": "未归一化输出"
+    },
+    {
+      "source": "Use common-reference image for amplitude; self-normalized image for morphology",
+      "target": "共用参考图用于看幅度；各自峰值归一化图用于看形态"
+    },
+    {
+      "source": "Use the profile to judge whether MVDR is now laterally sampled",
+      "target": "结合剖面判断横向采样是否足以描述 MVDR 响应"
+    },
+    {
+      "source": "Weight energy ||w||^2",
+      "target": "权重能量 ||w||^2"
+    },
+    {
+      "source": "Within-subarray channel",
+      "target": "子孔径内通道"
+    },
+    {
+      "source": "abs(analytic(raw DMAS)) is a different operation",
+      "target": "直接对未滤波 DMAS 取解析包络是另一种运算"
+    },
+    {
+      "source": "dz = lambda/16: four samples per 2f0 cycle",
+      "target": "dz = lambda/16：每个 2f0 周期取四个样本"
+    },
+    {
+      "source": "dz = lambda/4: 2f0 aliases to constant samples",
+      "target": "dz = lambda/4：2f0 混叠为恒定样本"
+    },
+    {
+      "source": "fDMAS (own peak = 0 dB)",
+      "target": "fDMAS（自身峰值 = 0 dB）"
+    },
+    {
+      "source": "fDMAS AFTER bandpass",
+      "target": "带通之后的 fDMAS"
+    },
+    {
+      "source": "fDMAS envelope",
+      "target": "fDMAS 包络"
+    },
+    {
+      "source": "fDMAS: own GLOBAL peak = 0 dB",
+      "target": "fDMAS：自身全图峰值 = 0 dB"
+    },
+    {
+      "source": "fs,z = 2.0 f0; Nyquist = 1.0 f0",
+      "target": "fs,z = 2.0 f0；奈奎斯特频率 = 1.0 f0"
+    },
+    {
+      "source": "fs,z = 8.0 f0; Nyquist = 4.0 f0",
+      "target": "fs,z = 8.0 f0；奈奎斯特频率 = 4.0 f0"
+    },
+    {
+      "source": "w^H a = 1, but |w^H a_{true}| may be smaller",
+      "target": "w^H a = 1，但 |w^H a_{true}| 可能更小"
+    },
+    {
+      "source": "|R| : X X^H / 4, size 3 x 3",
+      "target": "|R|：X X^H / 4，维度 3 × 3"
+    },
+    {
+      "source": "|X| : 3 rows x 4 columns",
+      "target": "|X|：3 行 × 4 列"
+    },
+    {
+      "source": "2/(M-1) times pair sum",
+      "target": "2/(M-1) 乘通道对之和"
+    },
+    {
+      "source": "2f0 sample",
+      "target": "2f0 样本"
+    },
+    {
+      "source": "2f0-band output",
+      "target": "2f0 带通输出"
+    },
+    {
+      "source": "A finer output grid does not restore missing information in the acquired RF",
+      "target": "加密输出网格不能恢复采集 RF 中缺失的信息"
+    },
+    {
+      "source": "Absolute-scale prediction",
+      "target": "绝对缩放关系的预测"
+    }
+  ],
+  "patterns": [
+    {
+      "source": "^(\\d+) Rx elements$",
+      "target": "$1 个 Rx 阵元"
+    },
+    {
+      "source": "^(\\d+) Tx focuses$",
+      "target": "$1 个 Tx 焦点"
+    },
+    {
+      "source": "^(\\d+) elements, F# (.+)$",
+      "target": "$1 阵元，F# $2"
+    },
+    {
+      "source": "^Element (\\d+)$",
+      "target": "阵元 $1"
+    },
+    {
+      "source": "^Beamforming c = (.+)$",
+      "target": "重建声速 c = $1"
+    },
+    {
+      "source": "^Separation (.+)$",
+      "target": "间距 $1"
+    },
+    {
+      "source": "^Short pulse, (.+)$",
+      "target": "短脉冲，$1"
+    },
+    {
+      "source": "^Long pulse, (.+)$",
+      "target": "长脉冲，$1"
+    },
+    {
+      "source": "^Axial PSF comparison near x = (.+)$",
+      "target": "x = $1 附近的轴向 PSF 对照"
+    },
+    {
+      "source": "^Lateral PSF comparison near z = (.+)$",
+      "target": "z = $1 附近的横向 PSF 对照"
+    },
+    {
+      "source": "^Axial PSF profile at x = (.+) \\| FWHM = (.+)$",
+      "target": "轴向 PSF：x = $1 | FWHM = $2"
+    },
+    {
+      "source": "^Lateral PSF profile at z = (.+) \\| FWHM = (.+)$",
+      "target": "横向 PSF：z = $1 | FWHM = $2"
+    },
+    {
+      "source": "^Lateral target profile near z = (.+)$",
+      "target": "z = $1 附近的目标横向剖面"
+    },
+    {
+      "source": "^Dynamic receive aperture, F# = (.+)$",
+      "target": "动态接收孔径，F# = $1"
+    },
+    {
+      "source": "^Fractional query u = (.+); fs/fc = (.+)$",
+      "target": "非整数取样位置 u = $1；fs/fc = $2"
+    },
+    {
+      "source": "^Conventional FI \\((\\d+) lines\\)$",
+      "target": "常规 FI（$1 条扫描线）"
+    },
+    {
+      "source": "^RTB blended \\((\\d+) pixels\\)$",
+      "target": "RTB 混合模型（$1 个横向像素）"
+    },
+    {
+      "source": "^Conv\\. interpolated (.+)$",
+      "target": "常规 FI 包络插值 $1"
+    },
+    {
+      "source": "^Conventional ([0-9.]+ mm)$",
+      "target": "常规 FI $1"
+    },
+    {
+      "source": "^Full: FWHM (.+)$",
+      "target": "全孔径：FWHM $1"
+    },
+    {
+      "source": "^F# ([0-9.]+): FWHM (.+)$",
+      "target": "F# $1：FWHM $2"
+    },
+    {
+      "source": "^Lateral offset (.+)$",
+      "target": "横向偏移 $1"
+    },
+    {
+      "source": "^RF echo zoom \\| wave=(\\d+) \\| frame=(\\d+)$",
+      "target": "RF 回波放大 | Tx=$1 | 帧=$2"
+    },
+    {
+      "source": "^real channel data \\| wave=(\\d+) \\| frame=(\\d+)$",
+      "target": "实数通道数据 | Tx=$1 | 帧=$2"
+    },
+    {
+      "source": "^Lateral profile at z = (.+)$",
+      "target": "z = $1 处的横向剖面"
+    },
+    {
+      "source": "^Aligned aperture, CF=(.+)$",
+      "target": "对齐孔径，CF=$1"
+    },
+    {
+      "source": "^GCF (?:map|weight), M0=(.+)$",
+      "target": "GCF 权重，M0=$1"
+    },
+    {
+      "source": "^GCF\\(M0=([^)]*)\\) - CF weight$",
+      "target": "GCF(M0=$1) - CF 权重"
+    },
+    {
+      "source": "^L7 FI carotid cross ([12]) \\| (.+)$",
+      "target": "颈动脉采集 $1 | $2"
+    },
+    {
+      "source": "^Phasors, CF = (.+)$",
+      "target": "复相量，CF = $1"
+    },
+    {
+      "source": "^P([123]): Tx\\+Rx delay$",
+      "target": "P$1：Tx+Rx 延时"
+    },
+    {
+      "source": "^Axial target profile \\| DAS FWHM (.+) \\| CF FWHM (.+)$",
+      "target": "目标轴向剖面 | DAS FWHM $1 | CF FWHM $2"
+    },
+    {
+      "source": "^Lateral target profile \\| DAS FWHM (.+) \\| CF FWHM (.+)$",
+      "target": "目标横向剖面 | DAS FWHM $1 | CF FWHM $2"
+    },
+    {
+      "source": "^L/M=(.+), load=(.+)$",
+      "target": "L/M=$1，加载=$2"
+    },
+    {
+      "source": "^L/M=(.+), loading=(.+), axial avg=(.+) lambda$",
+      "target": "L/M=$1，加载=$2，轴向半窗=$3 λ"
+    },
+    {
+      "source": "^Additional low-spatial-frequency energy admitted by GCF, M0=(.+)$",
+      "target": "GCF 额外纳入的低空间频率能量，M0=$1"
+    },
+    {
+      "source": "^Common DAS reference \\| stride=(.+) \\| L/M=(.+) \\| loading=(.+) \\| axial avg=(.+) lambda$",
+      "target": "共用 DAS 参考 | Tx 步长=$1 | L/M=$2 | 加载=$3 | 轴向半窗=$4 λ"
+    },
+    {
+      "source": "^L7 FI carotid cross ([12])$",
+      "target": "颈动脉采集 $1"
+    },
+    {
+      "source": " \\| CF map$",
+      "target": " | CF 权重图"
+    },
+    {
+      "source": " \\| GCF map, M0=(.+)$",
+      "target": " | GCF 权重图，M0=$1"
+    },
+    {
+      "source": "^carotid cross ([12]) \\| CF/GCF vs depth$",
+      "target": "颈动脉采集 $1 | CF/GCF 随深度变化"
+    },
+    {
+      "source": "^carotid cross ([12]) \\| signal level and active aperture$",
+      "target": "颈动脉采集 $1 | 信号幅度与有效孔径"
+    },
+    {
+      "source": "^Six pairs: DAS = (.+), DMAS = (.+)$",
+      "target": "六个通道对：DAS = $1，DMAS = $2"
+    },
+    {
+      "source": "^At x=(.+): pair count grows faster than M$",
+      "target": "x=$1：通道对数量比 M 增长更快"
+    },
+    {
+      "source": "^Axial: dz=(.+); widths (.+) / (.+)$",
+      "target": "轴向：dz=$1；宽度 $2 / $3"
+    },
+    {
+      "source": "^Lateral: dx=(.+); widths span (.+) / (.+) intervals$",
+      "target": "横向：dx=$1；宽度跨 $2 / $3 个间距"
+    },
+    {
+      "source": "^One actual TheGB scanline, x=(.+): separate signal stages$",
+      "target": "真实 TheGB 扫描线 x=$1：区分各信号阶段"
+    },
+    {
+      "source": "^Zoom around median transmit focus: z_f = (.+)$",
+      "target": "发射焦深中位数附近放大：z_f = $1"
+    }
+  ]
+}

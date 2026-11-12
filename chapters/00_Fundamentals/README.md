@@ -71,19 +71,19 @@
    ↓
 传播距离
    ↓
-Tx / Rx propagation time
+Tx / Rx 传播时间
    ↓
-channel RF / IQ 中的时间和相位结构
+通道 RF / IQ 中的时间和相位结构
    ↓
-Delay + interpolation
+延时 + 插值
    ↓
-focused aperture vector
+对齐后的孔径向量
    ↓
-aperture / apodization
+孔径 / 加窗
    ↓
-coherent sum
+相干求和
    ↓
-PSF / image
+PSF / 图像
 ~~~
 
 ---
@@ -100,17 +100,17 @@ PSF / image
 
 ~~~mermaid
 flowchart TB
-    A[Linear array: element 1 ... M] --> B[Transmit acoustic wave]
-    B --> C[Point scatterer r = (x,z)]
-    C --> D1[Echo to element 1]
-    C --> D2[Echo to element 2]
-    C --> D3[Echo to element M]
-    D1 --> E[Different arrival times]
+    A[线阵：阵元 1 至 M] --> B[发射声波]
+    B --> C[点散射体 r = (x,z)]
+    C --> D1[回波到达阵元 1]
+    C --> D2[回波到达阵元 2]
+    C --> D3[回波到达阵元 M]
+    D1 --> E[到达时刻不同]
     D2 --> E
     D3 --> E
-    E --> F[Delay compensation]
-    F --> G[Alignment across aperture]
-    G --> H[Weighted coherent sum]
+    E --> F[延时补偿]
+    F --> G[孔径内信号对齐]
+    G --> H[加权相干求和]
 ~~~
 
 同一个散射体到不同阵元的传播距离不同，所以回波不会在所有 channel 上同时到达。
@@ -128,28 +128,28 @@ flowchart TB
 第 0 章第一个脚本 <code>demo_synthetic_point_target.m</code> 里其实存在两个完全不同的过程。
 
 ~~~text
-Forward model：模拟真实世界
+正向模型：模拟真实世界
 ─────────────────────────
 真实 target_x / target_z
         ↓
-真实 Tx / Rx propagation time
+真实 Tx / Rx 传播时间
         ↓
 每个阵元收到一条 RF
         ↓
 channel_rf[sample, element]
 
 
-Reconstruction：模拟 beamformer
+图像重建：模拟波束合成器
 ────────────────────────────
-选择 candidate pixel (x_focus, z_focus)
+选择候选像素 (x_focus, z_focus)
         ↓
-预测这个像素对应的 Tx / Rx delay
+预测这个像素对应的 Tx / Rx 延时
         ↓
-到每个 channel 的对应时间取样
+到每个通道的对应时间取样
         ↓
 focused_samples[element]
         ↓
-weighted coherent sum
+加权相干求和
 ~~~
 
 这个区分非常重要。
@@ -199,7 +199,7 @@ channel_rf = zeros(n_samples, n_elements);
 其 shape 是：
 
 ~~~text
-[sample, receive element]
+[时间样本, 接收阵元]
 ~~~
 
 所以：
@@ -326,10 +326,10 @@ $$ \boxed{\text{Acquisition} \neq \text{Beamformer}} $$
 完全可以存在：
 
 ~~~text
-Plane Wave + DAS
-Plane Wave + MV
-Focused Imaging + DAS
-Focused Imaging + DMAS
+平面波成像 + DAS
+平面波成像 + MV
+聚焦成像 + DAS
+聚焦成像 + DMAS
 ~~~
 
 同样的 beamformer 可以作用在不同 acquisition 上，但 Tx delay 模型不能混用。
@@ -357,7 +357,7 @@ $$ \sqrt{z_0^2+(x_m-x_0)^2} \approx z_0+\frac{(x_m-x_0)^2}{2z_0}, $$
 因此轨迹看起来近似抛物线。
 
 ~~~text
-absolute time
+绝对时间
     ↓
 
              ______
@@ -365,7 +365,7 @@ absolute time
        __/            \__
 ______/                  \______
 
-──────────────────────────────→ element position
+──────────────────────────────→ 阵元位置
 ~~~
 
 这条曲线不是显示伪影，它就是点目标的传播几何在 channel domain 中留下的痕迹。
@@ -405,7 +405,7 @@ $$ \tilde v_m(\Delta t) = v_m\!\left(\Delta t+\hat\tau_m\right), $$
 $$ \Delta t\approx0. $$
 
 ~~~text
-Before focusing                 After correct focusing
+延时对齐前                       正确对齐后
 
 ch 1      /\                    ch 1        /\
 ch 2         /\                 ch 2        /\
@@ -598,13 +598,13 @@ PSF 是后续比较 beamformer 最重要的基础工具之一。
 ~~~text
 D ↑
 ↓
-错误横向位置产生的跨孔径 phase mismatch ↑
+错误横向位置产生的跨孔径相位失配 ↑
 ↓
-coherence 更快下降
+相干性更快下降
 ↓
-lateral PSF 变窄
+横向 PSF 变窄
 ↓
-lateral resolution 提升
+横向分辨率提升
 ~~~
 
 经典尺度关系：
@@ -632,8 +632,8 @@ $$ D(z) \approx \frac{z}{F\#}. $$
 于是：
 
 ~~~text
-浅层 → 小 aperture
-深层 → 大 aperture
+浅层 → 小孔径
+深层 → 大孔径
 ~~~
 
 这就是 dynamic receive aperture 的基本思想。
@@ -662,7 +662,7 @@ $$ w_m=\text{constant} $$
 Hann、Hamming 等 window 会降低 aperture 边缘阵元权重，使空间窗函数更平滑：
 
 ~~~text
-Uniform
+矩形窗
 |████████████████████████|
 
 Hann
@@ -748,10 +748,10 @@ $$ \boxed{ \Delta z_{\mathrm{axial}} \sim \frac{\mathrm{SPL}}{2} } $$
 更短的 pulse：
 
 ~~~text
-shorter temporal pulse
-→ broader bandwidth
-→ less echo overlap in depth
-→ better axial resolution
+更短的时间脉冲
+→ 更宽的带宽
+→ 深度方向的回波重叠更少
+→ 更好的轴向分辨率
 ~~~
 
 因此：
@@ -815,13 +815,13 @@ $$ PSF(x,z). $$
 二维 PSF 往往不是圆形，因为 axial 和 lateral 的控制机制不同。
 
 ~~~text
-             axial
+             轴向
                ↓
 
              ▓▓▓
           ▓▓████▓▓
         ▓██████████▓
-────────────●────────────→ lateral
+────────────●────────────→ 横向
         ▓██████████▓
           ▓▓████▓▓
              ▓▓▓
@@ -849,10 +849,10 @@ Grating lobe：
 
 ~~~text
 时间采样：
-fs 太低 → temporal aliasing
+fs 太低 → 时间混叠
 
 空间采样：
-pitch 太大 → grating lobe
+pitch 太大 → 栅瓣
 ~~~
 
 二者都可能产生离轴响应，但物理来源不同。
@@ -866,11 +866,11 @@ pitch 太大 → grating lobe
 两个 lateral point target 如果间距小于当前系统有效分辨尺度，其 PSF 会重叠：
 
 ~~~text
-far enough:
+间距足够大：
       /\            /\
 _____/  \__________/  \_____
 
-too close:
+目标过近：
         /\  /\
 _______/  \/  \_______
 ~~~
@@ -1027,11 +1027,11 @@ $$ \boxed{ \text{fixed channel weighting + coherent sum} } $$
 这自然产生几个问题。
 
 ~~~text
-“这些 delayed channels 真的一致吗？”
+“这些延时后的通道真的一致吗？”
           ↓
       CF / GCF
 
-“为什么 weights 必须预先固定？”
+“为什么权重必须预先固定？”
           ↓
    MV / MVDR / Capon
 
@@ -1039,11 +1039,11 @@ $$ \boxed{ \text{fixed channel weighting + coherent sum} } $$
           ↓
        DMAS
 
-“为什么 coherence 只能做权重？”
+“为什么相干性只能做权重？”
           ↓
        SLSC
 
-“为什么只利用 main lobe？”
+“为什么只利用主瓣？”
           ↓
         NSI
 ~~~
@@ -1069,12 +1069,12 @@ $$ \mathbf s(\mathbf r) $$
 建立：
 
 ~~~text
-point target
-→ channel RF
-→ Delay
-→ interpolation
-→ coherent sum
-→ lateral response
+点目标
+→ 通道 RF
+→ 延时
+→ 插值
+→ 相干求和
+→ 横向响应
 ~~~
 
 ### 2. <code>demo_delay_alignment.m</code>

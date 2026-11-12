@@ -6,6 +6,7 @@ function export_chapter4_figures(section)
 if nargin < 1, section = 'all'; end
 assert(any(strcmp(section,{'all','concepts','uff'})),'Unknown section.');
 demo_dir = fileparts(mfilename('fullpath'));
+addpath(fileparts(demo_dir)); % Shared Chinese figure export.
 repo_dir = fileparts(fileparts(demo_dir));
 out_dir = fullfile(repo_dir,'chapters','04_DMAS','figures');
 if ~exist(out_dir,'dir'), mkdir(out_dir); end
@@ -239,7 +240,7 @@ assert(numel(figs)==expected,'Unexpected number of figures for %s.',id);
 [~,order] = sort([figs.Number]); figs = figs(order);
 for k = 1:numel(figs)
     drawnow;
-    exportgraphics(figs(k),fullfile(out_dir,sprintf('%s_%02d.png',id,k)), ...
+    export_figure_zh_cn(figs(k),fullfile(out_dir,sprintf('%s_%02d.png',id,k)), ...
         'Resolution',150);
 end
 fprintf('Exported %d figures: %s.\n',numel(figs),id);

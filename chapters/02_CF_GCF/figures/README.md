@@ -14,7 +14,9 @@
 | 图 4 | [aperture_spatial_spectrum.png](aperture_spatial_spectrum.png) | 常量、相位坡与不规则相位沿 Rx 的空间 FFT |
 | 图 5 | [gcf_bandwidth_tradeoff.png](gcf_bandwidth_tradeoff.png) | DC-only 扩展为低频带；扩大 M0 的收益与代价 |
 
-插图由 Codex 内置 `image_gen` 生成，最终 PNG 已放入本目录。白色背景适合课件，英文短标签配正文中文解释。它们不按比例，不能作为声场测量、重建结果或性能证据。
+插图由 Codex 内置 `image_gen` 生成，最终 PNG 已放入本目录。白色背景适合课件，图内中文标签配正文讲解。它们不按比例，不能作为声场测量、重建结果或性能证据。
+
+本目录全部配图的说明、标题和坐标名称已汉化；方法缩写、数学符号、代码标识与单位保留原写法。汉化映射、中文编辑提示词与复现步骤见[PDF 与中文配图构建说明](../../../tools/pdf/README.md)。
 
 逐张检查了流程箭头、相量关系、DC / +1 bin、低频选择与轴标签。第一张经两次定向编辑改为清晰的查询时间轴，避免示意 RF 相位引起歧义；第五张把能量轴统一为 `Spectral energy`。图 4 画的是频谱幅值示意，GCF 的实际能量使用幅值平方。完整初始提示词与编辑提示词保存在 [imagegen_prompts.md](imagegen_prompts.md)。
 

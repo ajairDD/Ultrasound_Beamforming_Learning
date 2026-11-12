@@ -187,7 +187,7 @@ flowchart LR
     B --> C[插值并选择有效 Rx]
     C --> D[通道向量 s]
     D --> E[沿 Rx 求和 S]
-    D --> F[CF 或 aperture FFT 后的 GCF]
+    D --> F[CF 或孔径 FFT 后的 GCF]
     E --> G[权重乘复数 DAS]
     F --> G
     G --> H[遍历像素后取包络与 dB]
@@ -263,11 +263,11 @@ inspect_real_cf_aperture_vectors
 ~~~text
 rf_wave         [sample,Rx]
     ↓ 沿 sample 构造解析 RF
-analytic_wave   [sample,Rx] complex
+analytic_wave   [sample,Rx] 复数
     ↓ 每个 Rx 自己的 Tx+Rx 查询时间与插值
-focused_samples [1,N_Rx] complex
+focused_samples [1,N_Rx] 复数
     ↓ 有效接收孔径与记录范围
-s               [1,M_active] complex
+s               [1,M_active] 复数
     ├─ sum(s) → 复数 DAS
     └─ coherence(s) → 实数权重
 ~~~

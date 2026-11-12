@@ -8,6 +8,22 @@
 
 ---
 
+## PDF 课堂讲义
+
+已完成的第 0–4 章各有一份 PDF，包含目录、公式、完整正文与补充课件图。全部配图说明已汉化，保留方法缩写、数学符号、代码标识与单位。
+
+| 章节 | PDF |
+|---|---|
+| 第 0 章 | [波束合成共同基础](output/pdf/第00章_波束合成共同基础.pdf) |
+| 第 1 章 | [FI-DAS 与 RTB](output/pdf/第01章_FI-DAS与RTB.pdf) |
+| 第 2 章 | [CF 与 GCF](output/pdf/第02章_CF与GCF.pdf) |
+| 第 3 章 | [MVDR](output/pdf/第03章_MVDR.pdf) |
+| 第 4 章 | [DMAS 与 fDMAS](output/pdf/第04章_DMAS与fDMAS.pdf) |
+
+[构建与配图汉化说明](tools/pdf/README.md)
+
+---
+
 ## 学习路线
 
 | 章节 | 内容 | 状态 |

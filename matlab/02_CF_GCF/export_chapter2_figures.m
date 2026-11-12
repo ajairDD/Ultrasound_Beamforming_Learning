@@ -5,6 +5,7 @@ function export_chapter2_figures(section)
 % and close figures, so use a fresh MATLAB session.
 if nargin < 1, section = 'all'; end
 demo_dir = fileparts(mfilename('fullpath'));
+addpath(fileparts(demo_dir)); % Shared Chinese figure export.
 repo_dir = fileparts(fileparts(demo_dir));
 addpath(fullfile(repo_dir,'matlab','01_DAS_Real_UFF'));
 out_dir = fullfile(repo_dir,'chapters','02_CF_GCF','figures');
@@ -93,7 +94,7 @@ for k = 1:size(jobs,1)
             end
             set(figs(j),'Position',pos);
             drawnow;
-            exportgraphics(figs(j),fullfile(out_dir, ...
+            export_figure_zh_cn(figs(j),fullfile(out_dir, ...
                 sprintf('%s_%02d.png',name,j)),'Resolution',150);
         end
     end

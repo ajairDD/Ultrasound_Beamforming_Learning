@@ -5,6 +5,7 @@ function export_chapter3_figures(section)
 % their own workspace; this exporter isolates each run in a helper workspace.
 if nargin < 1, section = 'all'; end
 demo_dir = fileparts(mfilename('fullpath'));
+addpath(fileparts(demo_dir)); % Shared Chinese figure export.
 repo_dir = fileparts(fileparts(demo_dir));
 addpath(demo_dir,fullfile(repo_dir,'matlab','01_DAS_Real_UFF'));
 out_dir = fullfile(repo_dir,'chapters','03_MVDR','figures');
@@ -84,7 +85,7 @@ for k = 1:size(jobs,1)
         pos(4) = max(pos(4),700);
         set(figs(j),'Position',pos);
         drawnow;
-        exportgraphics(figs(j),fullfile(out_dir, ...
+        export_figure_zh_cn(figs(j),fullfile(out_dir, ...
             sprintf('%s_%02d.png',id,j)),'Resolution',150);
     end
     elapsed = toc(started);
