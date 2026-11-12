@@ -35,7 +35,7 @@
 | 第 2 章 | CF / GCF | **已完成** |
 | 第 3 章 | MV / MVDR / Capon | **已完成** |
 | 第 4 章 | DMAS / fDMAS | **已完成** |
-| 第 5 章 | SLSC | 计划中 |
+| 第 5 章 | SLSC | **进行中** |
 | 第 6 章 | NSI | 计划中 |
 | 第 7 章 | 统一 benchmark | 计划中 |
 
@@ -145,6 +145,23 @@ TheGB 实验观察到：部分点目标横向响应被压低，但 fDMAS speckle
 
 ---
 
+## 第 5 章
+
+阅读：**[第 5 章：SLSC（Short-Lag Spatial Coherence）](./chapters/05_SLSC/README.md)**
+
+本章按“原理 → 一次完整二维实验 → 总结”进行。SLSC 不是 RF 幅度图，而是近邻接收通道在短轴向窗口中的 normalized correlation image。
+
+~~~matlab
+cd matlab/05_SLSC
+compare_fi_das_vs_slsc
+~~~
+
+它包含同一 FI Tx/Rx delay 的 DAS 基线、Chapter-1 DAS 复数回归验证、线性 SLSC 图像和 short-lag 相关曲线。由于动态 Rx F# 导致 lag 数随深度变化，本项目保留经典 short-lag sum，同时使用 mean-across-lags 做教学显示。
+
+**目前代码和文档已提交，真实 UFF 输出等待本地 MATLAB 验证，因此状态为进行中。**
+
+---
+
 ## 统一数学框架
 
 候选 pixel：
@@ -187,6 +204,6 @@ $$
 
 ## 下一章
 
-**第 5 章：SLSC（Short-Lag Spatial Coherence）**。
+当前第 5 章：**SLSC**（Short-Lag Spatial Coherence）正在进行。
 
-从当前的 DAS、CF/GCF、MVDR 和 fDMAS，进一步学习直接使用短阵元间距空间相关性构造 B-mode-like coherence image 的思路。
+完成一次完整二维 DAS/SLSC 对照和回归验证后，进入第 6 章 NSI（Null Subtraction Imaging）。
