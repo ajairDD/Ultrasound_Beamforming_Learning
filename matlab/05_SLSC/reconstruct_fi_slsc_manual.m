@@ -72,6 +72,22 @@ function out = reconstruct_fi_slsc_manual(filename,opts)
     Nwaves = cd.N_waves;
     Nch = cd.N_channels;
 
+    % The lag axis is meaningful only if neighboring data-channel indices
+    % correspond to neighboring PHYSICAL receive elements. Chapter-1 FI
+    % already assumes this indexing; SLSC makes it especially critical.
+    element_x=probe.x(:);
+    element_pitch=diff(element_x);
+    assert(all(element_pitch>0) || all(element_pitch<0), ...
+        'Probe element order must be monotonic along x.');
+    pitch_abs=abs(element_pitch);
+    pitch_med=median(pitch_abs);
+    assert(pitch_med>0 && ...
+           max(abs(pitch_abs-pitch_med))<max(1e-9,1e-3*pitch_med), ...
+        'Physical receive-element pitch must be approximately uniform.');
+    assert(max(abs(probe.y(:)-probe.y(1)))<1e-9 && ...
+           max(abs(probe.z(:)-probe.z(1)))<1e-9, ...
+        'SLSC Chapter-5 core requires an approximately 1-D linear array.');
+
     source_x=zeros(Nwaves,1);
     for iw=1:Nwaves
         assert(seq(iw).wavefront==uff.wavefront.spherical && ...
