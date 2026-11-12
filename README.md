@@ -121,7 +121,7 @@ cd matlab/04_DMAS
 compare_fi_das_vs_fdmas
 ~~~
 
-核心是 real-RF signed-sqrt DMAS、约 \`2*f0\` 的带通后形成 fDMAS，以及正确的输出轴向采样检查。
+核心是 real-RF signed-sqrt DMAS、约 `2*f0` 的带通后形成 fDMAS，以及正确的输出轴向采样检查。
 
 TheGB 实验观察到：部分点目标横向响应被压低，但 fDMAS speckle 更颗粒化；**不能把局部 profile 变化直接等同于整体成像质量提升**。代码会检查快速 DMAS 恒等式和 Chapter-1 DAS reference，一次性实验足够完成本章教学。
 
