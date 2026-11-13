@@ -173,8 +173,32 @@ function test_rtb_standard_interface()
     end
     assert(caught,'Missing Tx-delay timing must raise an error.');
 
+    % Do NOT let a vendor plane-wave acquisition masquerade as RTB FI.
+    bad=meta;
+    bad.tx_wavefront='plane';
+    caught=false;
+    try
+        bad_acq=rtb_from_vendor_array(vendor,bad);
+        rtb_load_acquisition(bad_acq);
+    catch err
+        caught=contains(err.message,'Only focused spherical Tx');
+    end
+    assert(caught,'Non-focused transmit data must be rejected.');
+
+    % Unit typo mm -> m would produce 300-mm array pitch, not 0.3 mm.
+    bad=meta;
+    bad.units.length='m';
+    caught=false;
+    try
+        bad_acq=rtb_from_vendor_array(vendor,bad);
+        rtb_load_acquisition(bad_acq);
+    catch err
+        caught=contains(err.message,'Receive pitch');
+    end
+    assert(caught,'Physically implausible unit mapping must be rejected.');
+
     fprintf('PASS: vendor axis/units/channel order, RF/IQ, all methods.\n');
     fprintf('PASS: CF=GCF(M0=0), NSI envelope bound, point target location.\n');
-    fprintf('PASS: reject unsupported IQ methods and missing Tx timing.\n');
+    fprintf('PASS: reject IQ-only mismatch, missing timing, plane Tx, wrong units.\n');
     fprintf('NOTE: independent UFF/Chapter-1 RTB regression is separate.\n');
 end
