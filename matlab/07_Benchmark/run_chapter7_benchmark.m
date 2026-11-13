@@ -228,7 +228,7 @@ function run_fi_track(o)
     N=numel(labels);
     width=nan(N,1); width_samples=nan(N,1);
     axial_width=nan(N,1); w20=nan(N,1);
-    cv=nan(N,1); corr=nan(N,1);
+    cv=nan(N,1); speckle_snr=nan(N,1); corr=nan(N,1);
     peak_change_db=nan(N,1);
     speckle_pixels=zeros(N,1);
 
@@ -244,6 +244,7 @@ function run_fi_track(o)
         axial_width(k)=mt.axial_fwhm_mm;
         w20(k)=mt.lateral_w20_mm;
         cv(k)=mt.speckle_cv;
+        speckle_snr(k)=mt.speckle_snr;
         corr(k)=mt.corr_with_das;
         speckle_pixels(k)=mt.speckle_n_pixels;
 
@@ -261,11 +262,11 @@ function run_fi_track(o)
     end
 
     fi_table=table(labels,times,width,width_samples,axial_width, ...
-        w20,peak_change_db,cv,corr,speckle_pixels, ...
+        w20,peak_change_db,cv,speckle_snr,corr,speckle_pixels, ...
         'VariableNames',{'method','runtime_s','lat_FWHM_mm', ...
           'lat_FWHM_in_scanlines','axial_FWHM_mm', ...
           'lat_20dB_mm','local_peak_vs_DAS_dB', ...
-          'speckle_CV','speckle_corr_DAS','speckle_n'});
+          'speckle_CV','speckle_SNR','speckle_corr_DAS','speckle_n'});
 
     disp(fi_table);
     fprintf(['FI NOTE: <3 scanlines across FWHM is sampling-limited; ' ...
