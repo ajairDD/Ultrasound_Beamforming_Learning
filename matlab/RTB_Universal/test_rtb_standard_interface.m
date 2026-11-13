@@ -76,6 +76,10 @@ function test_rtb_standard_interface()
            abs(validated.focus_xyz_m(2,3)-0.020)<1e-12, ...
         'Vendor unit conversion was incorrect.');
 
+    source_audit=rtb_audit_source(acq);
+    assert(source_audit.focus_time_coverage_fraction==1, ...
+        'Synthetic echo timing is not inside the recorded sample window.');
+
     cfg=struct();
     cfg.methods={'DAS','CF','GCF','MVDR','FDMAS','SLSC','NSI'};
     cfg.x_range_m=[-0.45,0.45]*1e-3;
