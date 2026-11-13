@@ -103,6 +103,11 @@ function acq = rtb_load_acquisition(source)
         error('source must be an UFF path, canonical MAT path, or struct.');
     end
 
+    % Canonical MAT files are not required to carry provenance metadata.
+    if ~isfield(acq,'adapter_source') || isempty(acq.adapter_source)
+        acq.adapter_source='canonical MAT/struct';
+    end
+
     required={'data','signal_type','fs_hz','t0_s','c_m_s','f0_hz', ...
         'element_xyz_m','channel_to_element','focus_xyz_m', ...
         'origin_xyz_m','tx_reference_distance_m','tx_delay_s', ...
