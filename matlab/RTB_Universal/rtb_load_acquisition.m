@@ -58,6 +58,7 @@ function acq = rtb_load_acquisition(source)
                 origin=zeros(nw,3);
                 ref=zeros(nw,1);
                 delay=zeros(nw,1);
+                tx_c=zeros(nw,1);
                 for iw=1:nw
                     wave=cd.sequence(iw);
                     assert(wave.wavefront==uff.wavefront.spherical, ...
@@ -66,6 +67,7 @@ function acq = rtb_load_acquisition(source)
                     origin(iw,:)=double(wave.origin.xyz(:).');
                     ref(iw)=double(wave.source.distance);
                     delay(iw)=double(wave.delay);
+                    tx_c(iw)=double(wave.sound_speed);
                     assert(abs(wave.sound_speed-acq.c_m_s)<1e-4, ...
                         'UFF Tx %d sound speed differs from channel data.',iw);
                     if all(abs(origin(iw,:))<eps) && ...
@@ -79,6 +81,7 @@ function acq = rtb_load_acquisition(source)
                 acq.origin_xyz_m=origin;
                 acq.tx_reference_distance_m=ref;
                 acq.tx_delay_s=delay;
+                acq.tx_sound_speed_m_s=tx_c;
                 % The Chapter-1 UFF focused-FI reference assumes a
                 % common coherent transmit phase; see project docs.
                 acq.tx_phase_correction_rad=zeros(nw,1);
@@ -178,6 +181,18 @@ function acq = rtb_load_acquisition(source)
            strcmp(char(acq.time_reference),'two_way'), ...
         'Unsupported Tx delay sign or sample-time reference.');
 
+    % The Chapter-1 Tx virtual-source delay uses wave.sound_speed,
+    % which is not guaranteed bit-for-bit identical to the channel-data
+    % receive sound speed. Preserve per-Tx Tx c where provided.
+    if ~isfield(acq,'tx_sound_speed_m_s') || ...
+            isempty(acq.tx_sound_speed_m_s)
+        acq.tx_sound_speed_m_s=repmat(acq.c_m_s,nw,1);
+    end
+    tx_c=double(acq.tx_sound_speed_m_s(:));
+    assert(numel(tx_c)==nw && all(isfinite(tx_c)) && ...
+           all(tx_c>=1000 & tx_c<=2000), ...
+        'tx_sound_speed_m_s must have one plausible value per Tx.');
+
     t0=double(acq.t0_s(:));
     if numel(t0)==1,t0=repmat(t0,nw,1);end
     assert(numel(t0)==nw && all(isfinite(t0)), ...
@@ -247,6 +262,7 @@ function acq = rtb_load_acquisition(source)
     acq.origin_xyz_m=ox;
     acq.tx_reference_distance_m=rr;
     acq.tx_delay_s=dd;
+    acq.tx_sound_speed_m_s=tx_c;
     acq.tx_phase_correction_rad=ph;
 
     % Quality summary that can be inspected across machine exports.
@@ -258,5 +274,6 @@ function acq = rtb_load_acquisition(source)
         'channel_reorder_changed',any(order(:)~=(1:nc).'), ...
         't0_range_s',[min(t0),max(t0)], ...
         'focus_depth_range_m',[min(fx(:,3)),max(fx(:,3))], ...
+        'max_tx_rx_sound_speed_diff_m_s',max(abs(tx_c-acq.c_m_s)), ...
         'is_RF',strcmp(acq.signal_type,'RF'));
 end
