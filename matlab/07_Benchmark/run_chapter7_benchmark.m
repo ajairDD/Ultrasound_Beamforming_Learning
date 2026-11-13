@@ -447,9 +447,11 @@ function run_rtb_track(o)
         peak_delta(k)=20*log10((max(part(:))+eps)/(base_peak+eps));
     end
 
-    % Each core re-calculates DAS internally. These are NOT pure-kernel
-    % timing numbers; c=0.8 is generated from the same cached D,Z data.
-    runtime_s=[time_nsi;time_mvdr;time_nsi;NaN];
+    % Attribution matters: RTB-DAS is calculated INSIDE the NSI core,
+    % so time_nsi must NOT be presented as an independently timed
+    % standalone DAS implementation. Likewise, NSI c=0.8 reuses D,Z.
+    % Only the actual executed core runtimes are reported.
+    runtime_s=[NaN;time_mvdr;time_nsi;NaN];
 
     rtb_table=table(labels,runtime_s,peak_x,peak_z,width, ...
         width_samples,axial,w20,peak_delta, ...
@@ -458,6 +460,8 @@ function run_rtb_track(o)
         'lat_FWHM_in_pixels','axial_FWHM_mm', ...
         'lat_20dB_mm','point_peak_vs_DAS_dB'});
     disp(rtb_table);
+    fprintf(['RTB TIMING NOTE: DAS and NSI c=0.8 are not independently timed; ' ...
+        'NaN is intentional. NSI c=0.2 runtime includes DAS and ZM.\n']);
 
     fig2=figure('Color','w','Position',[60 60 1300 760]);
     peak=max(imgs{1}(:));
