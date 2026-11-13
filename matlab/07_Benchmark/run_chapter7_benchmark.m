@@ -272,6 +272,8 @@ function run_fi_track(o)
         'fDMAS spectral band differs; SLSC is a coherence image.\n']);
     fprintf(['Speckle ROI is not independently certified homogeneous: ' ...
         '[%s] mm.\n'],num2str(o.speckle_roi_mm));
+    fprintf(['Speckle correlation is similarity to DAS, not validated ' ...
+        'preservation of true tissue reflectivity.\n']);
 
     fig1=figure('Color','w','Position',[30 30 1450 770]);
     for k=1:N
@@ -356,6 +358,10 @@ end
 function run_rtb_track(o)
     fprintf('\n============== TRACK B: dense RTB point target =============\n');
     assert(exist(o.filename,'file')==2,'Missing RTB UFF: %s',o.filename);
+    assert(contains(lower(char(o.filename)),'thegb'), ...
+        ['RTB point-target benchmark uses the known TheGB target ' ...
+         'at x=-0.745mm z=20.1mm. Do not label arbitrary in-vivo ' ...
+         'structures as a point target.']);
 
     % Both cores must use exactly the same independent RTB geometry.
     common=struct('x_min',-2.5e-3,'x_max',1.5e-3, ...
