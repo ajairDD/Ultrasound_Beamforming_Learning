@@ -15,6 +15,7 @@ function acq = rtb_load_acquisition(source)
 % element_xyz_m [N_elem,3], channel_to_element [N_channel,1]
 % focus_xyz_m [Ntx,3], origin_xyz_m [Ntx,3]
 % tx_reference_distance_m [Ntx,1], tx_delay_s [Ntx,1]
+% tx_phase_correction_rad [Ntx,1], multiply analytic by exp(+1i*phase)
 % tx_delay_convention 'subtract', time_reference 'two_way'
 % IQ only: demod_hz, iq_reference_time_s, and COMPLEX input
 %
@@ -78,6 +79,9 @@ function acq = rtb_load_acquisition(source)
                 acq.origin_xyz_m=origin;
                 acq.tx_reference_distance_m=ref;
                 acq.tx_delay_s=delay;
+                % The Chapter-1 UFF focused-FI reference assumes a
+                % common coherent transmit phase; see project docs.
+                acq.tx_phase_correction_rad=zeros(nw,1);
                 acq.tx_delay_convention='subtract';
                 acq.time_reference='two_way';
                 acq.demod_hz=0;
@@ -100,6 +104,7 @@ function acq = rtb_load_acquisition(source)
     required={'data','signal_type','fs_hz','t0_s','c_m_s','f0_hz', ...
         'element_xyz_m','channel_to_element','focus_xyz_m', ...
         'origin_xyz_m','tx_reference_distance_m','tx_delay_s', ...
+        'tx_phase_correction_rad', ...
         'tx_delay_convention','time_reference'};
     for k=1:numel(required)
         assert(isfield(acq,required{k}), ...
@@ -210,7 +215,10 @@ function acq = rtb_load_acquisition(source)
     ox=double(acq.origin_xyz_m);
     rr=double(acq.tx_reference_distance_m(:));
     dd=double(acq.tx_delay_s(:));
-    assert(isequal(size(fx),[nw,3]) && ...
+    ph=double(acq.tx_phase_correction_rad(:));
+    assert(numel(ph)==nw && all(isfinite(ph)), ...
+        'tx_phase_correction_rad must be one finite correction per Tx.');
+    assert(isequal(size(fx),[nw,3] && ...
            isequal(size(ox),[nw,3]) && ...
            all(isfinite(fx(:))) && all(isfinite(ox(:))), ...
         'focus_xyz_m and origin_xyz_m must each be [Ntx,3] in meters.');
@@ -227,6 +235,7 @@ function acq = rtb_load_acquisition(source)
     acq.origin_xyz_m=ox;
     acq.tx_reference_distance_m=rr;
     acq.tx_delay_s=dd;
+    acq.tx_phase_correction_rad=ph;
 
     % Quality summary that can be inspected across machine exports.
     acq.audit=struct( ...
