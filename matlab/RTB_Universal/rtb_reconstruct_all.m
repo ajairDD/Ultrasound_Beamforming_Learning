@@ -97,6 +97,10 @@ function out = rtb_reconstruct_all(source,cfg)
 
     active_tx=zeros(Nz,Nx);
     sum_w=zeros(Nz,Nx);
+    % Keep the original Chapter-1 RTB normalization: all Tx weights
+    % contribute to the denominator even when no Rx sample is valid.
+    % Track the data-supported weight SEPARATELY for vendor QA.
+    valid_rx_tx_weight=zeros(Nz,Nx);
     D=complex(zeros(Nz,Nx));
 
     if run_cf,C=complex(zeros(Nz,Nx));end
@@ -182,11 +186,16 @@ function out = rtb_reconstruct_all(source,cfg)
             end
             active=active & valid;
 
-            % Only actual Tx support is counted in the denominator.
+            % Match independent Chapter-1 RTB DAS exactly:
+            % denominator = sum of all transmit-apodization weights.
+            % If receive samples are unavailable, their zero contribution
+            % is not renormalized into an artificially brighter echo.
             wt=wt(:);
             receive_has_sample=any(active,2);
-            sum_w(:,ix)=sum_w(:,ix)+wt.*receive_has_sample;
-            active_tx(:,ix)=active_tx(:,ix)+double(wt>0 & receive_has_sample);
+            sum_w(:,ix)=sum_w(:,ix)+wt;
+            active_tx(:,ix)=active_tx(:,ix)+double(wt>0);
+            valid_rx_tx_weight(:,ix)=valid_rx_tx_weight(:,ix)+ ...
+                wt.*receive_has_sample;
             diagnostics.max_query_out_of_range_fraction=max( ...
                 diagnostics.max_query_out_of_range_fraction, ...
                 1-nnz(valid)/numel(valid));
@@ -350,12 +359,28 @@ function out = rtb_reconstruct_all(source,cfg)
     end
     out.tx_weight_sum=sum_w;
     out.active_tx_count=active_tx;
+    out.valid_rx_tx_weight_sum=valid_rx_tx_weight;
+    out.valid_rx_tx_fraction=zeros(Nz,Nx);
+    out.valid_rx_tx_fraction(support)= ...
+        valid_rx_tx_weight(support)./sum_w(support);
     out.input_audit=acq.audit;
     out.source_info=acq.adapter_source;
     out.options=cfg;
+    diagnostics.tx_weight_without_rx=sum(max( ...
+        sum_w(:)-valid_rx_tx_weight(:),0));
+    diagnostics.tx_weight_total=sum(sum_w(:));
+    diagnostics.missing_rx_tx_weight_fraction= ...
+        diagnostics.tx_weight_without_rx/(diagnostics.tx_weight_total+eps);
     out.diagnostics=diagnostics;
     out.fdmas_filter=filter_meta;
     out.elapsed_s=toc(t_all);
+    if diagnostics.missing_rx_tx_weight_fraction>1e-4
+        warning('RTB:MissingRxSupport', ...
+            ['Some transmit-weighted image pixels have NO valid Rx ' ...
+             'samples: global missing Tx-weight fraction %.3g. ' ...
+             'Inspect valid_rx_tx_fraction, t0 and sample length.'], ...
+             diagnostics.missing_rx_tx_weight_fraction);
+    end
     if cfg.verbose
         fprintf('Finished universal RTB in %.2f s\n',out.elapsed_s);
         fprintf('MVDR fallback %d/%d, SLSC unavailable pixel-Tx %d\n', ...
