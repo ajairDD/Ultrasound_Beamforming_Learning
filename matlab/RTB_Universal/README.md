@@ -254,6 +254,12 @@ test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
 
 最新针对性修复：将通用 RTB 的 Tx Tukey25 窗口计算表达式及 Rx F-number 半孔径边界计算顺序，严格调整为第 1 章的原始 MATLAB 运算顺序；消除在接近孔径阈值时由不同浮点运算顺序可能引入的差异。**此修复尚未得到真实 UFF 复测确认。** 对比测试额外打印 Tx 权重差异的 x/z 坐标，以及最大复数误差位置上的两套 Tx 权重，方便区分“孔径边界差异”与“延时/采样差异”。
 
+**追加的数值精度核对（待 MATLAB 验证）：** MathWorks 文档指出 MATLAB 的 `single` 与 `double` 混合运算可能给出 `single` 结果。第 1 章最初直接读取 UFF geometry 属性，新接口则明确转换为 `double`；如果该 UFF 的 `probe.x`、`wave.source.x` 等是 `single`，之前的双精度 `1e-10` 回归阈值就存在不一致精度的比较问题。
+
+为保证科学一致性，**第 1 章默认行为完全不变**；只为回归测试增加可选 `options.force_double_geometry=true`，将 UFF wave/probe geometry、采样时间和 Tx/Rx 声速在进入同一 RTB 方程之前转成 double。最新独立测试自动开启此选项；新的统一引擎同步保留真实阵元 y/z 几何（而非只用 x），仍要求 complex-DAS relative error `<1e-10`。测试会打印 UFF 原始字段的 `class()`，确认该解释是否适用。
+
+**注意：前两次用户日志显示的 6.848491e-05 仍是失败结果；当前更正后的 double-reference 尚未得到运行日志，不可提前宣称通过。**
+
 ## 7. 文件与依赖
 
 ~~~text
