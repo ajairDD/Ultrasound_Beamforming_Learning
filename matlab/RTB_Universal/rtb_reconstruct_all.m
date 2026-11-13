@@ -28,6 +28,7 @@ function out = rtb_reconstruct_all(source,cfg)
 
     if nargin<2 || isempty(cfg),cfg=struct();end
     assert(isstruct(cfg) && isscalar(cfg),'cfg must be a scalar struct.');
+    t_all=tic; % includes file loading and metadata validation
 
     acq=rtb_load_acquisition(source);
     cfg=defaults(cfg,acq);
@@ -94,7 +95,6 @@ function out = rtb_reconstruct_all(source,cfg)
              dz*1e6,acq.c_m_s/(4*filter_edges(end))*1e6);
     end
 
-    t_all=tic;
     active_tx=zeros(Nz,Nx);
     sum_w=zeros(Nz,Nx);
     D=complex(zeros(Nz,Nx));
