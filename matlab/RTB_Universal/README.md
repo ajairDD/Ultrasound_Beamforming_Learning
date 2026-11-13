@@ -1,0 +1,237 @@
+# Universal RTB：跨设备原始数据标准接口
+
+**状态：已实现接口、7 种方法、展示及两类测试；当前环境没有 MATLAB，真实 UFF 数值验收尚待用户运行。**
+
+## 1. 目标与适用范围
+
+统一入口：
+
+~~~matlab
+out=rtb_reconstruct_all(source,cfg);
+rtb_show_methods(out,'own');      % own-peak dB；SLSC 线性
+rtb_show_methods(out,'common');   % common DAS dB；SLSC 线性
+~~~
+
+source 支持：
+- UFF 文件：使用 USTB 只读取 focused FI RF channel data；
+- MAT 文件：必须含 canonical struct 变量 acq；
+- canonical MATLAB struct：将不同机器的原始数据、坐标、时间定义映射到统一 SI 格式。
+
+**兼容不同机器不等于能自动解码未知私有文件。** 厂商的 bin/HDF5/自有 MAT 应先用其 SDK/导出脚本获取 numeric channel tensor，再经 rtb_from_vendor_array(raw,meta) 明确映射。没有实际厂商协议或发射时序资料，不猜测硬件和 IQ 相位。
+
+**当前只支持**二维 x-z、z=0 的均匀 1D 线性阵列、positive-z focused spherical Tx（RTB）、未 beamformed 的真实 RF 或复数 baseband IQ。当前不支持 CPWC、plane/diverging/STA、convex、二维矩阵阵列、任意 Tx 编码、已经 envelope/log 的数据。兼容的主要是**数据排列和元数据规范**，不是自动支持所有物理发射序列。
+
+## 2. 一键运行现有 TheGB UFF
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/RTB_Universal
+out=demo_rtb_universal;
+~~~
+
+默认 TheGB 测试 ROI：x=-4..3mm，z=18..22.5mm，64 个横向像素、每 4 次 Tx 取一次、全七种方法。z 的采样数自动按波长约 lambda/16 设定以满足 fDMAS 二倍频带通。
+
+也可以自行提供所有重建参数：
+
+~~~matlab
+cfg=struct();
+cfg.methods={'DAS','CF','GCF','MVDR','FDMAS','SLSC','NSI'};
+cfg.x_range_m=[-4,3]*1e-3;
+cfg.z_range_m=[18,22.5]*1e-3;
+cfg.n_x=64;
+cfg.n_z=[];                    % 根据 lambda/16 自动确定
+cfg.wave_stride=4;             % 1=全部 Tx
+cfg.frame_index=1;
+
+cfg.tx_delay_model='blended';
+cfg.tx_f_number=2;
+cfg.tx_min_aperture_m=3e-3;
+cfg.tx_window='tukey25';
+cfg.rx_f_number=1.7;
+
+cfg.gcf_M0=1;
+cfg.mvdr_fraction=0.5;
+cfg.mvdr_loading=0.01;
+cfg.mvdr_axial_lambda=1.5;
+cfg.slsc_lag_fraction=0.15;
+cfg.slsc_max_lag=12;
+cfg.slsc_axial_lambda=1.0;
+cfg.nsi_dc=0.8;
+
+out=rtb_reconstruct_all('../../data/L7_FI_TheGB.uff',cfg);
+rtb_show_methods(out,'own');
+rtb_show_methods(out,'common');
+~~~
+
+注意：默认是**快速预览**，不是整张临床全视野。如果将 Tx×pixel 提高太多，程序默认拒绝超大规模 MVDR/SLSC，用户评估资源后才设置 cfg.allow_large=true。另一个设备如 Alpinion、Verasonics focused FI，可改 UFF 路径，并根据该机器真实的有效焦深/视野修改参数。
+
+## 3. 核心标准数据格式（SI 单位）
+
+Canonical acq 的必须字段：
+
+| 字段 | 说明 |
+|---|---|
+| data | 数值数组 [sample,channel,Tx,frame]；禁止预先 beamform/envelope/log |
+| signal_type | RF（实数）或 IQ（复数） |
+| fs_hz | 采样率 Hz |
+| t0_s | ADC/IQ 第一个样点时间，标量或每 Tx 一个值，秒 |
+| c_m_s | 重建声速 m/s |
+| f0_hz | 标称中心频率 Hz |
+| element_xyz_m | [Nelem,3] 物理阵元 xyz，米 |
+| channel_to_element | [Nchannel,1] 物理阵元 1-based 编号 |
+| focus_xyz_m | [Ntx,3] 聚焦发射源焦点坐标，米 |
+| origin_xyz_m | [Ntx,3] 发射波轴的 origin，米 |
+| tx_reference_distance_m | [Ntx,1] 虚源 Tx 路径参考距离，米 |
+| tx_delay_s | [Ntx,1] Tx 时间偏移，秒 |
+| tx_phase_correction_rad | [Ntx,1] Tx analytic 相位补偿，单位 rad；确认相干才填 0 |
+| tx_delay_convention | 必须为 subtract，表示 tau_tx=path/c-tx_delay |
+| time_reference | 必须为 two_way，样点时间相对 Tx+Rx 全程 |
+| IQ 附加 | demod_hz、iq_reference_time_s、iq_phase_convention |
+
+对需要重新排列数组/转单位的非 UFF 数据，使用显式 adapter：
+
+~~~matlab
+% raw_vendor 已由机器 SDK 解码成 numeric channel data
+% machine.* 是需要你根据该机器实际 SDK/发射配置取得的字段：
+meta=struct();
+meta.data_order='channel,sample,tx'; % 需核对，不能猜
+meta.units=struct('length','mm','time','us','frequency','MHz');
+meta.signal_type='RF';
+
+meta.sampling_frequency=machine.fs_MHz;
+meta.initial_time=machine.initial_time_us;  % scalar 或每 Tx
+meta.sound_speed_m_s=machine.c_m_s;
+meta.nominal_frequency=machine.f0_MHz;
+
+meta.element_xyz=machine.element_xyz_mm;
+meta.channel_to_element=machine.rx_to_element; % 1-based
+meta.focus_xyz=machine.focus_xyz_mm;
+meta.origin_xyz=machine.origin_xyz_mm;
+meta.tx_reference_distance=machine.tx_reference_distance_mm;
+meta.tx_delay=machine.tx_delay_us;
+meta.tx_phase_correction_rad=machine.tx_phase_correction_rad;
+meta.tx_delay_convention='subtract';
+meta.time_reference='two_way';
+
+acq=rtb_from_vendor_array(raw_vendor,meta);
+out=rtb_reconstruct_all(acq,cfg);
+rtb_show_methods(out);
+~~~
+
+所有 machine.* 只是**占位字段名**，不是任何厂家都提供的具体 API。转换器会处理 mm/us/MHz→m/s/Hz、任意已明确的数据 axis 顺序、物理 Rx 接线反向和 Tx 独立 t0。关键元数据不全则报错。
+
+若是 IQ，必须明确给出：
+
+~~~matlab
+meta.signal_type='IQ';
+meta.iq_demodulation_frequency=machine.demod_frequency_MHz;
+meta.iq_reference_time=machine.demod_tref_us;
+meta.iq_phase_convention= ...
+    'iq_equals_analytic_times_exp_minus_j2pift';
+~~~
+
+这里定义 IQ(t)=analytic_RF(t)×exp(-j2πf_demod(t-t_ref))，内核在 delay interpolation 后恢复 analytic carrier 相位。其它 IQ 约定必须先做正确的适配；不能仅凭复数 dtype 猜测。IQ 只支持 DAS/CF/GCF/MVDR/NSI；fDMAS/SLSC 必须要真实 RF。默认遇到 IQ+这两方法会**报错**；可明确设置 cfg.unsupported_policy='skip' 并查看 out.skipped。
+
+## 4. 核心算法链与科学边界
+
+~~~text
+UFF / vendor tensor / canonical MAT
+                |
+      validate axes / units
+      channel->physical element mapping
+      t0 / Tx focus / delay / phase
+                |
+        shared Tx/Rx RTB delays
+        shared Rx F# / Tx weights
+        shared fractional interpolation
+                |
+      aligned receive aperture vector
+                |
+    DAS: complex receive sum
+     CF: per-Tx receive CF × DAS
+    GCF: per-Tx Rx-aperture FFT low-bin energy × DAS
+   MVDR: receive covariance + spatial/axial smoothing
+  fDMAS: real RF sign-sqrt pairs + image-depth 2f0 filter
+   SLSC: short-lag axial RF correlation
+    NSI: zero-mean Rx + two DC-offset envelopes
+                |
+      cross-Tx compounding
+      B-mode / linear coherence display
+~~~
+
+- CF/GCF/MVDR/NSI 都先执行**每 Tx 的 receive 运算**，然后通过相同 Tx apodization 做相干复合。
+- SLSC 的相关性是实数统计量，按 Tx 权重做**非相干平均**。这是新的 RTB 教学扩展，不能冒充论文中已验证的统一 RTB-SLSC。
+- fDMAS 对 real RF pair products 先按 RTB 的 Tx 权重求和，再沿轴向图像时间轴滤波二倍频。这是显式规定的 RTB 教学扩展，**不等同于在每次 Tx 内先滤波再复合的所有可能定义**；输出幅度不能当作 DAS 的同一物理校准幅度。
+- NSI 默认 c=0.8 是根据本项目此前 c=0.2 的 in-vivo 强抑制结果选择的保守教学值，**不是各类设备最优值**。
+- RTB Tx blended model 复用了第 1 章所用的虚源/近焦区混合模型，但不是声场完整正演；其它设备必须先验证 timing/phase，不得仅因图像看起来合理就认定正确。
+
+图像输出：
+
+~~~matlab
+out.images.DAS
+out.images.CF
+out.images.GCF
+out.images.MVDR
+out.images.FDMAS
+out.images.SLSC  % signed coherence, dimensionless
+out.images.NSI
+
+out.x_axis_m
+out.z_axis_m
+out.display                   % 自峰值归一化 dB；SLSC 线性
+out.display_common_db         % 与 DAS 共用参考 dB；无 SLSC
+out.input_audit
+out.diagnostics
+out.tx_weight_sum
+out.active_tx_count
+~~~
+
+## 5. 跨机器最易出错的地方
+
+1. **array shape**：sample/channel/Tx/frame 的顺序，是否混入 ensemble/角度维。
+2. **物理通道映射**：ADC channel 到 probe element 的 1-based 映射，是否反向、跳过阵元或者插入虚通道。GCF/SLSC 对物理 lag 特别敏感。
+3. **样点时间轴**：time0/pre-trigger、Tx firing offset、pulse-center delay、解调/抽取滤波群延时；t0 错了，即使图像有结构也可能焦点错误。
+4. **Tx 参数**：focus 位置、origin、reference distance、Tx delay 的**符号**及不同 Tx 间 coherent phase。
+5. **RF/IQ 阶段**：正负载频、IQ 相位原点、decimation、carrier 的时间相位恢复；RF-only 算法不能自动从 IQ 还原真实 RF。
+6. **设备前处理**：bandpass、TGC、各通道增益、动态孔径、相关序列的解码/配准等会影响跨机对比；不能默认原始数据已完全等价。
+7. **模型适配**：2D linear focused 是当前边界；其他探头/发射序列必须另建物理模型，不是更换元数据字段就能支持。
+
+## 6. 必须先运行的两个验证
+
+**A. 不依赖 UFF 的合成数据：**
+
+~~~matlab
+cd matlab/RTB_Universal
+test_rtb_standard_interface
+~~~
+
+生成点目标，验证多种数据轴顺序、反向通道、单位换算、RF/IQ、所有七种输出、CF=GCF(M0=0)、NSI 的理论上下界、错误元数据拒绝机制。
+
+**B. 和项目已验证第 1 章 RTB-DAS 独立复数数据对比：**
+
+~~~matlab
+addpath('../01_DAS_Real_UFF');
+test_rtb_universal_vs_chapter1
+
+% 可额外换不同机器的 focused FI UFF
+test_rtb_universal_vs_chapter1('../../data/L7_FI_carotid_cross_1.uff')
+test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
+~~~
+
+要求在相同网格和 Tx/Rx 条件下，complex DAS 的 max-peak scaled error 小于 1e-10。若失败，**先核查设备时序和几何，不能进入各方法优劣比较**。成功后也只能证明共同 DAS 基线一致，不自动证明新的 fDMAS/SLSC 扩展完全符合论文定义。
+
+## 7. 文件与依赖
+
+~~~text
+matlab/RTB_Universal/
+  rtb_from_vendor_array.m
+  rtb_load_acquisition.m
+  rtb_reconstruct_all.m
+  rtb_show_methods.m
+  demo_rtb_universal.m
+  test_rtb_standard_interface.m
+  test_rtb_universal_vs_chapter1.m
+  README.md
+~~~
+
+MATLAB 基础 FFT/线性代数/绘图，不需额外工具箱。**只读 UFF 时需要 USTB**；canonical struct/MAT 不需要 USTB。原始 UFF 和私有采集数据不提交 GitHub。
