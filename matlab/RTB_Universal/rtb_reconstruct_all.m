@@ -76,6 +76,10 @@ function out = rtb_reconstruct_all(source,cfg)
     run_nsi=ismember('NSI',requested);
 
     if run_fdmas
+        assert(all(abs(acq.tx_phase_correction_rad(cfg.selected_tx))<1e-10), ...
+            ['RTB-fDMAS requires Tx phase-consistent REAL RF. ' ...
+             'Arbitrary per-Tx complex phase corrections are not ' ...
+             'defined for this teaching fDMAS route.']);
         fs_image=acq.c_m_s/(2*dz);
         filter_edges=cfg.fdmas_edges_ratio*acq.f0_hz;
         assert(numel(filter_edges)==4 && all(diff(filter_edges)>0), ...
@@ -157,6 +161,9 @@ function out = rtb_reconstruct_all(source,cfg)
                 samples=samples.*exp(1i*2*pi*acq.demod_hz.* ...
                     (query_time-acq.iq_reference_time_s));
             end
+            % Per-Tx correction to make analytic carrier phases coherent.
+            % Must be independently calibrated by the vendor adapter.
+            samples=samples.*exp(1i*acq.tx_phase_correction_rad(itx));
 
             if run_fdmas || run_slsc
                 [real_samples,~]=interp_channel_matrix( ...
