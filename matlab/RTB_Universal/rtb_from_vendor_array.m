@@ -22,6 +22,8 @@ function acq = rtb_from_vendor_array(raw,meta)
 %   tx_delay_convention = 'subtract'     tau_tx=path/c - tx_delay
 %   time_reference = 'two_way'           sample timestamp for Tx+Rx path
 %   signal_type = 'RF' or 'IQ'
+%   tx_wavefront = 'focused_spherical'
+%   data_stage = 'pre_beamform_channel'
 %
 % REQUIRED FOR IQ:
 %   iq_demodulation_frequency           units.frequency, can be signed
@@ -50,7 +52,8 @@ function acq = rtb_from_vendor_array(raw,meta)
         'element_xyz','channel_to_element','focus_xyz', ...
         'origin_xyz','tx_reference_distance','tx_delay', ...
         'tx_phase_correction_rad', ...
-        'tx_delay_convention','time_reference','signal_type'};
+        'tx_delay_convention','time_reference','signal_type', ...
+        'tx_wavefront','data_stage'};
     for k=1:numel(required)
         assert(isfield(meta,required{k}), ...
             'Missing REQUIRED vendor metadata: %s',required{k});
@@ -138,6 +141,8 @@ function acq = rtb_from_vendor_array(raw,meta)
         'tx_phase_correction_rad requires one finite value per Tx.');
     acq.tx_delay_convention='subtract';
     acq.time_reference='two_way';
+    acq.tx_wavefront=char(meta.tx_wavefront);
+    acq.data_stage=char(meta.data_stage);
 
     if strcmp(acq.signal_type,'IQ')
         need={'iq_demodulation_frequency','iq_reference_time', ...
