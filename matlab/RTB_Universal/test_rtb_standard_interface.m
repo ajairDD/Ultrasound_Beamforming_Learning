@@ -104,6 +104,26 @@ function test_rtb_standard_interface()
     assert(output.diagnostics.mvdr_attempts>0, ...
         'MVDR branch was not executed.');
 
+    % Missing-Rx regression: one Tx has a valid geometric transmit
+    % aperture but NO acquired samples in the requested image window.
+    % Chapter-1 normalization still counts its Tx weight, so the
+    % denominator MUST remain unchanged. Missing Rx is reported
+    % separately and must not be silently re-normalized.
+    tx_missing=acq;
+    tx_missing.t0_s=zeros(nw,1);
+    tx_missing.t0_s(2)=1e-3; % no valid time samples for Tx 2
+    cfg_das=cfg;
+    cfg_das.methods={'DAS'};
+    full_das=rtb_reconstruct_all(acq,cfg_das);
+    partial_das=rtb_reconstruct_all(tx_missing,cfg_das);
+    mismatch=max(abs(full_das.tx_weight_sum(:)- ...
+                     partial_das.tx_weight_sum(:)));
+    assert(mismatch<1e-12, ...
+        'Tx normalization must count Tx support independent of Rx coverage.');
+    assert(partial_das.diagnostics.missing_rx_tx_weight_fraction>0 && ...
+           all(partial_das.valid_rx_tx_fraction(:)<=1+1e-12), ...
+        'Rx coverage QA must detect a missing Tx receive record.');
+
     das=output.images.DAS;
     nsi=output.images.NSI;
     assert(all(nsi(:)>=-1e-10) && ...
@@ -202,7 +222,7 @@ function test_rtb_standard_interface()
     assert(caught,'Physically implausible unit mapping must be rejected.');
 
     fprintf('PASS: vendor axis/units/channel order, RF/IQ, all methods.\n');
-    fprintf('PASS: CF=GCF(M0=0), NSI envelope bound, point target location.\n');
+    fprintf('PASS: CF=GCF(M0=0), NSI bound, target location, missing-Rx Tx normalization.\n');
     fprintf('PASS: reject IQ-only mismatch, missing timing, plane Tx, wrong units.\n');
     fprintf('NOTE: independent UFF/Chapter-1 RTB regression is separate.\n');
 end
