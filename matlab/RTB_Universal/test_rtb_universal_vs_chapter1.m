@@ -74,9 +74,16 @@ function relative_error = test_rtb_universal_vs_chapter1(filename)
     [max_diff,linear_index]=max(abs(residual(:)));
     relative_error=max_diff/(max(abs(b.rtb_analytic(:)))+eps);
     [iz,ix]=ind2sub(size(residual),linear_index);
-    txw_diff=max(abs(a.tx_weight_sum(:)-b.tx_weight_sum(:)));
+    txw_delta=abs(a.tx_weight_sum-b.tx_weight_sum);
+    [txw_diff,ixw]=max(txw_delta(:));
+    [izw,jxw]=ind2sub(size(txw_delta),ixw);
     fprintf('UNIVERSAL RTB vs CHAPTER-1 DAS: %.6e\n',relative_error);
     fprintf('  Tx normalization weight max abs difference: %.6e\n',txw_diff);
+    fprintf('  Max Tx-weight difference at x=%.4f mm,z=%.4f mm; universal %.9g vs baseline %.9g\n', ...
+        a.x_axis_m(jxw)*1e3,a.z_axis_m(izw)*1e3, ...
+        a.tx_weight_sum(izw,jxw),b.tx_weight_sum(izw,jxw));
+    fprintf('  Tx weights at worst complex residual: universal %.9g vs baseline %.9g\n', ...
+        a.tx_weight_sum(iz,ix),b.tx_weight_sum(iz,ix));
     fprintf('  Max per-Tx vs channel Rx sound-speed diff: %.9g m/s\n', ...
         acq.audit.max_tx_rx_sound_speed_diff_m_s);
     fprintf('  Maximum complex residual: |delta|=%.6e at x=%.4f mm, z=%.4f mm\n', ...
