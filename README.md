@@ -203,6 +203,28 @@ MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。�
 
 ---
 
+## 跨设备 RTB 多算法统一接口（独立工具）
+
+新增 **[RTB_Universal：跨设备采集数据标准化 + RTB 全方法重建](./matlab/RTB_Universal/README.md)**，独立于第 0–7 章课程，不改变已完成章节的历史算法。
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/RTB_Universal
+
+% 一键快速预览：TheGB UFF、七种 RTB 方法、同一网格
+out=demo_rtb_universal;
+
+% 标准入口：source 可以是 UFF、canonical acq 或 canonical MAT
+out=rtb_reconstruct_all(source,cfg);
+rtb_show_methods(out,'own');
+~~~
+
+支持 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI**。提供原始数据结构验证、物理 Rx channel/element 映射、明确的单位与 Tx 时序约定、相位补偿、共享 Tx/Rx delay 及画图。对其他厂商需先从 SDK/私有文件解出 numeric raw，再通过 `rtb_from_vendor_array(raw,meta)` 显式适配；不对未知仪器发射模型做猜测。
+
+目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块已提供 deterministic 合成测试及与第 1 章复数 RTB-DAS 的独立回归入口，**新增代码还没有在用户 MATLAB 实际执行验收，暂不声称跨厂商运行已经验证**。
+
+---
+
 ## 统一数学框架
 
 候选 pixel：
