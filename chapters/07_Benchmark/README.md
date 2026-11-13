@@ -1,6 +1,6 @@
 # 第 7 章：统一 Benchmark——从“更好看”转向可验证的性能
 
-**状态：方法学与 MATLAB 测试脚本已提交；尚待本地运行真实 UFF 以验收。**
+**状态：第 7 章教学与 TheGB 实际 Benchmark 已完成（2026-11-13）。** 两个 track 的基础 DAS 复数一致性及合成 gCNR 测试通过。**没有可靠的 lesion/background ROI，因此真实数据 CR/CNR/gCNR 尚未测量；不作临床优越性结论。**
 
 本章不增加新的 beamformer，核心问题是：在相同的声学/采样条件下，哪种方法针对哪种成像任务真正有收益，付出什么代价？
 
@@ -146,4 +146,91 @@ output/benchmark/ch07/
 
 > 真正的成像改进应在同一任务、同一数据和明确 ROI 下表现为相关指标的改善，并且说明分辨率、contrast、speckle 与计算复杂度的取舍。仅仅“更黑”或“主瓣更尖”，不能作为结论。
 
-当前只完成算法接入、合规性检查和数值小样例。缺少本地 MATLAB 真实运行结果，必须保持“进行中”；不得把代码提交视为科学 Benchmark 通过。
+本章已经收到用户本地 MATLAB 真实运行的 Figure、完整控制台与两组统计表；下述实测结果已写入教程。项目级教学对照完成，但缺少带标注的低回声 phantom ROI，因此不能声称已经完成客观病灶检出性能的全面评测。
+
+
+---
+
+## 七、TheGB 实测统一 Benchmark（2026-11-13）
+
+本节数据由用户在本地 MATLAB 运行 `run_chapter7_benchmark` 提供的 **Figure 1/2 和完整 Console** 得到。图像保存路径为本地 `output/benchmark/ch07`；仓库只记录日志中的确切数值与分析，不伪造 CSV 或数据文件。
+
+### 1. 共同基线与自检
+
+- gCNR 小型合成用例：**PASS**（完全相同两组分布 0，完全分离两组分布 1）。
+- FI 的 CF、GCF、MVDR、fDMAS、SLSC 内部 complex DAS 相对第 1 章的 max-peak scaled error 均为 **6.147×10⁻¹⁸**。
+- RTB-MVDR 和 RTB-NSI 两个独立 core 内部的 complex RTB-DAS 误差为 **0**。
+- 以上证明**各轨道内部的基础 DAS 实现及输出网格一致**，不证明每个自适应算法的独立论文数值等价性。
+
+### 2. Track A：Conventional FI
+
+统一深度 `z=16–24 mm`，`n_z=434`；真实横向扫描线间距由表格推得约 **0.298 mm**。
+
+| 方法 | 横向 FWHM (mm) | FWHM / 扫描线 | 轴向 FWHM (mm) | 横向 -20 dB (mm) | 点目标局部峰值 vs DAS (dB) | core 耗时 (s) |
+|---|---:|---:|---:|---:|---:|---:|
+| DAS | 0.71147 | 2.3876 | 0.44182 | 1.14570 | 0 | 23.455 |
+| CF | 0.41672 | 1.3985 | 0.43796 | 0.97791 | -0.18643 | 24.287 |
+| GCF (M0=1) | 0.62156 | 2.0859 | 0.43953 | 1.13540 | -0.15247 | 23.345 |
+| MVDR | 0.30669 | 1.0292 | 0.48558 | 0.55205 | -2.3924 | 41.070 |
+| fDMAS | 0.71965 | 2.4151 | 0.62134 | 1.10210 | 不可同幅度比较 | 21.985 |
+| SLSC | 不适用 | 不适用 | 不适用 | 不适用 | 不适用 | 24.439 |
+
+**解释**：
+
+- CF / MVDR 在 FI 数据上有很窄的表观横向响应，但这组 FWHM 都不足 3 条 scanline，尤其 MVDR 只有约 1 条：**受采样限制，不能据此宣称物理分辨率提高数倍**。
+- GCF (M0=1) 相比 CF 保留更多散斑与横向响应，符合其放宽接受的 aperture spatial-frequency band 的机制。
+- fDMAS 在这组数据的横向 FWHM 与 DAS 很接近（0.720 vs 0.711 mm），轴向响应甚至更宽（0.621 vs 0.442 mm）。fDMAS 的二倍频 bandpass 使输出谱定义不同，不宜据此单独推断算法优劣。
+- SLSC 输出 **linear coherence**，与 RF envelope 振幅定义不同，不参加幅度 FWHM 排名。
+
+一个事先未验证为 homogeneous 的 speckle ROI `[-12,-8,18,22] mm`，样本数 **2808**，得到：
+
+| 方法 | CV | SNR = mean/std | envelope 与 DAS 相关 |
+|---|---:|---:|---:|
+| DAS | 0.51056 | 1.9586 | 1 |
+| CF | 1.1738 | 0.85196 | 0.89873 |
+| GCF | 0.70722 | 1.4140 | 0.92875 |
+| MVDR | 0.49909 | 2.0036 | 0.82285 |
+| fDMAS | 0.8038 | 1.2441 | 0.79296 |
+| SLSC | 0.19771 | 5.0579 | 0.52009 |
+
+**尤其注意**：SLSC 的 `SNR=5.06` 只是其归一化 coherence image 的 mean/std，**不是 RF 回波 SNR 提升到 5.06**，更不能把它判为 speckle 成像质量冠军。该 ROI 没有独立同质性标注，DAS 相关也只说明相似性。
+
+### 3. Track B：dense RTB 同几何点目标
+
+二维网格为 `x=-2.5~1.5 mm` 和 `z=18.5~22.5 mm`，`161×161`，`dx=dz=0.025 mm`。
+
+| 方法 | 横向 FWHM (mm) | FWHM / pixel | 轴向 FWHM (mm) | 横向 -20 dB (mm) | 点峰值 vs DAS (dB) |
+|---|---:|---:|---:|---:|---:|
+| RTB-DAS | 0.70632 | 28.253 | 0.42305 | 1.14820 | 0 |
+| RTB-MVDR | 0.12382 | 4.953 | 0.40714 | 0.46166 | -2.8928 |
+| RTB-NSI (c=0.2) | 0.16089 | 6.4358 | 0.38542 | 0.56294 | -2.5358 |
+| RTB-NSI (c=0.8) | 0.37254 | 14.902 | 0.42281 | 0.80151 | -0.68566 |
+
+相对 0.70632 mm RTB-DAS 主瓣：MVDR 横向 FWHM 缩小约 **82.5%**，NSI c=0.2 约 **77.2%**，NSI c=0.8 约 **47.3%**。本次 lateral sample spacing 足够密，三种自适应响应的 FWHM 均跨越 4 个以上 pixels，明显减少 conventional FI 欠采样问题。
+
+但是，**这些只是单一 TheGB 点目标的空间响应测量，不是两目标 resolvability、临床对比度或 speckle fidelity 证明**。结合第 3、6 章的 carotid 验证，MVDR 的人体 B-mode 增益有限；NSI c=0.2 导致严重组织抑制，c=0.8 仍引起显著纹理变化。
+
+**实际整条 core 计时（单次运行，非 kernel-only）：**
+
+- RTB-MVDR core（内部含 DAS）：**135.93 s**；
+- RTB-NSI core（内部含 DAS/ZM）：**23.40 s**；
+- **独立 RTB-DAS 没有在本次 Track B 单独计时**。原版报告将 RTB-NSI 的 23.404 s 同时写在 RTB-DAS 行，会误导为独立 DAS 运行时间；代码现已修正该行耗时为 `NaN`。
+- c=0.8 使用已有 `D,Z` 复数结果代数重组，没有第二次 RF beamforming，独立整条 core runtime 记为 `NaN`。
+
+**不要将 135.93/23.40 的比值解读为同硬件上的纯 MVDR/NSI kernel 性能比**：两者的全 core 数据路径、缓存/读取等开销并不完全独立，且只有一次计时。
+
+### 4. 尚未测量的部分
+
+**本次没有已确认的低回声 lesion/background ROI，因此 CR、CNR、gCNR 不参与任何对比，`FI_contrast.csv` 不会生成。**
+
+这不是运行失败，而是遵守了数据有效性边界。如果将来为了评估临床/目标可检测性而继续研究，应优先使用带独立标注的 hypoechoic phantom，固定两个 ROI 后再比较。**但这不是结束当前“经典波束合成学习”项目的阻碍。**
+
+### 5. 最终可支持的结论
+
+1. **方法正确性层面**：两组共同 DAS 复数基线一致，实验具有可比的声学/网格条件。
+2. **分辨率层面**：MVDR、NSI 在密集 RTB 点目标上能显著缩窄 lateral response，伴随峰值损失；CF 的 conventional FI 窄主瓣受 scanline sampling 影响更大。
+3. **组织层面**：CF/NSI 在已有结果中会明显改变正常组织散斑；MVDR 在人体的整体 B-mode 获益不像点目标结果那样明显。
+4. **应用层面**：没有跨方法普适冠军；必须根据真实任务分辨 resolution gain、contrast detectability、speckle distortion 和计算成本。
+5. **实验边界**：上述结论是 TheGB 教学 benchmark + 前几章真实 carotid 的综合判断，不包含带 ROI 的客观 lesion detection/临床优越性验证。
+
+**第 7 章的教学和现有数据 Benchmark 已完成。**
