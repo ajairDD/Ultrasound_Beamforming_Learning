@@ -73,6 +73,10 @@ function relative_error = test_rtb_universal_vs_chapter1(filename)
     options.rx_aperture_mode='f_number';
     options.rx_f_number=cfg.rx_f_number;
     options.normalize_tx_weights=true;
+    % Reference method itself is unchanged; only UFF geometry arithmetic
+    % is opt-in double to match canonical adapter precision. Comparing
+    % mixed single/double vs all-double at 1e-10 is not a fair regression.
+    options.force_double_geometry=true;
     options.verbose=false;
     b=reconstruct_fi_rtb_manual(filename,options);
 
