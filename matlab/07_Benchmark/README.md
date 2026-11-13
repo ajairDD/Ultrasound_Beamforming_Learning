@@ -1,6 +1,6 @@
 # Chapter 7 MATLAB — Unified Benchmark
 
-一个入口，两个独立比较组，复用 Chapter 1–6 已有代码。**代码已提交，真实 UFF 运行结果待验收。**
+一个入口，两个独立比较组，复用 Chapter 1–6 已有代码。**已于 2026-11-13 通过用户本地 TheGB UFF 实验验证并完成第 7 章教学 Benchmark**（不包括未标注 ROI 的 lesion detectability 评价）。
 
 ## 一键运行
 
@@ -42,7 +42,7 @@ z [18.5,22.5] mm, n_z=161, dz=0.025mm
 RTB-DAS / MVDR / NSI c=0.2 / NSI c=0.8
 ~~~
 
-RTB-MVDR 与 NSI 的独立复数 DAS 需要一致；否则拒绝产生比较指标。NSI 的两个 c 只重建一次 D/Z，另一幅从数学上直接重组，不能把第二个 c 当作独立 runtime。
+RTB-MVDR 与 NSI 的独立复数 DAS 需要一致；否则拒绝产生比较指标。**本次实测误差为 0**。NSI 的两个 c 只重建一次 D/Z，另一幅从数学上直接重组，不能把第二个 c 当作独立 runtime。**原始输出把 RTB-NSI 的计时复制到 RTB-DAS 行，已修正：没有独立计时的 RTB-DAS 和 NSI c=0.8 均标记 NaN。**
 
 ### CR/CNR/gCNR
 
@@ -95,3 +95,21 @@ README.md
 ~~~
 
 详细教学见 [第 7 章](../../chapters/07_Benchmark/README.md)。
+
+
+## 本次真实运行记录（2026-11-13）
+
+用户在 MATLAB 中运行 `run_chapter7_benchmark`，提供两组完整 Figure/Console。
+
+- `gCNR synthetic sanity tests: PASS`；
+- FI 的 CF、GCF、MVDR、fDMAS、SLSC 相对第 1 章 complex DAS 一致性误差都是 **6.147e-18**；
+- RTB 的两条独立 complex DAS 一致性误差 **0**；
+- 生成 `FI_metrics.csv` 和 `RTB_metrics.csv` 以及对应 Figure/配置；**没有验证的 lesion/background ROI，未生成 FI_contrast.csv，是预期行为**。
+
+**FI 主瓣 FWHM（mm）**：DAS 0.71147；CF 0.41672；GCF 0.62156；MVDR 0.30669；fDMAS 0.71965。FI 横向扫描线约 0.298 mm，所有主瓣跨越不足 3 scanlines，尤其 MVDR 只有约 1.03 个 scanlines，因此不做精确分辨率倍数宣称。
+
+**密集 RTB FWHM（mm）**：DAS 0.70632；MVDR 0.12382；NSI c=0.2 为 0.16089；NSI c=0.8 为 0.37254。四种条件完全同网格，且 MVDR FWHM 仍跨约 4.95 pixels。点目标峰值相对 DAS 分别为 -2.8928、-2.5358、-0.68566 dB。
+
+**RTB 全核心单次计时**：MVDR + 内部 DAS 135.93 秒，NSI + 内部 DAS/ZM 23.40 秒。请勿将 RTB-DAS 视为单独跑出 23.40 秒：**本次没有单独计时**；c=0.8 重用了同一 D/Z，没有独立 full-core 计时。已更新表格输出，将这两个 runtime 置为 NaN（仅更正计时归属，不影响图像、FWHM 或相干性计算）。如需要验证新的 runtime 列，可只重跑 RTB；**非必须，不影响本章验收**。
+
+本章结论不是“哪个算法全局最好”，而是 **点目标横向响应压窄、真实人体结构保真、contrast detectability 和计算时间之间存在不同的取舍**。完整结果与边界见 [第 7 章正文](../../chapters/07_Benchmark/README.md)。
