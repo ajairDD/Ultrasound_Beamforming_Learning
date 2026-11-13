@@ -37,7 +37,7 @@
 | 第 4 章 | DMAS / fDMAS | **已完成** |
 | 第 5 章 | SLSC | **已完成** |
 | 第 6 章 | NSI | **已完成** |
-| 第 7 章 | 统一 benchmark | 计划中 |
+| 第 7 章 | 统一 benchmark | **进行中** |
 
 ---
 
@@ -182,6 +182,25 @@ compare_full_fov_rtb_das_vs_nsi
 
 ---
 
+## 第 7 章
+
+阅读：**[第 7 章：统一 Benchmark](./chapters/07_Benchmark/README.md)**
+
+本章已提供一个 MATLAB 入口、两套互不混排的公平比较：
+
+~~~matlab
+cd matlab/07_Benchmark
+run_chapter7_benchmark
+~~~
+
+- **FI track**：DAS、CF、GCF、MVDR、fDMAS、SLSC，固定同一 focused FI UFF、同一成像 x/z 网格、Tx/Rx 延时和接收 F#。
+- **RTB track**：RTB-DAS、RTB-MVDR、RTB-NSI(c=0.2 / 0.8)，固定同一 RTB 网格、Tx compounding，并对两个独立 DAS 核心做 complex regression。
+- **指标**：点目标 FWHM/-20dB 响应、speckle ROI 统计、全 core runtime；CR/CNR/gCNR 只有在提供已确认 lesion/background ROI 后才计算。
+
+输出 CSV、MAT 配置及图像至本地 output/benchmark/ch07。当前代码和方法学已提交，真实 UFF 运行与数值验收尚待完成，故标记“进行中”。
+
+---
+
 ## 统一数学框架
 
 候选 pixel：
@@ -222,8 +241,8 @@ $$
 
 ---
 
-## 下一章
+## 最终验收
 
-**第 6 章 NSI 已完成。下一步进入第 7 章：统一 Benchmark。**
+第 0–6 章已完成；第 7 章统一 Benchmark **进行中**。
 
-将已完成算法按各自真实输出定义和合适数据集对照，集中评价点目标横向响应、contrast/speckle 保真性、人体结构鲁棒性与计算成本。
+最终需要在本地 MATLAB 运行 FI/RTB 两组，核查共同 DAS baseline 的复数一致性，审阅 FWHM/采样与 speckle 统计以及真实 ROI 数据可用性，然后再总结为跨算法的任务相关结论。
