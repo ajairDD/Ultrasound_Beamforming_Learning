@@ -37,7 +37,7 @@
 | 第 4 章 | DMAS / fDMAS | **已完成** |
 | 第 5 章 | SLSC | **已完成** |
 | 第 6 章 | NSI | **已完成** |
-| 第 7 章 | 统一 benchmark | **进行中** |
+| 第 7 章 | 统一 benchmark | **已完成** |
 
 ---
 
@@ -186,18 +186,20 @@ compare_full_fov_rtb_das_vs_nsi
 
 阅读：**[第 7 章：统一 Benchmark](./chapters/07_Benchmark/README.md)**
 
-本章已提供一个 MATLAB 入口、两套互不混排的公平比较：
+本章已完成 TheGB 真实数据上的统一对照实验，将各方法划分为组内可比的两条轨道：
 
 ~~~matlab
 cd matlab/07_Benchmark
 run_chapter7_benchmark
 ~~~
 
-- **FI track**：DAS、CF、GCF、MVDR、fDMAS、SLSC，固定同一 focused FI UFF、同一成像 x/z 网格、Tx/Rx 延时和接收 F#。
-- **RTB track**：RTB-DAS、RTB-MVDR、RTB-NSI(c=0.2 / 0.8)，固定同一 RTB 网格、Tx compounding，并对两个独立 DAS 核心做 complex regression。
-- **指标**：点目标 FWHM/-20dB 响应、speckle ROI 统计、全 core runtime；CR/CNR/gCNR 只有在提供已确认 lesion/background ROI 后才计算。
+- **Conventional FI**：DAS、CF、GCF、MVDR、fDMAS、SLSC；同扫描线/深度网格。FI 各方法的内部复数 DAS 与第 1 章误差均为 **6.147×10⁻¹⁸**，但横向点目标 FWHM 只有约 1–2.4 条扫描线，受采样限制。
+- **Dense RTB**：RTB-DAS、MVDR、NSI(c=0.2)、NSI(c=0.8)；两条独立 RTB-DAS core 的复数误差 **0**。横向 FWHM 分别为 **0.7063、0.1238、0.1609、0.3725 mm**，均采用 0.025 mm 横向采样。
+- **代价和边界**：MVDR/NSI 的点响应明显变窄，但峰值降低；此前 carotid 结果显示 MVDR 的人体改善有限，NSI 会明显损伤组织 speckle/连续性。本次未提供独立已确认的低回声 target/background ROI，所以没有声称测得真实 gCNR/CNR 或普遍临床收益。
 
-输出 CSV、MAT 配置及图像至本地 output/benchmark/ch07。当前代码和方法学已提交，真实 UFF 运行与数值验收尚待完成，故标记“进行中”。
+MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。计时为完整 core 单次运行，不是独立算法 kernel 耗时；**原版把 NSI core 的运行时间错误标到 RTB-DAS 行，已修正为未独立计时 (NaN)**。
+
+**项目第 0–7 章经典波束合成课程已完成**。本次是方法教学及 TheGB/此前 carotid 的证据总结，不等于完成全部客观对比度/临床验证。
 
 ---
 
@@ -241,8 +243,10 @@ $$
 
 ---
 
-## 最终验收
+## 项目完成状态与验证边界
 
-第 0–6 章已完成；第 7 章统一 Benchmark **进行中**。
+**第 0–7 章的教学、手写 MATLAB 算法与现有真实数据实验均已完成。**
 
-最终需要在本地 MATLAB 运行 FI/RTB 两组，核查共同 DAS baseline 的复数一致性，审阅 FWHM/采样与 speckle 统计以及真实 ROI 数据可用性，然后再总结为跨算法的任务相关结论。
+已完成最关键的基线检查：FI 所有算法的 DAS complex regression 均通过；RTB 两个独立核心的 DAS complex regression 误差为 0；合成 gCNR 的非重叠/完全重叠样例通过。
+
+这不意味着所有自适应算法都已与论文逐点数值对应，也不意味着有标注的 lesion detectability、真实人体诊断有效性及计算加速均得到证明。后续若开展正式科学 benchmark，应另行使用已标注 phantom 的目标/背景 ROI，报告 CR/CNR/gCNR、重复采样不确定性与计算设备配置。
