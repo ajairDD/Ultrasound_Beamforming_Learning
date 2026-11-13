@@ -57,6 +57,8 @@ function test_rtb_standard_interface()
     meta.tx_phase_correction_rad=zeros(nw,1);
     meta.tx_delay_convention='subtract';
     meta.time_reference='two_way';
+    meta.tx_wavefront='focused_spherical';
+    meta.data_stage='pre_beamform_channel';
     meta.signal_type='RF';
 
     acq=rtb_from_vendor_array(vendor,meta);
