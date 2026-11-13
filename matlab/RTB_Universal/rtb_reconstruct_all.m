@@ -537,39 +537,41 @@ function [y,fallback]=mvdr_pixel(s,gate,gate_valid,fraction,loading)
     if M<3 || P<2
         y=sum(s);fallback=true;return;
     end
-    R=complex(zeros(L,L)); count=0;
+
+    % Build P overlapping subarrays from each axial snapshot.
+    indices=(0:L-1).'+(1:P);
+    R=complex(zeros(L,L));
+    count=0;
     for q=1:size(gate,1)
-        % Check validity separately for each receive subarray.
-        for p=1:P
-            idx=p:p+L-1;
-            if all(gate_valid(q,idx))
-                v=gate(q,idx).';
-                R=R+v*v';
-                count=count+1;
-            end
+        keep=all(gate_valid(q,indices),1);
+        if any(keep)
+            slice=gate(q,indices);
+            X=slice(:,keep);
+            R=R+X*X';
+            count=count+nnz(keep);
         end
     end
     if count<1
         y=sum(s);fallback=true;return;
     end
+
     R=R/count;
     power=real(trace(R))/L;
     if ~(isfinite(power) && power>eps)
         y=sum(s);fallback=true;return;
     end
     R=R+loading*power*eye(L);
-    a=ones(L,1);
-    b=R\a;
-    den=a'*b;
-    if ~(isfinite(real(den)) && isfinite(imag(den)) && abs(den)>eps)
+    steering=ones(L,1);
+    sol=R\steering;
+    denom=steering'*sol;
+    if ~(isfinite(real(denom)) && isfinite(imag(denom)) && ...
+         abs(denom)>eps)
         y=sum(s);fallback=true;return;
     end
-    weights=b/den;
-    sub=zeros(P,1);
-    for p=1:P
-        sub(p)=weights'*s(p:p+L-1);
-    end
-    y=M*mean(sub); % same nominal receive-DAS amplitude convention
+
+    weights=sol/denom;
+    center=s(indices);
+    y=M*mean(weights'*center); % nominal DAS receive-scale convention
 end
 
 function [value,ok]=slsc_pixel(gate,valid,cfg)
