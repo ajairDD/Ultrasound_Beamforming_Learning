@@ -164,6 +164,8 @@ UFF / vendor tensor / canonical MAT
 ~~~
 
 - CF/GCF/MVDR/NSI 都先执行**每 Tx 的 receive 运算**，然后通过相同 Tx apodization 做相干复合。
+- **跨机器 GCF 注意事项**：这里的 GCF M0 是 FFT 的固定整数 bin 数，实际对应的归一化 spatial-frequency 截止随有效 Rx 孔径 M 变化；不同阵元数或 F# 的机器不能仅以相同 M0 就认为严格同等滤波条件。
+- 各 Tx 在本版本采用同一个采样率 fs；如果机器不同 Tx 使用不等采样率/时间基准，需先正确重采样并更新 t0，不能随意拼接成标准 4D tensor。
 - SLSC 的相关性是实数统计量，按 Tx 权重做**非相干平均**。这是新的 RTB 教学扩展，不能冒充论文中已验证的统一 RTB-SLSC。
 - fDMAS 对 real RF pair products 先按 RTB 的 Tx 权重求和，再沿轴向图像时间轴滤波二倍频。这是显式规定的 RTB 教学扩展，**不等同于在每次 Tx 内先滤波再复合的所有可能定义**；输出幅度不能当作 DAS 的同一物理校准幅度。
 - NSI 默认 c=0.8 是根据本项目此前 c=0.2 的 in-vivo 强抑制结果选择的保守教学值，**不是各类设备最优值**。
