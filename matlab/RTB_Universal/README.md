@@ -235,6 +235,16 @@ test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
 
 要求在相同网格和 Tx/Rx 条件下，complex DAS 的 max-peak scaled error 小于 1e-10。若失败，**先核查设备时序和几何，不能进入各方法优劣比较**。成功后也只能证明共同 DAS 基线一致，不自动证明新的 fDMAS/SLSC 扩展完全符合论文定义。
 
+### 2026-11-13：首次真实 UFF 回归发现的归一化差异
+
+用户首次运行：合成输入适配/7 算法检查全部 PASS，但真实 TheGB 的独立 RTB-DAS 复数 regression 出现 **6.848491e-05**，因此**尚未通过 1e-10 验收**。
+
+代码审查发现一处确定的实现不一致：
+- Chapter 1：`tx_weight_sum` 对所有 Tx 孔径支持的像素累计 Tx apodization，即使该位置没有有效的 Rx 样点，接收值也按 0 贡献；
+- 初版 RTB_Universal：只有至少一个 Rx 通道样点有效的 Tx 才计入分母，导致数据窗边界的零贡献被重新放大。
+
+已修正 RTB_Universal，使分母和 Chapter 1 一致，同时另外输出 `out.valid_rx_tx_weight_sum`、`out.valid_rx_tx_fraction` 和 `out.diagnostics.missing_rx_tx_weight_fraction`，在存在 Rx 数据缺失时给出警告。这个代码差异在静态审查中得到确认，但**是否足以解释实测 6.848491e-05，需要本地 MATLAB 重跑才能确认**。回归测试现在还输出 Tx 权重最大差异和复数误差最大位置，不允许仅放宽容差通过。
+
 ## 7. 文件与依赖
 
 ~~~text
