@@ -1,6 +1,6 @@
 # Universal RTB：跨设备原始数据标准接口
 
-**状态：合成数据标准接口测试通过；TheGB UFF 的统一 RTB-DAS 与第 1 章独立复数回归通过（误差 6.533229×10⁻¹⁶）。七种方法的真实数据图像及跨厂商采集验证尚未完成。**
+**状态：合成数据标准接口测试、TheGB UFF 的独立复数 DAS 回归（6.533229×10⁻¹⁶），以及 TheGB 的七算法真实 RF 一键重建集成测试均已通过。跨厂商真实采集数据和 fDMAS/SLSC 新 RTB 定义的独立数值验证尚未完成。**
 
 ## 1. 目标与适用范围
 
@@ -275,7 +275,48 @@ PASS: complex RTB DAS baseline is consistent with Chapter 1.
 
 **归因边界**：这次通过之前同时修正了 Tx/Rx 归一化、运算顺序、几何精度与坐标处理；没有逐一隔离变量的消融实验，因此不能仅凭最终 PASS 断言以前的差异全部由 single/double 引起。第 1 章的 `force_double_geometry` 仍为回归测试专用选项，默认重建行为不变。
 
-**尚未验收**：七种 RTB 算法在 TheGB 真实数据上的完整图像和运行日志；其它机器的 UFF/canonical 数据及 IQ 物理一致性；fDMAS/SLSC 新 RTB 扩展的独立算法数值真值。上述问题不应由 DAS 基线回归 PASS 自动推定已经通过。
+**尚未验收**：其它机器的真实 UFF/canonical 数据及 IQ 物理一致性；fDMAS/SLSC 新 RTB 扩展的独立算法数值真值；七算法结果的同物理条件定量 benchmark。TheGB 七算法已经集成运行，但这不意味着每种算法已通过独立科学正确性验证。
+
+### 2026-11-14：TheGB 真实 RF 七算法一键重建
+
+用户运行 `out=demo_rtb_universal;` 并提供 Figure 1（own-peak）、Figure 2（common DAS reference）及控制台日志。**这是端到端集成测试通过，而不是每个算法获得了独立的科学验证。**
+
+~~~text
+Finished universal RTB in 41.37 s
+MVDR fallback 0/61289, SLSC unavailable pixel-Tx 0
+shape_sample_rx_tx_frame: [1920 128 128 1]
+element_pitch_m: 2.9800e-04
+channel_reorder_changed: 0
+t0_range_s: [0 0]
+focus_depth_range_m: [0.0296 0.0296]
+max_tx_rx_sound_speed_diff_m_s: 0
+is_RF: 1
+Methods completed: DAS, CF, GCF, MVDR, FDMAS, SLSC, NSI
+Total full-pipeline runtime: 41.37 s
+~~~
+
+`demo_rtb_universal` 默认从 128 个 Tx 中按 `wave_stride=4` 取子集（32 Tx），视野 x=-4..3 mm，z=18..22.5 mm，`n_x=64`；**不是全部 128 Tx 的全视野性能测试**。41.37 秒是七算法共同处理的一次总时间，不能分配为任何单独方法的耗时。
+
+**截图观察（定性，不是独立 ground truth）：**
+
+- DAS：点目标和背景散斑呈预期 RTB 形态；作为共同空间几何基线。
+- CF：更强的背景压低；GCF(M0=1) 相比 CF 恢复部分散斑。
+- MVDR：点目标横向响应紧凑；较粗的默认 x 网格不能替代密集 PSF 数值测量。
+- fDMAS：点目标附近出现更明显的轴向细长结构；需要在固定几何下进一步核查二倍频 bandpass 和轴向 profile。不能仅因图像可显示就认定新的 RTB-fDMAS 定义已与原方法一致。
+- SLSC：宽而平滑的亮区，这是 `short-lag coherence` 的线性图，而非声压幅度图。还需独立验证新的跨 Tx 非相干平均约定。
+- NSI：出现明显零点与背景明暗起伏，符合之前 c 相关实验的外观趋势；不能据此认定组织保真性好。
+
+**验收分层：**
+
+1. 解析/物理适配的合成测试：PASS。
+2. TheGB 复数 RTB-DAS vs 第 1 章的数值回归：PASS（6.533229×10⁻¹⁶）。
+3. TheGB 七算法真实 UFF 端到端运行/展示：PASS（本次日志）。
+4. 其它设备原始数据/元数据的真实互操作性：**待验收**。
+5. fDMAS、SLSC 的 RTB 扩展与独立算法基准的数值一致性：**待验收**。
+
+**下一项最直接的跨机器检查**：优先拿已有 `Alpinion_L3-8_FI_hypoechoic.uff` 做 `rtb_audit_source`，再运行 `test_rtb_universal_vs_chapter1`。若波型、阵列及时间元数据符合本接口，且复杂 DAS 回归达到 `<1e-10`，再对该数据开启七算法成像。不要把波型/阵元排列不同的文件自动视为兼容。
+
+---
 
 ## 7. 文件与依赖
 
