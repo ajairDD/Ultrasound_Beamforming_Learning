@@ -221,7 +221,7 @@ rtb_show_methods(out,'own');
 
 支持 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI**。提供原始数据结构验证、物理 Rx channel/element 映射、明确的单位与 Tx 时序约定、相位补偿、共享 Tx/Rx delay 及画图。对其他厂商需先从 SDK/私有文件解出 numeric raw，再通过 `rtb_from_vendor_array(raw,meta)` 显式适配；不对未知仪器发射模型做猜测。
 
-目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块的 deterministic 合成接口测试已在用户 MATLAB 通过；TheGB UFF 的独立复数 RTB-DAS 回归误差为 **6.533229×10⁻¹⁶**，Tx 权重差异为 **0**，均通过。**七种方法的真实 UFF 完整图像、跨厂商数据与 fDMAS/SLSC 扩展的论文级一致性尚未验收**，详见使用说明。
+目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块的 deterministic 合成接口测试已在用户 MATLAB 通过；TheGB UFF 的独立复数 RTB-DAS 回归误差为 **6.533229×10⁻¹⁶**，Tx 权重差异为 **0**，均通过。**TheGB 七算法真实 RF 快速预览已全部运行并展示**（41.37 s，MVDR fallback 0/61289，SLSC 无效估计 0）；这是集成运行通过，不等于七种算法独立的数值真值验证。**跨厂商数据与 fDMAS/SLSC RTB 扩展的独立科学验证仍未完成**，详见使用说明。
 
 ---
 
