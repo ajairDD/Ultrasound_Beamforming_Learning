@@ -182,7 +182,11 @@ function out = rtb_reconstruct_all(source,cfg)
                     raw,t0,acq.fs_hz,query_time);
             end
 
-            active=abs(xx-ele)<=z/(2*cfg.rx_f_number);
+            % Match Chapter-1 Rx F-number arithmetic/order exactly.
+            % Avoid a different <= decision at an aperture boundary.
+            aperture_width=z/cfg.rx_f_number;
+            half_width=aperture_width/2;
+            active=abs(xx-ele)<=half_width;
             empty=~any(active,2);
             if any(empty)
                 [~,nearest]=min(abs(ele-xx));
@@ -539,23 +543,42 @@ function tau=tx_delay(focus,dist,delay,xx,z,c,cfg)
 end
 
 function w=tx_weight(focus,origin,xx,z,cfg)
-    axis=[focus(1)-origin(1),focus(3)-origin(3)];
-    axis=axis/norm(axis);
-    xu=[axis(2),-axis(1)];
-    dx=xx-focus(1);
-    dz=z-focus(3);
-    xloc=dx*xu(1)+dz*xu(2);
-    zloc=dx*axis(1)+dz*axis(2);
-    zeff=max(abs(zloc),cfg.tx_min_aperture_m*cfg.tx_f_number);
-    ratio=cfg.tx_f_number*abs(xloc)./zeff;
-    w=zeros(size(z));
-    if strcmpi(cfg.tx_window,'boxcar')
-        w(ratio<=0.5)=1;
-    else
-        flat=ratio<=0.375;
-        taper=ratio>0.375 & ratio<0.5;
-        w(flat)=1;
-        w(taper)=0.5*(1+cos((2*pi/0.25)*(ratio(taper)-0.625)));
+    % Same order of operations as Chapter-1
+    % transmit_weights_focused_wave/tukey_ratio_window.
+    ox=origin(1);
+    oz=origin(3);
+    sx=focus(1);
+    sz=focus(3);
+
+    axis_vec=[sx-ox,sz-oz];
+    axis_norm=norm(axis_vec);
+    assert(axis_norm>eps,'Focused origin and source coincide.');
+    zu=axis_vec/axis_norm;
+    xu=[zu(2),-zu(1)];
+
+    dx=xx-sx;
+    dz=z-sz;
+    x_local=dx*xu(1)+dz*xu(2);
+    z_local=dx*zu(1)+dz*zu(2);
+
+    z_eff=max(abs(z_local), ...
+        cfg.tx_min_aperture_m*cfg.tx_f_number);
+    ratio=cfg.tx_f_number.*abs(x_local)./z_eff;
+
+    switch lower(cfg.tx_window)
+        case 'boxcar'
+            w=double(ratio<=0.5);
+        case 'tukey25'
+            roll=0.25;
+            w=zeros(size(ratio));
+            flat=ratio<=0.5*(1-roll);
+            taper=ratio>0.5*(1-roll) & ratio<0.5;
+            w(flat)=1;
+            r=ratio(taper);
+            w(taper)=0.5.*(1+cos( ...
+                2*pi/roll.*(r-roll/2-1/2)));
+        otherwise
+            error('Unsupported Tx window: %s',cfg.tx_window);
     end
 end
 
