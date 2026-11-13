@@ -84,6 +84,8 @@ function acq = rtb_load_acquisition(source)
                 acq.tx_phase_correction_rad=zeros(nw,1);
                 acq.tx_delay_convention='subtract';
                 acq.time_reference='two_way';
+                acq.tx_wavefront='focused_spherical';
+                acq.data_stage='pre_beamform_channel';
                 acq.demod_hz=0;
                 acq.iq_reference_time_s=0;
                 acq.adapter_source=['UFF: ' filename];
@@ -105,7 +107,8 @@ function acq = rtb_load_acquisition(source)
         'element_xyz_m','channel_to_element','focus_xyz_m', ...
         'origin_xyz_m','tx_reference_distance_m','tx_delay_s', ...
         'tx_phase_correction_rad', ...
-        'tx_delay_convention','time_reference'};
+        'tx_delay_convention','time_reference', ...
+        'tx_wavefront','data_stage'};
     for k=1:numel(required)
         assert(isfield(acq,required{k}), ...
             'Canonical acquisition is missing %s.',required{k});
@@ -162,6 +165,10 @@ function acq = rtb_load_acquisition(source)
             'Direct IQ struct must affirm its IQ phase convention.');
     end
 
+    assert(strcmp(char(acq.tx_wavefront),'focused_spherical'), ...
+        'Only focused spherical Tx is supported by RTB_Universal.');
+    assert(strcmp(char(acq.data_stage),'pre_beamform_channel'), ...
+        'Input must be raw pre-beamformed channel RF/IQ, not B-mode.');
     assert(strcmp(char(acq.tx_delay_convention),'subtract') && ...
            strcmp(char(acq.time_reference),'two_way'), ...
         'Unsupported Tx delay sign or sample-time reference.');
