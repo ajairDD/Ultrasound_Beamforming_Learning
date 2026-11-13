@@ -145,13 +145,16 @@ function acq = rtb_from_vendor_array(raw,meta)
             'Unsupported IQ phase convention: map it explicitly first.');
         acq.demod_hz=double(meta.iq_demodulation_frequency)*fsu;
         acq.iq_reference_time_s=double(meta.iq_reference_time)*ts;
+        acq.iq_phase_convention='iq_equals_analytic_times_exp_minus_j2pift';
     else
         acq.demod_hz=0;
         acq.iq_reference_time_s=0;
     end
 
+    % Return a canonical, SI-unit struct. The central reconstruction
+    % entrypoint validates and reorders it exactly ONCE. Do not reorder
+    % the channel dimension in multiple adapters independently.
     acq.adapter_source='vendor-array-with-explicit-metadata';
-    acq=rtb_load_acquisition(acq);
 end
 
 function s=canonical_axis(s)
