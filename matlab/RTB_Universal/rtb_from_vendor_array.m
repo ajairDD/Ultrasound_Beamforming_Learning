@@ -18,6 +18,7 @@ function acq = rtb_from_vendor_array(raw,meta)
 %   origin_xyz                          [W,3], units.length, Tx beam axis
 %   tx_reference_distance               [W,1], units.length
 %   tx_delay                            [W,1], units.time
+%   tx_phase_correction_rad             [W,1]; explicit 0 if confirmed
 %   tx_delay_convention = 'subtract'     tau_tx=path/c - tx_delay
 %   time_reference = 'two_way'           sample timestamp for Tx+Rx path
 %   signal_type = 'RF' or 'IQ'
@@ -48,6 +49,7 @@ function acq = rtb_from_vendor_array(raw,meta)
         'initial_time','sound_speed_m_s','nominal_frequency', ...
         'element_xyz','channel_to_element','focus_xyz', ...
         'origin_xyz','tx_reference_distance','tx_delay', ...
+        'tx_phase_correction_rad', ...
         'tx_delay_convention','time_reference','signal_type'};
     for k=1:numel(required)
         assert(isfield(meta,required{k}), ...
@@ -130,6 +132,10 @@ function acq = rtb_from_vendor_array(raw,meta)
     acq.origin_xyz_m=origin;
     acq.tx_reference_distance_m=reference;
     acq.tx_delay_s=delay;
+    acq.tx_phase_correction_rad=double(meta.tx_phase_correction_rad(:));
+    assert(numel(acq.tx_phase_correction_rad)==w && ...
+           all(isfinite(acq.tx_phase_correction_rad)), ...
+        'tx_phase_correction_rad requires one finite value per Tx.');
     acq.tx_delay_convention='subtract';
     acq.time_reference='two_way';
 
