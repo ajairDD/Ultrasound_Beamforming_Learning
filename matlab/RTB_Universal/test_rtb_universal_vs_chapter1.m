@@ -22,6 +22,17 @@ function relative_error = test_rtb_universal_vs_chapter1(filename)
     assert(exist(filename,'file')==2,'Missing UFF %s',filename);
 
     acq=rtb_load_acquisition(filename);
+    % UFF HDF5 may store scan geometry as single precision. Chapter-1
+    % directly accesses UFF properties; the universal adapter converts
+    % them to double by design. Such dtype differences can affect an
+    % aperture boundary or sub-sample interpolation.
+    probe_raw=uff.read_object(filename,'/channel_data');
+    fprintf('Original UFF classes: channel=%s, probe.x=%s, source.x=%s, source.distance=%s, wave.delay=%s, sample_fs=%s\n', ...
+        class(probe_raw.data),class(probe_raw.probe.x), ...
+        class(probe_raw.sequence(1).source.x), ...
+        class(probe_raw.sequence(1).source.distance), ...
+        class(probe_raw.sequence(1).delay), ...
+        class(probe_raw.sampling_frequency));
     x0=median(acq.focus_xyz_m(:,1));
     focus_depth=median(acq.focus_xyz_m(:,3));
     x_min=max(min(acq.focus_xyz_m(:,1)),x0-2e-3);
