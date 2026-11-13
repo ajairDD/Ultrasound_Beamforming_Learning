@@ -200,7 +200,16 @@ out.active_tx_count
 6. **设备前处理**：bandpass、TGC、各通道增益、动态孔径、相关序列的解码/配准等会影响跨机对比；不能默认原始数据已完全等价。
 7. **模型适配**：2D linear focused 是当前边界；其他探头/发射序列必须另建物理模型，不是更换元数据字段就能支持。
 
-## 6. 必须先运行的两个验证
+## 6. 输入预检与两类验证
+
+**先做跨设备输入预检（不是成像验证）：**
+
+~~~matlab
+% source 可以是 UFF 文件或 canonical acq
+audit=rtb_audit_source(source);
+~~~
+
+除了元数据/通道重排校验，预检还会检查各个 Tx 的焦点预测回波时刻是否落在原始采样时间范围内。覆盖比例很低时，优先核对 t0、Tx 参考距离、Tx delay 和采样率；**焦点不在当前采样范围有时是采集设置所致，不一定是错误，因此这里只报警不自动改时序**。
 
 **A. 不依赖 UFF 的合成数据：**
 
@@ -230,6 +239,7 @@ test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
 matlab/RTB_Universal/
   rtb_from_vendor_array.m
   rtb_load_acquisition.m
+  rtb_audit_source.m
   rtb_reconstruct_all.m
   rtb_show_methods.m
   demo_rtb_universal.m
