@@ -380,7 +380,17 @@ function cfg=defaults(cfg,a)
     focus=a.focus_xyz_m;
     nw=a.audit.n_tx;
     if isempty(cfg.x_range_m)
-        cfg.x_range_m=[min(focus(:,1)),max(focus(:,1))];
+        lo=min(focus(:,1));
+        hi=max(focus(:,1));
+        if hi-lo<1e-8
+            % A single focused transmit is still a physical 2D beam.
+            % Its output ROI can extend laterally beyond its focus x;
+            % actual insonification is determined by Tx support weights.
+            reach=min(4e-3,0.5*(max(a.element_x_m)-min(a.element_x_m)));
+            lo=lo-reach;
+            hi=hi+reach;
+        end
+        cfg.x_range_m=[lo,hi];
     end
     if isempty(cfg.z_range_m)
         zc=median(focus(:,3));
@@ -396,17 +406,19 @@ function cfg=defaults(cfg,a)
         all(isfinite(cfg.z_range_m)) && ...
         cfg.z_range_m(1)>0 && cfg.z_range_m(2)>cfg.z_range_m(1), ...
         'z_range_m must be increasing positive [min max] in METERS.');
-    assert(cfg.x_range_m(1)>=min(focus(:,1))-1e-9 && ...
-           cfg.x_range_m(2)<=max(focus(:,1))+1e-9, ...
-        'Requested x range exceeds focused Tx lateral span.');
+    % Tx source positions are NOT a hard lateral image limit:
+    % a single focused beam can insonify off-axis locations, too.
+    % The actual per-pixel Tx support/coverage is reported in out.
 
     if isempty(cfg.n_z)
         lambda=a.c_m_s/a.f0_hz;
         cfg.n_z=ceil(diff(cfg.z_range_m)/(lambda/16))+1;
     end
-    assert(isscalar(cfg.n_x) && cfg.n_x>=2 && ...
+    assert(isnumeric(cfg.n_x) && isscalar(cfg.n_x) && ...
+           isfinite(cfg.n_x) && cfg.n_x>=2 && ...
            cfg.n_x==round(cfg.n_x) && ...
-           isscalar(cfg.n_z) && cfg.n_z>=3 && ...
+           isnumeric(cfg.n_z) && isscalar(cfg.n_z) && ...
+           isfinite(cfg.n_z) && cfg.n_z>=3 && ...
            cfg.n_z==round(cfg.n_z), ...
         'n_x/n_z must be positive integers with n_x>=2, n_z>=3.');
     assert(isscalar(cfg.frame_index) && ...
