@@ -320,8 +320,15 @@ function out = rtb_reconstruct_all(source,cfg)
             maxval=max(val(:));
             shown.(method)=max(-cfg.dynamic_range_db, ...
                 20*log10(val/(maxval+eps)+eps));
-            common_db.(method)=max(-cfg.dynamic_range_db, ...
-                20*log10(val/(peak+eps)+eps));
+            if strcmp(method,'FDMAS')
+                % fDMAS non-linear pair products do NOT have the same
+                % acoustic amplitude unit as DAS. Never offer a
+                % misleading common-DAS amplitude comparison.
+                common_db.(method)=[];
+            else
+                common_db.(method)=max(-cfg.dynamic_range_db, ...
+                    20*log10(val/(peak+eps)+eps));
+            end
         end
     end
 
