@@ -73,6 +73,8 @@ Canonical acq 的必须字段：
 |---|---|
 | data | 数值数组 [sample,channel,Tx,frame]；禁止预先 beamform/envelope/log |
 | signal_type | RF（实数）或 IQ（复数） |
+| tx_wavefront | 必须为 focused_spherical；未知波型或 plane/CPWC 不可以套此模型 |
+| data_stage | 必须为 pre_beamform_channel；拒绝已 beamformed/envelope/log 的数据 |
 | fs_hz | 采样率 Hz |
 | t0_s | ADC/IQ 第一个样点时间，标量或每 Tx 一个值，秒 |
 | c_m_s | 重建声速 m/s |
@@ -97,6 +99,8 @@ meta=struct();
 meta.data_order='channel,sample,tx'; % 需核对，不能猜
 meta.units=struct('length','mm','time','us','frequency','MHz');
 meta.signal_type='RF';
+meta.tx_wavefront='focused_spherical';
+meta.data_stage='pre_beamform_channel';
 
 meta.sampling_frequency=machine.fs_MHz;
 meta.initial_time=machine.initial_time_us;  % scalar 或每 Tx
@@ -179,7 +183,7 @@ out.images.NSI
 out.x_axis_m
 out.z_axis_m
 out.display                   % 自峰值归一化 dB；SLSC 线性
-out.display_common_db         % 与 DAS 共用参考 dB；无 SLSC
+out.display_common_db         % 与 DAS 共用参考 dB；无 SLSC / fDMAS
 out.input_audit
 out.diagnostics
 out.tx_weight_sum
