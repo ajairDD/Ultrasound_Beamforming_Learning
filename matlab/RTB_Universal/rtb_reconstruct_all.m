@@ -118,6 +118,10 @@ function out = rtb_reconstruct_all(source,cfg)
         'max_query_out_of_range_fraction',0);
     ele=acq.element_x_m;
     nc=numel(ele);
+    rx_element_xyz=acq.original_element_xyz_m( ...
+        acq.channel_to_element,:);
+    assert(isequal(size(rx_element_xyz),[nc,3]), ...
+        'Receive channel xyz geometry has wrong shape.');
 
     if cfg.verbose
         fprintf('RTB UNIVERSAL: %s | %d samples x %d Rx x %d Tx x %d frame\n', ...
@@ -163,7 +167,12 @@ function out = rtb_reconstruct_all(source,cfg)
             % This reproduces the Chapter-1 UFF convention exactly.
             q_tx=tx_delay(ft,ref,txd,xx,z, ...
                           acq.tx_sound_speed_m_s(itx),cfg);
-            d_rx=sqrt((xx-ele).^2+z.^2);
+            % Preserve all three geometric element coordinates exactly,
+            % even if y/z deviations are tiny within the allowed
+            % near-linear-array validation tolerance.
+            d_rx=sqrt((xx-ele).^2 + ...
+                (0-rx_element_xyz(:,2).').^2 + ...
+                (z-rx_element_xyz(:,3).').^2);
             query_time=q_tx+d_rx/acq.c_m_s;
 
             [samples,valid]=interp_channel_matrix( ...
@@ -527,10 +536,11 @@ function cfg=defaults(cfg,a)
 end
 
 function tau=tx_delay(focus,dist,delay,xx,z,c,cfg)
-    signed=sqrt((xx-focus(1)).^2+(z-focus(3)).^2);
+    signed=sqrt((xx-focus(1)).^2 + ...
+                (0-focus(2)).^2 + (z-focus(3)).^2);
     signed(z<focus(3))=-signed(z<focus(3));
     spherical=dist+signed;
-    plane=dist+z-focus(3);
+    plane=dist+(z-focus(3));
     switch lower(cfg.tx_delay_model)
         case 'spherical',path=spherical;
         case 'plane',path=plane;
