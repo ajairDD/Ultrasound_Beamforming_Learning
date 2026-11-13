@@ -78,6 +78,7 @@ Canonical acq 的必须字段：
 | fs_hz | 采样率 Hz |
 | t0_s | ADC/IQ 第一个样点时间，标量或每 Tx 一个值，秒 |
 | c_m_s | 重建声速 m/s |
+| tx_sound_speed_m_s | 可选，按 Tx 提供虚源模型声速（m/s）；默认使用 c_m_s；UFF 自动读取 wave.sound_speed |
 | f0_hz | 标称中心频率 Hz |
 | element_xyz_m | [Nelem,3] 物理阵元 xyz，米 |
 | channel_to_element | [Nchannel,1] 物理阵元 1-based 编号 |
@@ -243,7 +244,11 @@ test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
 - Chapter 1：`tx_weight_sum` 对所有 Tx 孔径支持的像素累计 Tx apodization，即使该位置没有有效的 Rx 样点，接收值也按 0 贡献；
 - 初版 RTB_Universal：只有至少一个 Rx 通道样点有效的 Tx 才计入分母，导致数据窗边界的零贡献被重新放大。
 
-已修正 RTB_Universal，使分母和 Chapter 1 一致，同时另外输出 `out.valid_rx_tx_weight_sum`、`out.valid_rx_tx_fraction` 和 `out.diagnostics.missing_rx_tx_weight_fraction`，在存在 Rx 数据缺失时给出警告。这个代码差异在静态审查中得到确认，但**是否足以解释实测 6.848491e-05，需要本地 MATLAB 重跑才能确认**。回归测试现在还输出 Tx 权重最大差异和复数误差最大位置，不允许仅放宽容差通过。
+已修正 RTB_Universal，使分母和 Chapter 1 一致，同时另外输出 `out.valid_rx_tx_weight_sum`、`out.valid_rx_tx_fraction` 和 `out.diagnostics.missing_rx_tx_weight_fraction`，在存在 Rx 数据缺失时给出警告。
+
+**另外发现第二个真实的实现差异**：第 1 章用 `wave.sound_speed` 计算每次发射的 Tx virtual-source delay、用 `channel_data.sound_speed` 计算 Rx delay；统一接口原先将后者同时用于 Tx/Rx。现在 UFF loader 精确保留每个 Tx 的 `tx_sound_speed_m_s`，核心也对应使用。对于厂商标准数组，此字段可以省略，默认等于 `c_m_s`；如果确实有独立 Tx 声速应显式提供。
+
+上述两处差异已在静态代码审查中确认，但**是否足以解释实测 6.848491e-05，需要本地 MATLAB 重跑才能确认**。回归测试输出 Tx 权重最大差异、Tx/Rx 声速元数据差异及复数误差最大位置，不允许仅放宽容差通过。
 
 ## 7. 文件与依赖
 
