@@ -32,8 +32,9 @@ function out = rtb_reconstruct_all(source,cfg)
     acq=rtb_load_acquisition(source);
     cfg=defaults(cfg,acq);
 
-    requested=upper(cellstr(string(cfg.methods(:))));
+    requested=cellstr(upper(string(cfg.methods(:))));
     requested=unique(requested,'stable');
+    assert(~isempty(requested),'At least one method must be requested.');
     allowed={'DAS','CF','GCF','MVDR','FDMAS','SLSC','NSI'};
     assert(all(ismember(requested,allowed)), ...
         'Methods must be selected from DAS CF GCF MVDR fDMAS SLSC NSI.');
@@ -123,8 +124,7 @@ function out = rtb_reconstruct_all(source,cfg)
         0.5*cfg.mvdr_axial_lambda*acq.c_m_s/acq.f0_hz/dz));
     sl_half=max(1,round( ...
         0.5*cfg.slsc_axial_lambda*acq.c_m_s/acq.f0_hz/dz));
-    wmax=Nz;
-    for wi=1:num_waves
+     for wi=1:num_waves
         itx=cfg.selected_tx(wi);
         raw=double(acq.data(:,:,itx,cfg.frame_index));
         if strcmp(acq.signal_type,'RF')
@@ -173,8 +173,9 @@ function out = rtb_reconstruct_all(source,cfg)
 
             % Only actual Tx support is counted in the denominator.
             wt=wt(:);
-            sum_w(:,ix)=sum_w(:,ix)+wt;
-            active_tx(:,ix)=active_tx(:,ix)+double(wt>0);
+            receive_has_sample=any(active,2);
+            sum_w(:,ix)=sum_w(:,ix)+wt.*receive_has_sample;
+            active_tx(:,ix)=active_tx(:,ix)+double(wt>0 & receive_has_sample);
             diagnostics.max_query_out_of_range_fraction=max( ...
                 diagnostics.max_query_out_of_range_fraction, ...
                 1-nnz(valid)/numel(valid));
@@ -531,10 +532,7 @@ function [y,fallback]=mvdr_pixel(s,gate,gate_valid,fraction,loading)
     end
     R=complex(zeros(L,L)); count=0;
     for q=1:size(gate,1)
-        if any(~gate_valid(q,:))
-            % Check each subarray separately instead of treating a
-            % partially valid pixel as a full valid aperture snapshot.
-        end
+        % Check validity separately for each receive subarray.
         for p=1:P
             idx=p:p+L-1;
             if all(gate_valid(q,idx))
@@ -607,7 +605,7 @@ function [filtered,meta]=fdmas_bandpass(raw,dz,c,f0,relative_edges)
     n=size(raw,1);
     pad=max(32,round(4*c/f0/dz));
     % Mirror axial image before 2f0 filter to reduce FFT boundary seams.
-    idx=[flipud((1:min(pad,n)).'),(1:n).', ...
+    idx=[flipud((1:min(pad,n)).');(1:n).'; ...
          flipud((max(1,n-min(pad,n)+1):n).')];
     % Column-major indexing: flatten/pad ONLY along z.
     array=raw(idx,:);
