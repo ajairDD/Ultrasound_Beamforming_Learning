@@ -35,7 +35,8 @@ function acq = rtb_from_vendor_array(raw,meta)
 % IQ phase convention can produce plausible-looking but WRONG images.
 % In particular IQ already log-compressed / beamformed input is invalid.
 %
-% OUTPUT acq.data [sample, physical_receive_channel, focused_Tx, frame].
+% OUTPUT acq.data [sample, vendor_receive_channel, focused_Tx, frame].
+% Physical Rx reordering is performed once by rtb_load_acquisition.
 %
 % Example (replace ALL values using verified machine documentation):
 %   meta.data_order='channel,sample,tx'; ...
