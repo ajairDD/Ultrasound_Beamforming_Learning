@@ -341,6 +341,13 @@ function out = rtb_reconstruct_all(source,cfg)
     out.x_axis_m=x;
     out.z_axis_m=z;
     out.rtb_das_analytic=D;
+    if run_slsc
+        % SLSC output 0 on unsupported pixels is NOT a measurement of
+        % zero coherence. Expose a separate mask for interpretation.
+        out.slsc_valid_mask=sw>eps;
+    else
+        out.slsc_valid_mask=[];
+    end
     out.tx_weight_sum=sum_w;
     out.active_tx_count=active_tx;
     out.input_audit=acq.audit;
@@ -603,30 +610,34 @@ function [value,ok]=slsc_pixel(gate,valid,cfg)
     if M<3 || size(gate,1)<cfg.slsc_min_samples
         return;
     end
+
     mmax=min([cfg.slsc_max_lag,M-1, ...
         max(1,floor(cfg.slsc_lag_fraction*M))]);
-    rsum=0; goodlags=0;
+    rsum=0;
+    goodlags=0;
+
+    % Vectorize all physical channel pairs within each element lag.
     for lag=1:mmax
-        pairs=[];
-        for i=1:M-lag
-            keep=valid(:,i)&valid(:,i+lag);
-            if nnz(keep)<cfg.slsc_min_samples
-                continue;
-            end
-            a=gate(keep,i);
-            b=gate(keep,i+lag);
-            den=sqrt(sum(a.^2)*sum(b.^2));
-            if den>0
-                pairs(end+1)=max(-1,min(1,sum(a.*b)/den)); %#ok<AGROW>
-            end
-        end
-        if ~isempty(pairs)
-            rsum=rsum+mean(pairs);
+        a=gate(:,1:M-lag);
+        b=gate(:,1+lag:M);
+        both=valid(:,1:M-lag) & valid(:,1+lag:M);
+        counts=sum(both,1);
+        a(~both)=0;
+        b(~both)=0;
+
+        numerator=sum(a.*b,1);
+        ea=sum(a.^2,1);
+        eb=sum(b.^2,1);
+        good=counts>=cfg.slsc_min_samples & ea>0 & eb>0;
+        if any(good)
+            corr=numerator(good)./sqrt(ea(good).*eb(good));
+            corr=max(-1,min(1,corr));
+            rsum=rsum+mean(corr);
             goodlags=goodlags+1;
         end
     end
     if goodlags>0
-        value=rsum/goodlags;  % explicit mean-lag convention
+        value=rsum/goodlags;  % documented mean-lag convention
         ok=true;
     end
 end
