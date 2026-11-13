@@ -32,7 +32,11 @@ function out = rtb_reconstruct_all(source,cfg)
     acq=rtb_load_acquisition(source);
     cfg=defaults(cfg,acq);
 
-    requested=cellstr(upper(string(cfg.methods(:))));
+    if ischar(cfg.methods)
+        requested={upper(strtrim(cfg.methods))};
+    else
+        requested=cellstr(upper(string(cfg.methods(:))));
+    end
     requested=unique(requested,'stable');
     assert(~isempty(requested),'At least one method must be requested.');
     allowed={'DAS','CF','GCF','MVDR','FDMAS','SLSC','NSI'};
