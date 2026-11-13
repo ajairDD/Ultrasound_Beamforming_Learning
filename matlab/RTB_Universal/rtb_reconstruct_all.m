@@ -158,7 +158,11 @@ function out = rtb_reconstruct_all(source,cfg)
                 continue;
             end
 
-            q_tx=tx_delay(ft,ref,txd,xx,z,acq.c_m_s,cfg);
+            % Tx virtual-source timing uses per-wave sound speed,
+            % while Rx geometric time uses channel-data sound speed.
+            % This reproduces the Chapter-1 UFF convention exactly.
+            q_tx=tx_delay(ft,ref,txd,xx,z, ...
+                          acq.tx_sound_speed_m_s(itx),cfg);
             d_rx=sqrt((xx-ele).^2+z.^2);
             query_time=q_tx+d_rx/acq.c_m_s;
 
