@@ -34,9 +34,16 @@ function figures = rtb_show_methods(out,display_mode)
         subplot(nrow,ncol,k);
         if strcmp(method,'SLSC')
             img=out.display.SLSC;
-            imagesc(x,z,img);
+            h=imagesc(x,z,img);
+            if isfield(out,'slsc_valid_mask') && ...
+                    ~isempty(out.slsc_valid_mask)
+                % Grey means no valid short-lag estimate, not a measured
+                % coherence of zero.
+                set(h,'AlphaData',double(out.slsc_valid_mask));
+                set(gca,'Color',[0.85 0.85 0.85]);
+            end
             caxis([0 1]);
-            title('SLSC (linear coherence)');
+            title('SLSC (linear coherence; grey=unavailable)');
         else
             if strcmp(method,'FDMAS')
                 img=out.display.FDMAS;
