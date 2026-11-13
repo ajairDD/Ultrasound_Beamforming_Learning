@@ -38,7 +38,10 @@ function figures = rtb_show_methods(out,display_mode)
             caxis([0 1]);
             title('SLSC (linear coherence)');
         else
-            if strcmp(display_mode,'common')
+            if strcmp(method,'FDMAS')
+                img=out.display.FDMAS;
+                title('fDMAS (own-peak dB, non-calibrated)');
+            elseif strcmp(display_mode,'common')
                 img=out.display_common_db.(method);
                 title([method ' (common DAS dB)']);
             else
