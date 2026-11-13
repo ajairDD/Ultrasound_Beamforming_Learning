@@ -1,6 +1,6 @@
 # Universal RTB：跨设备原始数据标准接口
 
-**状态：已实现接口、7 种方法、展示及两类测试；当前环境没有 MATLAB，真实 UFF 数值验收尚待用户运行。**
+**状态：合成数据标准接口测试通过；TheGB UFF 的统一 RTB-DAS 与第 1 章独立复数回归通过（误差 6.533229×10⁻¹⁶）。七种方法的真实数据图像及跨厂商采集验证尚未完成。**
 
 ## 1. 目标与适用范围
 
@@ -258,7 +258,24 @@ test_rtb_universal_vs_chapter1('../../data/Alpinion_L3-8_FI_hypoechoic.uff')
 
 为保证科学一致性，**第 1 章默认行为完全不变**；只为回归测试增加可选 `options.force_double_geometry=true`，将 UFF wave/probe geometry、采样时间和 Tx/Rx 声速在进入同一 RTB 方程之前转成 double。最新独立测试自动开启此选项；新的统一引擎同步保留真实阵元 y/z 几何（而非只用 x），仍要求 complex-DAS relative error `<1e-10`。测试会打印 UFF 原始字段的 `class()`，确认该解释是否适用。
 
-**注意：前两次用户日志显示的 6.848491e-05 仍是失败结果；当前更正后的 double-reference 尚未得到运行日志，不可提前宣称通过。**
+**最终复测（2026-11-14，用户 MATLAB 日志）已通过：**
+
+~~~text
+UNIVERSAL RTB vs CHAPTER-1 DAS: 6.533229e-16
+Tx normalization weight max abs difference: 0.000000e+00
+Max per-Tx vs channel Rx sound-speed diff: 0 m/s
+Maximum complex residual: 6.821210e-13
+Worst residual at x=-0.1000 mm, z=28.9316 mm
+Data-supported Tx-weight fraction: 1.000000
+Global missing-Rx Tx-weight fraction: 0
+PASS: complex RTB DAS baseline is consistent with Chapter 1.
+~~~
+
+说明在 **同一 TheGB 原始 RF、相同 Tx/Rx 几何、网格、参数及当前双精度对照条件**下，统一 RTB-DAS 与独立第 1 章实现达到了约双精度舍入误差量级的一致性。Tx 权重差异为零，且不存在记录样点缺失。结合此前通过的合成数组、通道重排、单位、RF/IQ、异常元数据和 GCF(M0=0)=CF 检查，可将**数据输入适配的合成验证 + TheGB UFF DAS 基线验证**标记为通过。
+
+**归因边界**：这次通过之前同时修正了 Tx/Rx 归一化、运算顺序、几何精度与坐标处理；没有逐一隔离变量的消融实验，因此不能仅凭最终 PASS 断言以前的差异全部由 single/double 引起。第 1 章的 `force_double_geometry` 仍为回归测试专用选项，默认重建行为不变。
+
+**尚未验收**：七种 RTB 算法在 TheGB 真实数据上的完整图像和运行日志；其它机器的 UFF/canonical 数据及 IQ 物理一致性；fDMAS/SLSC 新 RTB 扩展的独立算法数值真值。上述问题不应由 DAS 基线回归 PASS 自动推定已经通过。
 
 ## 7. 文件与依赖
 
