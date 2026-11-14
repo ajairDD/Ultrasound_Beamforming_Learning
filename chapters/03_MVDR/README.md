@@ -14,6 +14,18 @@
 
 <a id="theory"></a>
 
+## 本章学习入口
+
+> **推荐顺序：** 先弄清约束与协方差，再用小例子跟踪权重；最后比较点目标和人体结果。
+>
+> **最短实践：** `demo_mvdr_building_blocks` → `compare_manual_das_vs_mvdr`（第一步无需数据；第二步需要 USTB/UFF）。点目标变窄不代表人体图像整体更好。详细命令与参数以 [MATLAB 运行说明](../../matlab/03_MVDR/README.md) 为准。
+
+**章节导航：** [← 上一章](../02_CF_GCF/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/03_MVDR/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第03章_MVDR.pdf) · [下一章 →](../04_DMAS/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 第一部分：先讲清完整算法
 
 ### 1. 接上前两章：这次改变的是求和前的通道权重

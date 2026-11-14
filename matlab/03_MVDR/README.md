@@ -2,6 +2,30 @@
 
 先读 [第三章完整理论](../../chapters/03_MVDR/README.md)，再按下面顺序运行：**人工向量 → conventional FI → 参数变化 → 密网格 RTB 目标 → 人体数据**。课件图片和实际运行记录见 [配图索引](../../chapters/03_MVDR/figures/README.md)。
 
+## 快速开始（全课程统一入口）
+
+原理小实验不需要 USTB/UFF；真实图像需要 USTB 和 TheGB UFF。**建议先读[本章教学正文](../../chapters/03_MVDR/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/03_MVDR');
+demo_mvdr_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/03_MVDR
+filename = '../../data/L7_FI_TheGB.uff';
+compare_manual_das_vs_mvdr
+~~~
+
+**提示：** 此处**显式指定 TheGB**；对照脚本未设置 `filename` 时默认使用颈动脉数据。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/03_MVDR/figures/README.md)。
+
+---
+
 ## 1. 文件与数据流
 
 | 文件 | 输入 / 作用 | 主要输出 |

@@ -16,6 +16,18 @@
 
 <a id="theory"></a>
 
+## 本章学习入口
+
+> **推荐顺序：** 先理解 CF 的归一化相干性，再看 GCF 的空间频谱；用人工向量预测权重后查看真实图像。
+>
+> **最短实践：** `demo_cf_aperture_vectors` → `compare_manual_das_cf_gcf`（第一步无需数据；第二步需要 USTB/UFF）。区分加权图、原始 DAS 与显示归一化。详细命令与参数以 [MATLAB 运行说明](../../matlab/02_CF_GCF/README.md) 为准。
+
+**章节导航：** [← 上一章](../01_DAS_Real_UFF/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/02_CF_GCF/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第02章_CF与GCF.pdf) · [下一章 →](../03_MVDR/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 第一部分：先讲清完整算法
 
 ### 1. 接上第一章：一个像素对应一组复数观测

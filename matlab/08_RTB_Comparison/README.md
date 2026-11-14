@@ -4,6 +4,29 @@
 
 本目录保留固定 TheGB 参数的一键入口，并提供 **7 个无需 UFF 的机制例子、13 张中文 MATLAB 图**。重建复用 `../RTB_Universal/`；本次没有改写七种方法的重建核心。
 
+## 快速开始（全课程统一入口）
+
+机制小实验无需数据；七方法 RTB 真实预览需要 USTB 与 TheGB UFF。**建议先读[本章教学正文](../../chapters/08_RTB_Comparison/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/08_RTB_Comparison');
+demo_rtb_method_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/08_RTB_Comparison
+out = run_chapter8_rtb_comparison;
+~~~
+
+**提示：** 此入口调用 RTB_Universal；默认是固定 ROI 的对照，不是全视野、跨厂商验证。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/08_RTB_Comparison/figures/README.md)。
+
+---
+
 ## 1. 先运行机制例子
 
 从仓库根目录：

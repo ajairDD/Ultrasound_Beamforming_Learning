@@ -4,6 +4,29 @@
 
 本目录不新增波束合成算法。它复用第 1–6 章的核心，分为 conventional FI 与密集 RTB 两条轨道，并提供 **7 个无需 UFF 的教学例子、14 张中文 MATLAB 图**。
 
+## 快速开始（全课程统一入口）
+
+指标小实验无需数据；真实 Benchmark 需要 USTB 与 TheGB UFF。**建议先读[本章教学正文](../../chapters/07_Benchmark/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/07_Benchmark');
+demo_benchmark_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/07_Benchmark
+run_chapter7_benchmark
+~~~
+
+**提示：** 先读比较协议，再看两条轨道的结果；没有真实病灶 ROI 就不报告真实 CNR/gCNR。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/07_Benchmark/figures/README.md)。
+
+---
+
 ## 1. 从小例子开始
 
 在仓库根目录：

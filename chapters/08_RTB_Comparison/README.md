@@ -10,6 +10,18 @@
 
 ---
 
+## 本章学习入口
+
+> **推荐顺序：** 先看共享 RTB 前端与七种组合规则，再理解输出类型，最后运行同几何对照。
+>
+> **最短实践：** `demo_rtb_method_building_blocks` → `run_chapter8_rtb_comparison`（第一步无需数据；第二步需要 USTB/UFF）。跨设备接口的支持边界见 RTB_Universal 说明。详细命令与参数以 [MATLAB 运行说明](../../matlab/08_RTB_Comparison/README.md) 为准。
+
+**章节导航：** [← 上一章](../07_Benchmark/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/08_RTB_Comparison/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第08章_七方法RTB对照.pdf)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 1. 先看全貌：相同的是数据来源与几何，不同的是组合规则
 
 ![图 1：共享 RTB 前端以后，不同方法沿各自正确的顺序处理](figures/rtb_shared_frontend.png)

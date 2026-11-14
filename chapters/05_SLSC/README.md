@@ -12,6 +12,18 @@
 
 [MATLAB 运行说明](../../matlab/05_SLSC/README.md) · [配图与课件索引](figures/README.md) · [上一章：DMAS / fDMAS](../04_DMAS/README.md)
 
+## 本章学习入口
+
+> **推荐顺序：** 先理解短 lag 空间相干性如何替代幅度，再从 RF 小窗口、阵元对和统计集合读懂结果。
+>
+> **最短实践：** `demo_slsc_building_blocks` → `compare_fi_das_vs_slsc`（第一步无需数据；第二步需要 USTB/UFF）。SLSC 线性相干性不是 DAS 的 dB 幅度。详细命令与参数以 [MATLAB 运行说明](../../matlab/05_SLSC/README.md) 为准。
+
+**章节导航：** [← 上一章](../04_DMAS/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/05_SLSC/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第05章_SLSC.pdf) · [下一章 →](../06_NSI/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 1. 先看全貌：SLSC 换掉了哪一步？
 
 假设正在重建像素 P。与[第 1 章](../01_DAS_Real_UFF/README.md)一样，先计算 Tx 和 Rx 传播时间，再去各接收通道的对应位置插值取样。**SLSC 同样需要正确聚焦；相关运算不能代替延时。**

@@ -7,6 +7,18 @@
 ---
 
 
+## 本章学习入口
+
+> **推荐顺序：** 先建立传播与采样直觉，再看延时、孔径、PSF 和 DAS 的局限；最后用合成实验检验理解。
+>
+> **最短实践：** `demo_synthetic_point_target`（无 USTB / UFF）。第 0 章使用合成数据，无真实数据实验。详细命令与参数以 [MATLAB 运行说明](../../matlab/00_Fundamentals/README.md) 为准。
+
+**章节导航：** [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/00_Fundamentals/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第00章_波束合成共同基础.pdf) · [下一章 →](../01_DAS_Real_UFF/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 阅读地图
 
 这是一章完整讲义，不需要一次全部记住。建议按下面四个阶段阅读：

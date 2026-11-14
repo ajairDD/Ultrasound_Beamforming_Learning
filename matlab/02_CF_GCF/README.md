@@ -8,6 +8,30 @@
                                          └→ CF / GCF 权重 → DAS × 权重
 ~~~
 
+## 快速开始（全课程统一入口）
+
+原理小实验不需要 USTB/UFF；真实图像需要 USTB 和 TheGB UFF。**建议先读[本章教学正文](../../chapters/02_CF_GCF/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/02_CF_GCF');
+demo_cf_aperture_vectors
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/02_CF_GCF
+addpath('../01_DAS_Real_UFF');
+compare_manual_das_cf_gcf
+~~~
+
+**提示：** 章节内部分比较函数复用第 1 章代码；按后文「运行准备」追加路径。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/02_CF_GCF/figures/README.md)。
+
+---
+
 ## 运行准备
 
 在 MATLAB 中进入本目录，并设置：

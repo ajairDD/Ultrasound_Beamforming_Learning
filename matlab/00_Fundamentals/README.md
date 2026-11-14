@@ -8,6 +8,21 @@
 
 ---
 
+## 快速开始（全课程统一入口）
+
+无需 USTB、UFF，先从合成点目标开始。**建议先读[本章教学正文](../../chapters/00_Fundamentals/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/00_Fundamentals');
+demo_synthetic_point_target
+~~~
+
+**提示：** 这一章只有合成数据，推荐把五个脚本依次运行，不需要跳到真实数据。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/00_Fundamentals/figures/README.md)。
+
+---
+
 ## 推荐运行顺序
 
 ### 1. <code>demo_synthetic_point_target.m</code>

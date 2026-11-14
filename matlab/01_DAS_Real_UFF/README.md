@@ -12,6 +12,23 @@ USTB 用于 UFF 读取和 reference validation；Manual beamformer 的核心计�
 
 ---
 
+## 快速开始（全课程统一入口）
+
+真实数据入口需要本地 USTB 与 `data/L7_FI_TheGB.uff`。**建议先读[本章教学正文](../../chapters/01_DAS_Real_UFF/README.md)，再从仓库根目录运行以下命令。**
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/01_DAS_Real_UFF
+inspect_uff_metadata_ustb
+das_fi_scanline_manual
+~~~
+
+**提示：** 先检查文件与元数据，再重建 DAS；后续再运行 RTB 和独立参考对照。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/01_DAS_Real_UFF/figures/README.md)。
+
+---
+
 ## 文件说明
 
 | 文件 | 作用 |

@@ -1,301 +1,60 @@
 # Ultrasound Beamforming Learning
 
-一个以 **医学超声经典波束合成** 为主线的公开学习项目。算法代码统一使用 MATLAB。
+一个以**医学超声经典波束合成**为主线的 MATLAB 学习项目。课程从真实 channel data 出发，逐步建立以下计算链：
 
-核心目标：从真实 channel data 出发，理解
+> 空间位置 → Tx/Rx delay → fractional-sample interpolation → aperture / weighting → coherent sum → 图像与 PSF
 
-> **空间位置 → Tx/Rx delay → fractional-sample interpolation → aperture / weighting → coherent sum → PSF / image quality**
+建议学习顺序是**先理解原理，再运行小例子，最后使用真实 UFF 数据验证**。本仓库的第 0–8 章均已完成教学正文与配套实验；算法可运行不代表所有方法均通过论文级独立数值验证。
 
----
+## 从这里开始
 
-## PDF 课堂讲义
-
-已完成的第 0–8 章各有一份 PDF，包含可点击目录、公式、完整正文与中文配图。第 5–8 章采用中文友好版式：正文 A4 纵向，宽幅配图/指标表独立横向展示，少数密集竖图使用更大版面；图与讲解相邻，中文字体嵌入 PDF。方法缩写、数学符号、代码标识与单位保留。
-
-独立配图文件仅保存在本地，中英文版本均不纳入 Git。GitHub 上请阅读下方 PDF 获取完整图文；章节 Markdown 的图片预览和 PDF 重建需要本地配图，生成方法与提示词见构建说明。
-
-| 章节 | PDF |
-|---|---|
-| 第 0 章 | [波束合成共同基础](output/pdf/第00章_波束合成共同基础.pdf) |
-| 第 1 章 | [FI-DAS 与 RTB](output/pdf/第01章_FI-DAS与RTB.pdf) |
-| 第 2 章 | [CF 与 GCF](output/pdf/第02章_CF与GCF.pdf) |
-| 第 3 章 | [MVDR](output/pdf/第03章_MVDR.pdf) |
-| 第 4 章 | [DMAS 与 fDMAS](output/pdf/第04章_DMAS与fDMAS.pdf) |
-| 第 5 章 | [SLSC](output/pdf/第05章_SLSC.pdf) |
-| 第 6 章 | [NSI](output/pdf/第06章_NSI.pdf) |
-| 第 7 章 | [统一 Benchmark](output/pdf/第07章_统一Benchmark.pdf) |
-| 第 8 章 | [七方法 RTB 对照](output/pdf/第08章_七方法RTB对照.pdf) |
-
-[构建与配图汉化说明](tools/pdf/README.md)
-
----
-
-## 学习路线
-
-| 章节 | 内容 | 状态 |
-|---|---|---|
-| 第 0 章 | Delay、channel data、PSF、aperture、F-number、apodization、axial/lateral resolution、DAS failure modes | 已完成 |
-| 第 1 章 | 真实 UFF 上的 conventional FI-DAS 与 RTB | **已完成** |
-| 第 2 章 | CF / GCF | **已完成** |
-| 第 3 章 | MV / MVDR / Capon | **已完成** |
-| 第 4 章 | DMAS / fDMAS | **已完成** |
-| 第 5 章 | SLSC | **已完成** |
-| 第 6 章 | NSI | **已完成** |
-| 第 7 章 | 统一 benchmark | **已完成** |
-| 第 8 章 | **同一 RTB 几何下七种方法统一成像对比** | **已完成：TheGB 实测定性对照** |
-
----
-
-## 第 0 章
-
-阅读：**[第 0 章：波束合成共同基础](./chapters/00_Fundamentals/README.md)**
+**第一次接触波束合成：** 从[第 0 章](chapters/00_Fundamentals/README.md)开始，它的 MATLAB 示例不需要 USTB 或外部数据。
 
 ~~~matlab
-cd matlab/00_Fundamentals
+% 在 MATLAB 中将当前文件夹设为仓库根目录
+addpath('matlab/00_Fundamentals');
 demo_synthetic_point_target
-demo_delay_alignment
-demo_aperture_psf_apodization
-demo_axial_lateral_2d_psf
-demo_das_failure_modes
 ~~~
 
-这些脚本不需要 USTB 和外部数据。
-
----
-
-## 第 1 章
-
-阅读：**[第 1 章：真实 UFF 上的 conventional FI-DAS 与 RTB](./chapters/01_DAS_Real_UFF/README.md)**
-
-第 1 章统一使用：
-
-~~~text
-data/L7_FI_TheGB.uff
-~~~
-
-作为默认教学数据。
-
-USTB 负责：UFF 读取、probe / sequence 语义、reference validation。
-
-本项目自己实现：Tx delay、Rx delay、插值、receive aperture、DAS、RTB Tx reconstruction 与跨 Tx coherent combination。
-
-推荐运行顺序：
+**已经理解 delay / DAS，准备重建真实图像：** 按[数据准备](data/README.md)下载 `L7_FI_TheGB.uff` 至 `data/`，安装 USTB，然后从[第 1 章](chapters/01_DAS_Real_UFF/README.md)进入真实 FI-DAS 与 RTB。
 
 ~~~matlab
+% 在仓库根目录启动 MATLAB
+addpath(genpath('D:/你的USTB路径'));  % 修改为本机路径
 cd matlab/01_DAS_Real_UFF
-filename = '../../data/L7_FI_TheGB.uff';
-
 inspect_uff_metadata_ustb
-plot_raw_channel_overview_ustb
-
 das_fi_scanline_manual
-validate_manual_vs_ustb
-
-analyze_point_target_psf
-compare_receive_aperture_full_vs_fnumber
-
-compare_conventional_vs_rtb
-compare_rtb_spherical_plane_blended
-
-delay_model = 'blended';
-validate_manual_rtb_vs_ustb
-
-experiment = 'delay_model';
-experiment_rtb_parameter_sweep
 ~~~
 
----
+完整的环境与各章入口见 **[MATLAB 总指南](matlab/README.md)**。默认真实实验使用 TheGB focused FI channel data；其他数据的来源、用途与下载方式见[数据清单](data/README.md)。
 
-## 第 3 章
+## 课程地图
 
-阅读：**[第 3 章：MV / MVDR / Capon](./chapters/03_MVDR/README.md)**
+| 章节 | 这一章解决什么问题 | 教学正文 | MATLAB 实践 | 已发布 PDF |
+|---|---|---|---|---|
+| 0 · Fundamentals | 延时、孔径、相位、PSF 与 DAS 的基本边界 | [阅读](chapters/00_Fundamentals/README.md) | [运行](matlab/00_Fundamentals/README.md) | [讲义](output/pdf/第00章_波束合成共同基础.pdf) |
+| 1 · FI-DAS / RTB | 从真实通道数据重建一条线和二维图像 | [阅读](chapters/01_DAS_Real_UFF/README.md) | [运行](matlab/01_DAS_Real_UFF/README.md) | [讲义](output/pdf/第01章_FI-DAS与RTB.pdf) |
+| 2 · CF / GCF | 利用接收孔径相干性给 DAS 结果加权 | [阅读](chapters/02_CF_GCF/README.md) | [运行](matlab/02_CF_GCF/README.md) | [讲义](output/pdf/第02章_CF与GCF.pdf) |
+| 3 · MVDR | 根据局部数据估计自适应接收权重 | [阅读](chapters/03_MVDR/README.md) | [运行](matlab/03_MVDR/README.md) | [讲义](output/pdf/第03章_MVDR.pdf) |
+| 4 · DMAS / fDMAS | 通道配对、非线性求和与二倍频带 | [阅读](chapters/04_DMAS/README.md) | [运行](matlab/04_DMAS/README.md) | [讲义](output/pdf/第04章_DMAS与fDMAS.pdf) |
+| 5 · SLSC | 用短间距阵元的相关性形成图像 | [阅读](chapters/05_SLSC/README.md) | [运行](matlab/05_SLSC/README.md) | [讲义](output/pdf/第05章_SLSC.pdf) |
+| 6 · NSI | 利用不同接收孔径的包络相减改变空间响应 | [阅读](chapters/06_NSI/README.md) | [运行](matlab/06_NSI/README.md) | [讲义](output/pdf/第06章_NSI.pdf) |
+| 7 · Benchmark | 建立公平比较条件、指标与结论边界 | [阅读](chapters/07_Benchmark/README.md) | [运行](matlab/07_Benchmark/README.md) | [讲义](output/pdf/第07章_统一Benchmark.pdf) |
+| 8 · RTB Comparison | 同一 RTB 前端下比较七种组合规则 | [阅读](chapters/08_RTB_Comparison/README.md) | [运行](matlab/08_RTB_Comparison/README.md) | [讲义](output/pdf/第08章_七方法RTB对照.pdf) |
 
-本章已经完成：
+按顺序学习即可；第 0 章负责共同概念，第 1 章建立可靠 DAS 基线，第 2–6 章学习不同组合方式，第 7–8 章负责比较与综合。**每一章的正文开头都提供“学习导航”，MATLAB 目录内则给出“快速开始”。**
 
-~~~text
-1. conventional receive-domain MVDR
-2. covariance / spatial smoothing / axial averaging / diagonal loading
-3. dense-grid RTB point-target validation
-4. in-vivo carotid RTB-DAS vs RTB-MVDR
-5. EIBMV 与 RCB 两个重要后续方向
-~~~
+## 阅读、代码与配图分别在哪里？
 
-推荐入口：
+- **学习理论与公式：** `chapters/00_...` 至 `chapters/08_...` 中的 `README.md`。
+- **运行与调试：** `matlab/` 下对应编号目录的 `README.md`；公共 RTB 数据接口见 [RTB_Universal](matlab/RTB_Universal/README.md)。
+- **查看完整中文配图：** 使用上表的**已发布 PDF**。独立 PNG/FIG 未提交 Git，因而 GitHub 中部分 Markdown 图片无法预览；需要在本地重建图片时查阅[配图与构建说明](tools/pdf/README.md)。
+- **查看课件图片来源、参数和日志：** 每章 `figures/README.md`。它们是配套资料，不是初次学习的必读入口。
 
-~~~matlab
-cd matlab/03_MVDR
+本次文档导航调整不涉及 PDF 文件更新；现有 PDF 仍作为完整图文讲义提供。
 
-compare_manual_das_vs_mvdr
-compare_rtb_das_vs_rtb_mvdr
-compare_carotid_rtb_das_vs_rtb_mvdr
-~~~
+## 科学实现与验证边界
 
-最终结论：MVDR 在 point target 上可以产生很强的 lateral adaptive narrowing，但在真实 carotid B-mode 上优势明显减弱；steering mismatch 和 covariance robustness 是理解 MVDR 的关键边界。
+真实超声数据必须核对 RF/IQ、shape/axis、单位、采样时刻、probe / sequence、Tx/Rx delay、插值、孔径、相位和幅度/dB 约定；**程序运行、PSF 变窄或灰度图变好看，均不单独构成科学有效性证明**。
 
----
-## 第 4 章
-
-阅读：**[第 4 章：DMAS / fDMAS](./chapters/04_DMAS/README.md)**
-
-本章已完成“原理 → 一次完整二维实验 → 总结”：
-
-~~~matlab
-cd matlab/04_DMAS
-compare_fi_das_vs_fdmas
-~~~
-
-核心是 real-RF signed-sqrt DMAS、约 `2*f0` 的带通后形成 fDMAS，以及正确的输出轴向采样检查。
-
-TheGB 实验观察到：部分点目标横向响应被压低，但 fDMAS speckle 更颗粒化；**不能把局部 profile 变化直接等同于整体成像质量提升**。代码会检查快速 DMAS 恒等式和 Chapter-1 DAS reference，一次性实验足够完成本章教学。
-
----
-
-## 第 5 章
-
-阅读：**[第 5 章：SLSC（Short-Lag Spatial Coherence）](./chapters/05_SLSC/README.md)**
-
-本章按“原理主线 → 数值小例子 → TheGB 完整二维实验 → 实现注意事项”组织，包含 6 张中文 AI 概念图与 14 张可复现 MATLAB 图。独立配图只在本地保存，生成步骤见[运行说明](./matlab/05_SLSC/README.md)。
-
-~~~matlab
-cd matlab/05_SLSC
-demo_slsc_building_blocks       % 无需 USTB / UFF 的八个小例子
-compare_fi_das_vs_slsc
-~~~
-
-实验观察到：中央 ROI Lag 1 约 0.8901、Lag 4 约 0.5419；较大 lag 的统计像素集合发生变化，固定共同有效像素后曲线也会改变。SLSC 散斑与 DAS 幅度图明显不同。**线性相干性不等同于 dB 幅度，本次没有证据证明 SLSC 整体优于 DAS。** DAS 分支回归、逐 lag 聚合及一个真实 RF 窗口的独立复算均已实际验证。
-
-当前实现同时保留经典 short-lag sum 和适应动态 Rx F# 的 mean-across-lags 显示约定；已修正轴向 kernel 真实跨度的文字计算，未改动实际 RF 计算过程。
-
----
-
-## 第 6 章
-
-阅读：**[第 6 章：NSI（Null Subtraction Imaging）](./chapters/06_NSI/README.md)**
-
-本章按“算法原理 → 手算与数值小例子 → 密集点目标 → 完整体模与两组颈动脉 → 实现注意事项”组织，包含 7 张中文概念图与 17 张 MATLAB 图。独立配图仅保存在本地，[运行与导出说明](./matlab/06_NSI/README.md)提供复现入口。
-
-~~~matlab
-cd matlab/06_NSI
-demo_nsi_building_blocks       % 无需 USTB / UFF 的八个小例子
-compare_rtb_das_vs_nsi
-compare_full_fov_rtb_das_vs_nsi
-~~~
-
-**实验观察**：密集点目标的半幅横向宽度约为 DAS 0.7063 mm、NSI 0.1609 mm；全视野三份数据的幅度保留比中位数在 δ=0.2 时约 0.06–0.07，δ=0.8 时约 0.37–0.38。组织有所恢复，但仍需检查 speckle 与壁面连续性。点目标及三份全视野的第 1 章复数 RTB-DAS 回归均已执行，误差为 0。
-
-该 ratio 是算法幅度保留比例，不是对比度、功率或临床质量指标。本章完成的是方法教学与定性鲁棒性观察，不把窄 PSF 直接视为真实 B-mode 整体更好。
-
----
-
-## 第 7 章
-
-阅读：**[第 7 章：统一 Benchmark](./chapters/07_Benchmark/README.md)**
-
-本章先按“任务 → 共同条件 → 测量定义 → 指标解释 → 实际结果”建立比较主线，再进入两条组内可比轨道。新增 6 张中文概念图、7 个无 UFF 小实验，共 14 张 MATLAB 课件图；[配图索引](./chapters/07_Benchmark/figures/README.md)与[导出说明](./matlab/07_Benchmark/README.md)提供本地复现入口。
-
-~~~matlab
-cd matlab/07_Benchmark
-demo_benchmark_building_blocks   % 先理解采样、ROI、CNR/gCNR、统计与计时
-run_chapter7_benchmark
-~~~
-
-- **Conventional FI**：DAS、CF、GCF、MVDR、fDMAS、SLSC；同扫描线/深度网格。FI 各方法的内部复数 DAS 与第 1 章误差均为 **6.147×10⁻¹⁸**，但横向点目标 FWHM 只有约 1–2.4 条扫描线，受采样限制。
-- **Dense RTB**：RTB-DAS、MVDR、NSI(c=0.2)、NSI(c=0.8)；两条独立 RTB-DAS core 的复数误差 **0**。横向 FWHM 分别为 **0.7063、0.1238、0.1609、0.3725 mm**，均采用 0.025 mm 横向采样。
-- **代价和边界**：MVDR/NSI 的点响应明显变窄，但峰值降低；此前 carotid 结果显示 MVDR 的人体改善有限，NSI 会明显损伤组织 speckle/连续性。本次未提供独立已确认的低回声 target/background ROI，所以没有声称测得真实 gCNR/CNR 或普遍临床收益。
-
-MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。计时为完整 core 单次运行，不是独立算法 kernel 耗时；**原版把 NSI core 的运行时间错误标到 RTB-DAS 行，已修正为未独立计时 (NaN)**；2026-11-14 重跑 RTB 后，CSV 中 RTB-DAS 与 NSI(c=0.8) 的 runtime 已确认均为 `NaN`。
-
-**第 0–7 章经典波束合成教学与基准实验已完成**；第 8 章另以同一 RTB 几何集中展示七算法。这些实验不等于已完成全部客观对比度或临床验证。
-
----
-
-## 第 8 章
-
-阅读：**[第 8 章：同一 RTB 几何下的七算法比较](./chapters/08_RTB_Comparison/README.md)**
-
-这一章先用共同的“像素—Tx—Rx”变量讲清七种组合规则、跨 Tx 运算次序和输出类型，再固定 TheGB 数据及同一 RTB 几何/网格展示七种方法。新增 6 张中文概念图、7 个无 UFF 机制例子，共 13 张 MATLAB 课件图；详见[配图索引](./chapters/08_RTB_Comparison/figures/README.md)与[导出说明](./matlab/08_RTB_Comparison/README.md)。
-
-~~~matlab
-addpath(genpath('D:/你的USTB路径'));
-cd matlab/08_RTB_Comparison
-demo_rtb_method_building_blocks  % CF/GCF、MVDR、fDMAS、SLSC、NSI 与 IQ 相位
-out = run_chapter8_rtb_comparison;
-~~~
-
-本轮 2026-11-14 重跑七方法联合流程 **37.16 秒**（此前记录 41.37/38.66 秒，均非逐算法耗时），MVDR fallback **0/61289**、SLSC 无效估计 **0**；复数 RTB-DAS 与第 1 章独立双精度回归误差 **6.533229×10⁻¹⁶**、Tx 权重差异 0。中文 own/common 图和诊断图进一步区分了归一化参考、fDMAS 二倍频带与 SLSC 线性相干性。
-
-**验收边界**：这证明了 TheGB 数据的输入接口/复数 DAS 基线/七算法集成运行，不证明所有算法已通过论文级数值真值验证，也不证明跨厂商数据已经验收。
-
----
-
-## 跨设备 RTB 多算法统一接口（第 8 章使用的底层工具）
-
-**[RTB_Universal：跨设备采集数据标准化 + RTB 全方法重建](./matlab/RTB_Universal/README.md)** 是第 8 章的底层接口，也可独立使用；不会改动第 0–7 章已完成的原始算法。
-
-~~~matlab
-addpath(genpath('D:/你的USTB路径'));
-cd matlab/RTB_Universal
-
-% 一键快速预览：TheGB UFF、七种 RTB 方法、同一网格
-out=demo_rtb_universal;
-
-% 标准入口：source 可以是 UFF、canonical acq 或 canonical MAT
-out=rtb_reconstruct_all(source,cfg);
-rtb_show_methods(out,'own');
-~~~
-
-支持 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI**。提供原始数据结构验证、物理 Rx channel/element 映射、明确的单位与 Tx 时序约定、相位补偿、共享 Tx/Rx delay 及画图。对其他厂商需先从 SDK/私有文件解出 numeric raw，再通过 `rtb_from_vendor_array(raw,meta)` 显式适配；不对未知仪器发射模型做猜测。
-
-目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块的 deterministic 合成接口测试已在用户 MATLAB 通过；TheGB UFF 的独立复数 RTB-DAS 回归误差为 **6.533229×10⁻¹⁶**，Tx 权重差异为 **0**，均通过。**TheGB 七算法真实 RF 快速预览已全部运行并展示**（本轮 37.16 s；此前 41.37/38.66 s；MVDR fallback 0/61289，SLSC 无效估计 0）；这是集成运行通过，不等于七种算法独立的数值真值验证。**跨厂商数据与 fDMAS/SLSC RTB 扩展的独立科学验证仍未完成**，详见使用说明。
-
----
-
-## 统一数学框架
-
-候选 pixel：
-
-$$
-\mathbf r=(x,z)
-$$
-
-总延时：
-
-$$
-\tau_m(\mathbf r)=\tau_{Tx}(\mathbf r)+\tau_{Rx,m}(\mathbf r)
-$$
-
-延时后的 aperture observation：
-
-$$
-s_m(\mathbf r)=x_m\!\left(\tau_m(\mathbf r)\right)
-$$
-
-Conventional DAS：
-
-$$
-y_{DAS}(\mathbf r)=\sum_m w_m(\mathbf r)s_m(\mathbf r)
-$$
-
-后续 CF、MV、DMAS、SLSC、NSI，本质上都在研究：
-
-> **对齐后的 aperture data 应该怎样组合？**
-
----
-
-## 科学实现原则
-
-代码能运行不等于 beamforming 实现正确。真实数据实验至少检查：shape / axis、RF/IQ、fs / initial_time、probe geometry、transmit sequence、wave delay、Tx/Rx delay、interpolation、aperture、coherent/incoherent combination、amplitude/power/dB，以及 reference validation。
-
-原始 UFF 数据不提交到 GitHub。下载信息、MD5 和用途见 **[data/README.md](./data/README.md)**。
-
----
-
-## 项目完成状态与验证边界
-
-**第 0–7 章的经典算法教学和 Benchmark 已完成，第 8 章的 TheGB 同几何七算法演示及结果分析已完成。**
-
-已完成最关键的基线检查：FI 所有算法的 DAS complex regression 均通过；RTB 两个独立核心的 DAS complex regression 误差为 0；合成 gCNR 的非重叠/完全重叠样例通过。
-
-可运行 `cd matlab; run_all_checks` 复验合成接口、TheGB RTB-DAS 回归和七方法 smoke test；该入口不写实验产物。第 7、8 章的 CSV、PNG 和 MAT 属于本地可复现产物，统一输出到 `output/benchmark/` 且不纳入 Git。
-
-这不意味着所有自适应算法都已与论文逐点数值对应，也不意味着有标注的 lesion detectability、真实人体诊断有效性及计算加速均得到证明。后续若开展正式科学 benchmark，应另行使用已标注 phantom 的目标/背景 ROI，报告 CR/CNR/gCNR、重复采样不确定性与计算设备配置。
+仓库提供 `cd matlab; run_all_checks`，用于复查合成标准接口、TheGB 复数 RTB-DAS 基线与七方法紧凑集成测试；这不是所有算法的论文级真值验证，也不等于跨厂商、临床或计算性能已验证。各章分别保留实际观测、参数和限制，不在首页重复陈列。

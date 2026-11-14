@@ -14,6 +14,18 @@
 
 <a id="theory"></a>
 
+## 本章学习入口
+
+> **推荐顺序：** 先走通 conventional FI-DAS，再理解 RTB 与 Tx 合成；之后核对时间参考、孔径和参考实现。
+>
+> **最短实践：** `inspect_uff_metadata_ustb` → `das_fi_scanline_manual`（需要 USTB 与 `L7_FI_TheGB.uff`）。从真实 UFF 元数据开始，不跳过数据检查。详细命令与参数以 [MATLAB 运行说明](../../matlab/01_DAS_Real_UFF/README.md) 为准。
+
+**章节导航：** [← 上一章](../00_Fundamentals/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/01_DAS_Real_UFF/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第01章_FI-DAS与RTB.pdf) · [下一章 →](../02_CF_GCF/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 第一部分：先理解完整的成像过程
 
 ### 1. 聚焦发射之后，我们实际得到了什么？

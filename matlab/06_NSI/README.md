@@ -6,6 +6,29 @@
 
 教程统一用 δ 表示代码参数 `dc_offset`，避免与声速 c 混淆。核心 `reconstruct_fi_rtb_nsi_manual.m` 未改动；本次增加教学、中文绘图、日志与同一输出的诊断。
 
+## 快速开始（全课程统一入口）
+
+原理小实验无需数据；密集 RTB 点目标需要 USTB 与 TheGB UFF。**建议先读[本章教学正文](../../chapters/06_NSI/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/06_NSI');
+demo_nsi_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/06_NSI
+compare_rtb_das_vs_nsi
+~~~
+
+**提示：** 先做密集点目标，再看全视野与人体；不要把窄响应直接解读为图像整体改善。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/06_NSI/figures/README.md)。
+
+---
+
 ## 1. 八个无数据小实验
 
 从仓库根目录运行：

@@ -12,6 +12,18 @@ DAS 把延时对齐的通道相加；CF / GCF 用孔径内的一致性给输出�
 
 [MATLAB 运行说明](../../matlab/04_DMAS/README.md) · [配图与课件索引](figures/README.md) · [上一章：MVDR](../03_MVDR/README.md)
 
+## 本章学习入口
+
+> **推荐顺序：** 先理解通道两两配对与 signed-sqrt，再看滤波及输出采样；最后做真实 RF 对照。
+>
+> **最短实践：** `demo_dmas_building_blocks` → `compare_fi_das_vs_fdmas`（第一步无需数据；第二步需要 USTB/UFF）。区分非线性幅度与二倍频滤波。详细命令与参数以 [MATLAB 运行说明](../../matlab/04_DMAS/README.md) 为准。
+
+**章节导航：** [← 上一章](../03_MVDR/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/04_DMAS/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第04章_DMAS与fDMAS.pdf) · [下一章 →](../05_SLSC/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 1. 先看全貌：DMAS 换掉了哪一步？
 
 假设正在重建像素 P。[第一章的几何与延时](../01_DAS_Real_UFF/README.md)已经告诉我们：应该到每个接收通道的什么时间位置取样。经过 fractional-sample interpolation，再保留当前接收孔径内且取样有效的通道，就得到这个像素的输入向量。

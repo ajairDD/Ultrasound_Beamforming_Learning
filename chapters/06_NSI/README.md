@@ -12,6 +12,18 @@
 
 [MATLAB 运行说明](../../matlab/06_NSI/README.md) · [配图与课件索引](figures/README.md) · [上一章：SLSC](../05_SLSC/README.md)
 
+## 本章学习入口
+
+> **推荐顺序：** 先理解三套接收孔径与包络相减，再从点目标过渡到体模和人体结果。
+>
+> **最短实践：** `demo_nsi_building_blocks` → `compare_rtb_das_vs_nsi`（第一步无需数据；第二步需要 USTB/UFF）。点目标变窄与组织保真需分开评估。详细命令与参数以 [MATLAB 运行说明](../../matlab/06_NSI/README.md) 为准。
+
+**章节导航：** [← 上一章](../05_SLSC/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/06_NSI/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第06章_NSI.pdf) · [下一章 →](../07_Benchmark/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 1. 先看全貌：NSI 改的是接收组合，不是传播时间
 
 假设正在重建像素 P。先沿用[第 1 章](../01_DAS_Real_UFF/README.md)的 Tx/Rx 时间、插值和孔径选择，得到对应这个像素的接收样本。本章从实数 RF 构造解析信号，再得到**保留相位的复数通道向量**：

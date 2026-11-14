@@ -2,6 +2,30 @@
 
 先读[第四章教程](../../chapters/04_DMAS/README.md)的算法主线，再按“原理演示 → 真实数据 → 导图复现”运行。本目录保留一个 conventional FI 的 TheGB 实验；新增演示与诊断图用于看清同一个算法的各个阶段。
 
+## 快速开始（全课程统一入口）
+
+原理小实验不需要 USTB/UFF；真实 RF 实验需要 USTB 和 TheGB UFF。**建议先读[本章教学正文](../../chapters/04_DMAS/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/04_DMAS');
+demo_dmas_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/04_DMAS
+filename = '../../data/L7_FI_TheGB.uff';
+compare_fi_das_vs_fdmas
+~~~
+
+**提示：** fDMAS 结果涉及二倍频带和输出网格，先看本章采样说明再改变参数。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/04_DMAS/figures/README.md)。
+
+---
+
 ## 1. 先运行无需数据的六组演示
 
 ~~~matlab

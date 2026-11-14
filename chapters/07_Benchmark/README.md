@@ -14,6 +14,18 @@
 
 ---
 
+## 本章学习入口
+
+> **推荐顺序：** 先确定比较任务、共同条件和测量指标，再跑合成例子与真实双轨 Benchmark。
+>
+> **最短实践：** `demo_benchmark_building_blocks` → `run_chapter7_benchmark`（第一步无需数据；第二步需要 USTB/UFF）。FI 与 RTB 两条轨道不能直接混排结果。详细命令与参数以 [MATLAB 运行说明](../../matlab/07_Benchmark/README.md) 为准。
+
+**章节导航：** [← 上一章](../06_NSI/README.md) · [课程目录](../../README.md) · [MATLAB 运行说明](../../matlab/07_Benchmark/README.md) · [配图与实验记录](figures/README.md) · [完整中文 PDF](../../output/pdf/第07章_统一Benchmark.pdf) · [下一章 →](../08_RTB_Comparison/README.md)
+
+> 先沿正文的**原理与计算主线**阅读，再运行小例子或真实数据；实验观察、实现细节及自测放在主线之后。PDF 包含完整配图，GitHub 上的独立 PNG 未提交。
+
+---
+
 ## 1. 先回答“想解决什么问题”
 
 ![图 1：从成像任务走向对应指标，而不是先给算法排名](figures/benchmark_task_map.png)

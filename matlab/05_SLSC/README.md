@@ -6,6 +6,29 @@
 
 核心算法仍是 conventional FI、receive-domain、real-RF SLSC。DAS 分支用于核对与第 1 章一致的前端；本章新增课件图不改变核心重建算法，也不增加真实数据参数扫描。
 
+## 快速开始（全课程统一入口）
+
+原理小实验无需数据；真实二维图像需要 USTB 与 TheGB UFF。**建议先读[本章教学正文](../../chapters/05_SLSC/README.md)，再从仓库根目录运行以下命令。**
+
+**第一步：无需外部数据的原理演示**
+
+~~~matlab
+addpath('matlab/05_SLSC');
+demo_slsc_building_blocks
+~~~
+
+**第二步：真实 UFF 图像 / 数据检查**（先准备 USTB 与数据）
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/05_SLSC
+compare_fi_das_vs_slsc
+~~~
+
+**提示：** SLSC 是无量纲相干性，不能直接当成 DAS 的 dB 幅度。 完整实验顺序、参数、输出与验证记录见下方说明；课件配图见[本章配图索引](../../chapters/05_SLSC/figures/README.md)。
+
+---
+
 ## 1. 先运行八个不需要 UFF 的例子
 
 从仓库根目录运行：
