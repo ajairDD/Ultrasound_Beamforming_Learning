@@ -38,6 +38,7 @@
 | 第 5 章 | SLSC | **已完成** |
 | 第 6 章 | NSI | **已完成** |
 | 第 7 章 | 统一 benchmark | **已完成** |
+| 第 8 章 | **同一 RTB 几何下七种方法统一成像对比** | **已完成：TheGB 实测定性对照** |
 
 ---
 
@@ -199,13 +200,31 @@ run_chapter7_benchmark
 
 MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。计时为完整 core 单次运行，不是独立算法 kernel 耗时；**原版把 NSI core 的运行时间错误标到 RTB-DAS 行，已修正为未独立计时 (NaN)**。
 
-**项目第 0–7 章经典波束合成课程已完成**。本次是方法教学及 TheGB/此前 carotid 的证据总结，不等于完成全部客观对比度/临床验证。
+**第 0–7 章经典波束合成教学与基准实验已完成**；第 8 章另以同一 RTB 几何集中展示七算法。这些实验不等于已完成全部客观对比度或临床验证。
 
 ---
 
-## 跨设备 RTB 多算法统一接口（独立工具）
+## 第 8 章
 
-新增 **[RTB_Universal：跨设备采集数据标准化 + RTB 全方法重建](./matlab/RTB_Universal/README.md)**，独立于第 0–7 章课程，不改变已完成章节的历史算法。
+阅读：**[第 8 章：同一 RTB 几何下的七算法比较](./chapters/08_RTB_Comparison/README.md)**
+
+这一章建立在第 7 章 Benchmark 和独立的 `RTB_Universal` 接口之上，不重复介绍每个算法的推导；固定同一份 TheGB 聚焦发射 RF 原始数据、同一 RTB Tx/Rx 几何与 x/z 网格，一次展示 DAS、CF、GCF(M0=1)、MVDR、fDMAS、SLSC、NSI 七种方法：
+
+~~~matlab
+addpath(genpath('D:/你的USTB路径'));
+cd matlab/08_RTB_Comparison
+out = run_chapter8_rtb_comparison;
+~~~
+
+用户已确认 own/common 两张 Figure 的全部方法标题显示正常。TheGB 七方法完整运行日志：**41.37 秒**（联合流程，不是逐算法耗时），MVDR fallback **0/61289**、SLSC 无效估计 **0**；复数 RTB-DAS 与第 1 章独立双精度回归误差 **6.533229×10⁻¹⁶**、Tx 权重差异 0。第 8 章解释 CF/GCF 的相干性筛选、MVDR 的自适应输出、fDMAS 纹理变化、SLSC 的线性相干性以及 NSI 的背景损伤风险，并明确说明为什么 **fDMAS/SLSC 不能直接按 DAS 的 dB 幅度比较**。
+
+**验收边界**：这证明了 TheGB 数据的输入接口/复数 DAS 基线/七算法集成运行，不证明所有算法已通过论文级数值真值验证，也不证明跨厂商数据已经验收。
+
+---
+
+## 跨设备 RTB 多算法统一接口（第 8 章使用的底层工具）
+
+**[RTB_Universal：跨设备采集数据标准化 + RTB 全方法重建](./matlab/RTB_Universal/README.md)** 是第 8 章的底层接口，也可独立使用；不会改动第 0–7 章已完成的原始算法。
 
 ~~~matlab
 addpath(genpath('D:/你的USTB路径'));
@@ -267,7 +286,7 @@ $$
 
 ## 项目完成状态与验证边界
 
-**第 0–7 章的教学、手写 MATLAB 算法与现有真实数据实验均已完成。**
+**第 0–7 章的经典算法教学和 Benchmark 已完成，第 8 章的 TheGB 同几何七算法演示及结果分析已完成。**
 
 已完成最关键的基线检查：FI 所有算法的 DAS complex regression 均通过；RTB 两个独立核心的 DAS complex regression 误差为 0；合成 gCNR 的非重叠/完全重叠样例通过。
 
