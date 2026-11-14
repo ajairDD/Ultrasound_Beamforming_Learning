@@ -28,7 +28,8 @@ function figures = rtb_show_methods(out,display_mode)
     z=out.z_axis_m(:)*1e3;
 
     fig=figure('Color','w', ...
-        'Position',[50 50 max(1100,360*ncol) max(530,330*nrow)]);
+        'Position',[50 50 max(1200,420*ncol) max(600,320*nrow)], ...
+        'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
     for k=1:n
         method=methods{k};
         subplot(nrow,ncol,k);
@@ -43,17 +44,17 @@ function figures = rtb_show_methods(out,display_mode)
                 set(gca,'Color',[0.85 0.85 0.85]);
             end
             caxis([0 1]);
-            panel_title='SLSC (linear coherence; grey=unavailable)';
+            panel_title={'SLSC：线性相干性','灰色：无有效估计'};
         else
             if strcmp(method,'FDMAS')
                 img=out.display.FDMAS;
-                panel_title='fDMAS (own-peak dB, non-calibrated)';
+                panel_title={'fDMAS：各自峰值 dB','未作跨方法幅度标定'};
             elseif strcmp(display_mode,'common')
                 img=out.display_common_db.(method);
-                panel_title=[method ' (common DAS dB)'];
+                panel_title={method,'共同 DAS 峰值参考'};
             else
                 img=out.display.(method);
-                panel_title=[method ' (own-peak dB)'];
+                panel_title={method,'各自峰值参考'};
             end
             imagesc(x,z,img);
             caxis([-out.options.dynamic_range_db,0]);
@@ -62,17 +63,20 @@ function figures = rtb_show_methods(out,display_mode)
         colormap(gca,gray);
         axis image;
         colorbar;
-        xlabel('x (mm)');
-        ylabel('z (mm)');
+        xlabel('横向 x（mm）');
+        ylabel('深度 z（mm）');
         % imagesc resets axes in replace mode. Set title only AFTER
         % plotting so every method keeps its panel label.
-        title(panel_title,'Interpreter','none');
+        title(panel_title,'Interpreter','none','FontSize',10);
     end
 
-    sgtitle({ ...
-        'Universal RTB — same focused Tx/Rx geometry, same x/z grid', ...
-        ['Amplitude display: ' display_mode ...
-         ' reference; SLSC always linear (not RF amplitude)']});
+    if strcmp(display_mode,'own')
+        mode_label='包络图使用各自峰值参考';
+    else
+        mode_label='可比包络图使用共同 DAS 参考';
+    end
+    sgtitle({'相同聚焦 Tx/Rx 几何、相同输出网格的七方法 RTB 对照', ...
+        [mode_label '；fDMAS 保留自身参考，SLSC 始终为线性相干性']});
 
     figures=fig;
 end

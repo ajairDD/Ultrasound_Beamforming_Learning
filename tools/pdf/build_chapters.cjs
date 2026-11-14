@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const {pathToFileURL} = require('url');
 const {spawnSync} = require('child_process');
+const {createHash} = require('crypto');
 const MarkdownIt = require('markdown-it');
 const katex = require('katex');
 const ROOT = path.resolve(__dirname,'../..');
@@ -15,11 +16,16 @@ const chapters = [
   ['01_DAS_Real_UFF','真实 UFF 上的 FI-DAS 与 RTB','聚焦采集 → 几何延时 → DAS → RTB → 实现验证'],
   ['02_CF_GCF','CF / GCF：用空间相干性加权','对齐向量 → 相干因子 → 孔径频谱 → 图像解读'],
   ['03_MVDR','MVDR：从约束到自适应接收权重','估计协方差 → 保留目标模式 → 稳定求解 → 真实实验'],
-  ['04_DMAS','DMAS / fDMAS：非线性通道组合','实数 RF → 通道配对 → 频带选择 → 包络与图像']
+  ['04_DMAS','DMAS / fDMAS：非线性通道组合','实数 RF → 通道配对 → 频带选择 → 包络与图像'],
+  ['05_SLSC','SLSC：把阵元间的相似程度变成图像','延时 RF 窗口 → 空间 lag → 归一化相关 → 像素与显示'],
+  ['06_NSI','NSI：先制造中心零点，再用包络相减留下窄响应','中心零点 → 三套权重 → Tx 相干合成 → 包络相减 → 实验'],
+  ['07_Benchmark','统一 Benchmark：先问清任务，再判断算法收益','任务 → 共同条件 → 指标定义 → 真实实验 → 收益与代价'],
+  ['08_RTB_Comparison','共享 RTB 前端：理解七种组合规则','共同几何 → 七种组合规则 → 输出类型 → 接口与真实对照']
 ];
 const fileNames = [
  '第00章_波束合成共同基础.pdf','第01章_FI-DAS与RTB.pdf',
- '第02章_CF与GCF.pdf','第03章_MVDR.pdf','第04章_DMAS与fDMAS.pdf'
+ '第02章_CF与GCF.pdf','第03章_MVDR.pdf','第04章_DMAS与fDMAS.pdf',
+ '第05章_SLSC.pdf','第06章_NSI.pdf','第07章_统一Benchmark.pdf','第08章_七方法RTB对照.pdf'
 ];
 const escape = text => String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const url = file => pathToFileURL(file).href;
@@ -147,19 +153,51 @@ figure{margin:15pt 0 13pt;break-inside:avoid;page-break-inside:avoid;text-align:
 .toc{break-after:page;margin-top:8pt;} .toc h2{border:none;font-size:21pt;} .toc ol{columns:2;column-gap:22pt;list-style:none;padding:0;counter-reset:none;} .toc li{break-inside:avoid;font-size:9pt;line-height:1.6;margin:0 0 7pt;} .toc a{color:#234c68;}
 .toc li.toc-group{font-weight:700;margin-top:9pt;} .toc li.toc-subsection{padding-left:10pt;font-size:8.8pt;}
 .supplement{break-before:page;} .supplement figure{break-inside:avoid;} details{display:block;} summary{font-weight:700;color:#123c61;margin:10pt 0;} .math-error{color:red;}
+/* New lecture chapters: readable Chinese and dedicated large figure pages. */
+@page lecture-wide {size:A4 landscape;margin:17mm;}
+@page lecture-tall {size:A3 portrait;margin:19mm 17mm;}
+.lecture-book{line-break:strict;}
+.lecture-book table{font-size:9.2pt;}
+.lecture-book figcaption.teaching-caption{text-align:left;font-size:9.7pt;line-height:1.7;}
+.lecture-book figure>p.figure-intro,.lecture-book figure>p.figure-followup{text-align:left;font-size:10.5pt;line-height:1.7;margin:0 0 5pt;}
+.lecture-book figure>p.figure-followup{margin:5pt 0 0;}
+.lecture-book figure>h2,.lecture-book figure>h3,.lecture-book figure>h4{margin:0 0 5pt;padding:0 0 4pt;}
+@media print{
+ .lecture-book figure.wide-figure{page:lecture-wide;width:263mm;max-width:none;}
+ .lecture-book figure.wide-figure img{max-width:263mm;max-height:132mm;}
+ .lecture-book figure.tall-figure{page:lecture-tall;width:263mm;max-width:none;}
+ .lecture-book figure.tall-figure img{max-width:263mm;max-height:325mm;}
+ .lecture-book .wide-table-block{page:lecture-wide;width:263mm;max-width:none;break-inside:avoid;}
+ .lecture-book .wide-table-block>h2,.lecture-book .wide-table-block>h3,.lecture-book .wide-table-block>h4{margin:0 0 5pt;padding:0 0 4pt;}
+ .lecture-book .wide-table-block>p{font-size:10.5pt;line-height:1.7;margin:0 0 5pt;}
+ .lecture-book table.wide-table{width:263mm;max-width:none;font-size:9.8pt;}
+}
 `;
 
 async function main() {
  fs.mkdirSync(path.join(WORK,'html'),{recursive:true}); fs.mkdirSync(OUTPUT,{recursive:true});
- const selected=process.argv.includes('--chapter')?Number(process.argv[process.argv.indexOf('--chapter')+1]):null;
+ const args=process.argv.slice(2);
+ const flag=args.includes('--chapters')?'--chapters':args.includes('--chapter')?'--chapter':null;
+ let selected=null;
+ if(flag){
+   const specification=args[args.indexOf(flag)+1];
+   if(!specification||!/^\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*$/.test(specification))throw new Error('Use --chapter 5 or --chapters 5-8.');
+   selected=new Set();
+   for(const item of specification.split(',')){
+     const [first,last=first]=item.split('-').map(Number);
+     if(first<0||last<first||last>=chapters.length)throw new Error('Chapter selection must be within 0-8.');
+     for(let n=first;n<=last;n++)selected.add(n);
+   }
+ }
  const executable=process.env.COURSE_CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(p=>fs.existsSync(p));
  const browser=await chromium.launch({executablePath:executable,headless:true});
  const records=[];
  try {
   for(let number=0;number<chapters.length;number++) {
-   if(selected!==null && selected!==number) continue;
+   if(selected!==null && !selected.has(number)) continue;
    const [id,title,route]=chapters[number], chapterDir=path.join(ROOT,'chapters',id);
-   const source=fs.readFileSync(path.join(chapterDir,'README.md'),'utf8');
+   const rawSource=fs.readFileSync(path.join(chapterDir,'README.md'),'utf8');
+   const source=rawSource.replace(/\u2014+/g,'：').replace(/[\u2010-\u2013\u2015]/g,'-');
    const body=markdown(chapterDir).render(source);
    const used=new Set([...source.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map(m=>path.basename(m[1])));
    const extras=fs.readdirSync(path.join(chapterDir,'figures')).filter(f=>f.endsWith('.png')&&!used.has(f)).sort();
@@ -170,11 +208,11 @@ async function main() {
      caption=caption.replace(/`/g,'').replace(/point-like object/g,'点状目标').replace(/point target/g,'点目标').replace(/point-target/g,'点目标').replace(/full Rx/g,'完整接收孔径').replace(/scanline/g,'扫描线').replace(/conventional/g,'常规 FI').replace(/reference/g,'参考').replace(/self-normalized/g,'各自峰值归一化').replace(/peak/g,'峰值').replace(/Manual/g,'手工实现');
      return `<figure><img src="${url(path.join(chapterDir,'figures',name))}" alt="补充图 ${i+1}"/><figcaption>补充图 ${i+1}｜${escape(caption)}</figcaption></figure>`;
    }).join('\n');
-   const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>第 ${number} 章 ${escape(title)}</title><style>${katexCss}\n${css}</style></head><body><main>${body}${extras.length?'<section class="supplement"><h2>补充课件图</h2><p>以下图片与本章实验配套，便于课堂选用。保留各图原有的坐标、参数与归一化约定。</p>'+extraHtml+'</section>':''}</main></body></html>`;
+   const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>第 ${number} 章 ${escape(title)}</title><style>${katexCss}\n${css}</style></head><body class="${number>=5?'lecture-book':''}"><main>${body}${extras.length?'<section class="supplement"><h2>补充课件图</h2><p>以下图片与本章实验配套，便于课堂选用。保留各图原有的坐标、参数与归一化约定。</p>'+extraHtml+'</section>':''}</main></body></html>`;
    const htmlPath=path.join(WORK,'html',id+'.html'); fs.writeFileSync(htmlPath,html);
    const page=await browser.newPage({viewport:{width:665,height:1000},deviceScaleFactor:1});
    await page.goto(url(htmlPath),{waitUntil:'networkidle'});
-   const audit=await page.evaluate(async()=>{
+   const audit=await page.evaluate(async({widePages})=>{
      await document.fonts.ready;
      document.querySelector('h1')?.remove();
      document.querySelectorAll('details').forEach(d=>d.open=true);
@@ -195,12 +233,60 @@ async function main() {
        if(p.children.length===1&&p.firstElementChild.tagName==='IMG') {
          const img=p.firstElementChild,next=p.nextElementSibling;
          const f=document.createElement('figure'); f.appendChild(img);
-         if(!(next?.tagName==='P'&&/^图\s*\d/.test(next.textContent.trim()))) {
+         if(widePages && next?.tagName==='P'&&/^图\s*\d/.test(next.textContent.trim())){
+           const cap=document.createElement('figcaption');cap.className='teaching-caption';
+           cap.innerHTML=next.innerHTML;f.appendChild(cap);next.remove();
+         }else if(!(next?.tagName==='P'&&/^图\s*\d/.test(next.textContent.trim()))) {
            const cap=document.createElement('figcaption'); cap.textContent=img.alt; f.appendChild(cap);
          }
          p.replaceWith(f);
        }
      });
+     if(widePages){
+       document.querySelectorAll('figure').forEach(figure=>{
+         const image=figure.querySelector('img');if(!image)return;
+         const ratio=image.naturalWidth/image.naturalHeight;
+         if(ratio>=1.45)figure.classList.add('wide-figure');
+         else if(ratio<1.15&&image.naturalHeight>1400)figure.classList.add('tall-figure');
+         if(figure.matches('.wide-figure,.tall-figure')){
+           let introductionLength=0;
+           while(figure.previousElementSibling?.tagName==='P'){
+             const introduction=figure.previousElementSibling,length=introduction.textContent.trim().length;
+             if(length>180||introductionLength+length>300)break;
+             introductionLength+=length;
+             introduction.classList.add('figure-intro');figure.prepend(introduction);
+           }
+           while(figure.previousElementSibling&&/^H[234]$/.test(figure.previousElementSibling.tagName)){
+             figure.prepend(figure.previousElementSibling);
+           }
+         }
+       });
+       document.querySelectorAll('figure.wide-figure,figure.tall-figure').forEach(figure=>{
+         let followupLength=0;
+         while(figure.nextElementSibling?.tagName==='P'){
+           const followup=figure.nextElementSibling,length=followup.textContent.trim().length;
+           if(length>240||followupLength+length>360)break;
+           // Leave an introduction with the code, equation, table or list it introduces.
+           if(/[:：]$/.test(followup.textContent.trim())&&followup.nextElementSibling?.matches('pre,.math-display,table,ul,ol'))break;
+           followupLength+=length;followup.classList.add('figure-followup');figure.append(followup);
+         }
+       });
+       document.querySelectorAll('table').forEach(table=>{
+         if(table.querySelectorAll('thead tr:first-child th').length<6)return;
+         table.classList.add('wide-table');
+         const block=document.createElement('div');block.className='wide-table-block';
+         table.replaceWith(block);block.append(table);
+         let introductionLength=0;
+         while(block.previousElementSibling?.tagName==='P'){
+           const introduction=block.previousElementSibling,length=introduction.textContent.trim().length;
+           if(length>180||introductionLength+length>300)break;
+           introductionLength+=length;block.prepend(introduction);
+         }
+         while(block.previousElementSibling&&/^H[234]$/.test(block.previousElementSibling.tagName)){
+           block.prepend(block.previousElementSibling);
+         }
+       });
+     }
      document.querySelectorAll('.math-display').forEach(block=>{
        const inner=block.querySelector('.katex-display>.katex'); if(!inner)return;
        const ratio=(block.clientWidth-4)/inner.getBoundingClientRect().width;
@@ -215,12 +301,26 @@ async function main() {
      }
      const overflow=[...document.querySelectorAll('table,pre,.math-display,figure')].filter(e=>e.scrollWidth>e.clientWidth+5).map(e=>({tag:e.tagName,text:e.textContent.slice(0,90),width:e.scrollWidth,container:e.clientWidth}));
      return {images:document.images.length,failed,overflow,unparsed,headings:headings.map(h=>({text:h.textContent,id:h.id})),math:document.querySelectorAll('.katex').length};
-   });
+   },{widePages:number>=5});
    const expectedImages=fs.readdirSync(path.join(chapterDir,'figures')).filter(f=>f.endsWith('.png')).length;
    if(audit.failed.length || audit.overflow.length || audit.unparsed.length || audit.images!==expectedImages) throw new Error(JSON.stringify({chapter:id,expectedImages,...audit}));
+   // Keep the full figure block within its named page, including its introduction.
+   await page.emulateMedia({media:'print'});
+   await page.evaluate(()=>{
+     const pixelsPerMm=96/25.4;
+     document.querySelectorAll('figure.wide-figure,figure.tall-figure').forEach(figure=>{
+       const image=figure.querySelector('img'),style=getComputedStyle(figure);
+       const pageHeight=(figure.classList.contains('wide-figure')?176:382)*pixelsPerMm;
+       const otherHeight=figure.getBoundingClientRect().height-image.getBoundingClientRect().height;
+       const margins=parseFloat(style.marginTop)+parseFloat(style.marginBottom);
+       const allowedHeight=pageHeight-otherHeight-margins-2*pixelsPerMm;
+       if(allowedHeight<=0)throw new Error('Figure text exceeds its page height.');
+       image.style.maxHeight=Math.min(parseFloat(getComputedStyle(image).maxHeight),allowedHeight)+'px';
+     });
+   });
    const bodyPath=path.join(WORK,id+'_body.pdf');
    await page.pdf({path:bodyPath,preferCSSPageSize:true,printBackground:true,tagged:true,outline:true});
-   const record={id,number,title,route,file:fileNames[number],body:bodyPath,output:path.join(OUTPUT,fileNames[number]),source:path.join(chapterDir,'README.md'),...audit};
+   const record={id,number,title,route,file:fileNames[number],body:bodyPath,output:path.join(OUTPUT,fileNames[number]),source:path.join(chapterDir,'README.md'),source_sha256:createHash('sha256').update(rawSource).digest('hex'),extra_images:extras.length,...audit};
    records.push(record); console.log(JSON.stringify({chapter:id,images:audit.images,math:audit.math,pdf:bodyPath}));
    await page.close();
   }

@@ -164,20 +164,21 @@ function run_fi_track(o)
     t=tic;
     das=reconstruct_fi_scanline_manual(o.filename,opts);
     times=zeros(6,1);
+    reference_errors=zeros(6,1);
     times(1)=toc(t);
     fprintf('DAS      : %.2f s\n',times(1));
 
     t=tic;
     cf=reconstruct_fi_cf_manual(o.filename,opts);
     times(2)=toc(t);
-    verify_fi_reference(das,cf.das_analytic,cf.x_axis,cf.z_axis,'CF');
+    reference_errors(2)=verify_fi_reference(das,cf.das_analytic,cf.x_axis,cf.z_axis,'CF');
     fprintf('CF       : %.2f s\n',times(2));
 
     o_gcf=opts; o_gcf.M0=1;
     t=tic;
     gcf=reconstruct_fi_gcf_manual(o.filename,o_gcf);
     times(3)=toc(t);
-    verify_fi_reference(das,gcf.das_analytic,gcf.x_axis,gcf.z_axis,'GCF');
+    reference_errors(3)=verify_fi_reference(das,gcf.das_analytic,gcf.x_axis,gcf.z_axis,'GCF');
     fprintf('GCF M0=1 : %.2f s\n',times(3));
 
     o_mv=opts;
@@ -188,7 +189,7 @@ function run_fi_track(o)
     t=tic;
     mv=reconstruct_fi_mvdr_manual(o.filename,o_mv);
     times(4)=toc(t);
-    verify_fi_reference(das,mv.das_analytic,mv.x_axis,mv.z_axis,'MVDR');
+    reference_errors(4)=verify_fi_reference(das,mv.das_analytic,mv.x_axis,mv.z_axis,'MVDR');
     fprintf('MVDR     : %.2f s\n',times(4));
 
     o_fd=struct('z_min',o.z_min,'z_max',o.z_max,'n_z',nz, ...
@@ -196,7 +197,7 @@ function run_fi_track(o)
     t=tic;
     fd=reconstruct_fi_dmas_fdmas_manual(o.filename,o_fd);
     times(5)=toc(t);
-    verify_fi_reference(das,fd.das_analytic,fd.x_axis,fd.z_axis,'fDMAS');
+    reference_errors(5)=verify_fi_reference(das,fd.das_analytic,fd.x_axis,fd.z_axis,'fDMAS');
     fprintf('fDMAS    : %.2f s\n',times(5));
 
     o_slsc=struct('z_min',o.z_min,'z_max',o.z_max,'n_z',nz, ...
@@ -205,7 +206,7 @@ function run_fi_track(o)
     t=tic;
     slsc=reconstruct_fi_slsc_manual(o.filename,o_slsc);
     times(6)=toc(t);
-    verify_fi_reference(das,slsc.das_analytic, ...
+    reference_errors(6)=verify_fi_reference(das,slsc.das_analytic, ...
         slsc.x_axis,slsc.z_axis,'SLSC');
     fprintf('SLSC     : %.2f s\n',times(6));
 
@@ -276,27 +277,28 @@ function run_fi_track(o)
     fprintf(['Speckle correlation is similarity to DAS, not validated ' ...
         'preservation of true tissue reflectivity.\n']);
 
-    fig1=figure('Color','w','Position',[30 30 1450 770]);
+    fig1=figure('Color','w','Position',[30 30 1600 850], ...
+        'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
     for k=1:N
-        subplot(2,3,k);
+        subplot(3,2,k);
         if k==N
             imagesc(x*1e3,z*1e3,imgs{k});
             caxis([0 1]);
-            title('SLSC: linear coherence (not dB)');
+            title('SLSC：线性相干性');
         else
             env=imgs{k};
             peak=max(env(:));
             disp_db=max(-60,20*log10(env/(peak+eps)+eps));
             imagesc(x*1e3,z*1e3,disp_db);
             caxis([-60 0]);
-            title(char(labels(k))+" own-peak dB");
+            title(char(labels(k))+"：各自峰值参考");
         end
         set(gca,'YDir','reverse');
         colormap gray; colorbar; axis image;
-        xlabel('x (mm)'); ylabel('z (mm)');
+        xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
     end
-    sgtitle({'Chapter 7 / Track A: same conventional focused FI geometry', ...
-        'Envelope methods: own-peak dB; SLSC: linear coherence (not comparable brightness)'});
+    sgtitle({'第 7 章 / 轨道 A：相同 conventional FI 几何与网格', ...
+        '包络图：各自峰值 dB；SLSC：线性相干性，灰度含义不同'});
 
     % Optional explicitly labeled contrast ROIs, on EXACT same grid.
     if ~isempty(o.contrast_rois_mm)
@@ -338,11 +340,14 @@ function run_fi_track(o)
         saveas(fig1,fullfile(o.report_dir,'FI_images.png'));
         save(fullfile(o.report_dir,'FI_configuration.mat'), ...
             'o','opts','o_gcf','o_mv','o_fd','o_slsc','point_mm');
+        % Cache uncompressed images for lecture plots without rerunning cores.
+        save(fullfile(o.report_dir,'FI_results.mat'), ...
+            'imgs','labels','x','z','fi_table','reference_errors','o');
         fprintf('FI results saved: %s\n',o.report_dir);
     end
 end
 
-function verify_fi_reference(das,image,x,z,label)
+function scaled=verify_fi_reference(das,image,x,z,label)
     assert(isequal(size(image),size(das.das_analytic)), ...
         '%s DAS shape differs from Chapter-1 FI baseline.',label);
     assert(max(abs(x(:)-das.x_axis(:)))<1e-10 && ...
@@ -463,7 +468,8 @@ function run_rtb_track(o)
     fprintf(['RTB TIMING NOTE: DAS and NSI c=0.8 are not independently timed; ' ...
         'NaN is intentional. NSI c=0.2 runtime includes DAS and ZM.\n']);
 
-    fig2=figure('Color','w','Position',[60 60 1300 760]);
+    fig2=figure('Color','w','Position',[60 60 1300 900], ...
+        'DefaultAxesFontName','Microsoft YaHei','DefaultTextFontName','Microsoft YaHei');
     peak=max(imgs{1}(:));
     for k=1:n
         subplot(2,2,k);
@@ -471,17 +477,20 @@ function run_rtb_track(o)
         imagesc(x*1e3,z*1e3,image_db);
         set(gca,'YDir','reverse'); axis image;
         caxis([-60 0]); colormap gray; colorbar;
-        xlabel('x (mm)'); ylabel('z (mm)');
-        title(char(labels(k))+" (common DAS reference)");
+        xlabel('横向 x（mm）'); ylabel('深度 z（mm）');
+        panel_label=strrep(char(labels(k)),'c=','δ=');
+        title(panel_label+"：共同 DAS 参考");
     end
-    sgtitle({'Chapter 7 / Track B: identical RTB geometry and Tx compounding', ...
-       'Common DAS 0-dB reference; two NSI offsets share the same D/Z RF beamforming'});
+    sgtitle({'第 7 章 / 轨道 B：相同 RTB 几何与 Tx 相干合成', ...
+       '共同 DAS 参考；两种 NSI 偏置复用同一次 D、Z 重建'});
 
     if o.save_reports
         writetable(rtb_table,fullfile(o.report_dir,'RTB_metrics.csv'));
         saveas(fig2,fullfile(o.report_dir,'RTB_images.png'));
         save(fullfile(o.report_dir,'RTB_configuration.mat'), ...
             'o','vm','ns','common','point_mm');
+        save(fullfile(o.report_dir,'RTB_results.mat'), ...
+            'imgs','labels','x','z','rtb_table','scaled','D','Z','common');
         fprintf('RTB results saved: %s\n',o.report_dir);
     end
 

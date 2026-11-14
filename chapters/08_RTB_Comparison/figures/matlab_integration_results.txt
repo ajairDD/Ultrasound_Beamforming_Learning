@@ -1,0 +1,89 @@
+MATLAB R2021b; actual fresh run on 2026-11-14. UFF progress and console HTML removed.
+
+=== UNIVERSAL RTB ACQUISITION PREFLIGHT ===
+Source          : vendor-array-with-explicit-metadata
+Signal          : RF
+Data shape      : [1600,12,3,1] sample/Rx/Tx/frame
+fs / f0         : 40.0000 / 5.0000 MHz
+Rx pitch        : 0.30000 mm
+Channel reordered: 1
+t0 range        : 0.0000 .. 0.0000 us
+Focus depth     : 20.000 .. 20.000 mm
+Predicted focus times in recorded data: 3 / 3 (100.0%)
+Preflight is a metadata/time coverage check, NOT image validation.
+[警告: Some transmit-weighted image pixels have NO valid Rx samples: global missing Tx-weight fraction 0.333. Inspect
+valid_rx_tx_fraction, t0 and sample length.]
+[> 位置：rtb_reconstruct_all (第 395 行)
+位置: test_rtb_standard_interface (第 118 行)
+位置: run_real_data (第 13 行)
+位置: run (第 91 行)]
+[警告: Skipping RF-only methods for IQ data: FDMAS, SLSC]
+[> 位置：rtb_reconstruct_all (第 61 行)
+位置: test_rtb_standard_interface (第 185 行)
+位置: run_real_data (第 13 行)
+位置: run (第 91 行)]
+PASS: vendor axis/units/channel order, RF/IQ, all methods.
+PASS: CF=GCF(M0=0), NSI bound, target location, missing-Rx Tx normalization.
+PASS: reject IQ-only mismatch, missing timing, plane Tx, wrong units.
+NOTE: independent UFF/Chapter-1 RTB regression is separate.
+Original UFF classes: channel=single, probe.x=single, source.x=single, source.distance=single, wave.delay=single, sample_fs=single
+UNIVERSAL RTB vs CHAPTER-1 DAS: 6.533229e-16
+  Tx normalization weight max abs difference: 0.000000e+00
+  Max Tx-weight difference at x=-2.0000 mm,z=28.5680 mm; universal 1 vs baseline 1
+  Tx weights at worst complex residual: universal 1 vs baseline 1
+  Max per-Tx vs channel Rx sound-speed diff: 0 m/s
+  Maximum complex residual: |delta|=6.821210e-13 at x=-0.1000 mm, z=28.9316 mm
+  Data-supported Tx-weight fraction at that pixel: 1.000000
+  Global missing-Rx Tx-weight fraction: 0.000000e+00
+PASS: complex RTB DAS baseline is consistent with Chapter 1.
+RTB UNIVERSAL: RF | 1920 samples x 128 Rx x 128 Tx x 1 frame
+  source: UFF: D:\Ultrasound_Beamforming_Learning\data\L7_FI_TheGB.uff
+  x range [mm]: -4.000 .. 3.000, nx=64
+  z range [mm]: 18.000 .. 22.500, nz=245, dz=18.443 um
+  Tx count=32; methods=DAS,CF,GCF,MVDR,FDMAS,SLSC,NSI
+  estimated Tx pixels 501760
+  processed Tx 1 of 32 (wave 1)
+  processed Tx 2 of 32 (wave 5)
+  processed Tx 3 of 32 (wave 9)
+  processed Tx 4 of 32 (wave 13)
+  processed Tx 5 of 32 (wave 17)
+  processed Tx 6 of 32 (wave 21)
+  processed Tx 7 of 32 (wave 25)
+  processed Tx 8 of 32 (wave 29)
+  processed Tx 9 of 32 (wave 33)
+  processed Tx 10 of 32 (wave 37)
+  processed Tx 11 of 32 (wave 41)
+  processed Tx 12 of 32 (wave 45)
+  processed Tx 13 of 32 (wave 49)
+  processed Tx 14 of 32 (wave 53)
+  processed Tx 15 of 32 (wave 57)
+  processed Tx 16 of 32 (wave 61)
+  processed Tx 17 of 32 (wave 65)
+  processed Tx 18 of 32 (wave 69)
+  processed Tx 19 of 32 (wave 73)
+  processed Tx 20 of 32 (wave 77)
+  processed Tx 21 of 32 (wave 81)
+  processed Tx 22 of 32 (wave 85)
+  processed Tx 23 of 32 (wave 89)
+  processed Tx 24 of 32 (wave 93)
+  processed Tx 25 of 32 (wave 97)
+  processed Tx 26 of 32 (wave 101)
+  processed Tx 27 of 32 (wave 105)
+  processed Tx 28 of 32 (wave 109)
+  processed Tx 29 of 32 (wave 113)
+  processed Tx 30 of 32 (wave 117)
+  processed Tx 31 of 32 (wave 121)
+  processed Tx 32 of 32 (wave 125)
+Finished universal RTB in 37.16 s
+MVDR fallback 0/61289, SLSC unavailable pixel-Tx 0
+
+=== CHAPTER 8: SEVEN RTB METHODS ===
+Methods: DAS, CF, GCF, MVDR, FDMAS, SLSC, NSI
+Selected Tx: 32 / 128
+Grid: 245 z x 64 x pixels
+Full multi-method pipeline: 37.16 seconds (NOT per-method)
+MVDR fallback: 0 / 61289
+SLSC unavailable pixel-Tx: 0
+Saved figures and MAT to: D:\Ultrasound_Beamforming_Learning\output\benchmark\ch08
+CHAPTER8_FRESH_INTEGRATION_COMPLETE
+CHAPTER78_REAL_DATA_COMPLETE

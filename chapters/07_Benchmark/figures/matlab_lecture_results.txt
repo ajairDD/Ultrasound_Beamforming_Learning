@@ -1,0 +1,18 @@
+MATLAB 9.11.0.1769968 (R2021b); mode=cached; rng=7.
+Synthetic lessons are not acoustic simulations or real lesions.
+Chapter 7 concepts PASS: 7 figures, rng(7,twister), no UFF.
+Gaussian widths [lateral axial] mm: [0.6 0.4].
+Same-curve sampled peaks: [1 0.0139176125 1].
+CNR under scalar transforms: [1.05983352 1.04857032 0.985393165 0].
+gCNR under scalar transforms: [0.586005831 0.586005831 0.586005831 0].
+Same-marginal reordered gCNR: [0.586005831 0.586005831].
+Finite sample counts / median estimates: [25 100 400 1600] / [0.2 0.17 0.125 0.08125].
+
+Chapter 7 saved-output checks PASS: finite images, shapes, references, intentional NaNs.
+FI reference errors: [0 6.14702606e-18 6.14702606e-18 6.14702606e-18 6.14702606e-18 6.14702606e-18].
+RTB reference error: 0.000000000e+00.
+FI lateral widths mm: [0.711469668 0.416724967 0.621560097 0.306694118 0.719649387 NaN].
+RTB lateral widths mm: [0.706322226 0.123824159 0.160893908 0.372544887].
+FI measured core times s: [21.7280828 21.5708904 22.7305519 41.0775534 22.3644011 24.0591632].
+RTB attributed core times s: [NaN 134.902633 22.8642707 NaN].
+No annotated lesion/background ROIs: no real-data CR/CNR/gCNR claimed.

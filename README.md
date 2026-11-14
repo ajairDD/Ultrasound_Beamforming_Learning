@@ -10,7 +10,7 @@
 
 ## PDF 课堂讲义
 
-已完成的第 0–4 章各有一份 PDF，包含目录、公式、完整正文与补充课件图。全部配图说明已汉化，保留方法缩写、数学符号、代码标识与单位。
+已完成的第 0–8 章各有一份 PDF，包含可点击目录、公式、完整正文与中文配图。第 5–8 章采用中文友好版式：正文 A4 纵向，宽幅配图/指标表独立横向展示，少数密集竖图使用更大版面；图与讲解相邻，中文字体嵌入 PDF。方法缩写、数学符号、代码标识与单位保留。
 
 独立配图文件仅保存在本地，中英文版本均不纳入 Git。GitHub 上请阅读下方 PDF 获取完整图文；章节 Markdown 的图片预览和 PDF 重建需要本地配图，生成方法与提示词见构建说明。
 
@@ -21,6 +21,10 @@
 | 第 2 章 | [CF 与 GCF](output/pdf/第02章_CF与GCF.pdf) |
 | 第 3 章 | [MVDR](output/pdf/第03章_MVDR.pdf) |
 | 第 4 章 | [DMAS 与 fDMAS](output/pdf/第04章_DMAS与fDMAS.pdf) |
+| 第 5 章 | [SLSC](output/pdf/第05章_SLSC.pdf) |
+| 第 6 章 | [NSI](output/pdf/第06章_NSI.pdf) |
+| 第 7 章 | [统一 Benchmark](output/pdf/第07章_统一Benchmark.pdf) |
+| 第 8 章 | [七方法 RTB 对照](output/pdf/第08章_七方法RTB对照.pdf) |
 
 [构建与配图汉化说明](tools/pdf/README.md)
 
@@ -187,10 +191,11 @@ compare_full_fov_rtb_das_vs_nsi
 
 阅读：**[第 7 章：统一 Benchmark](./chapters/07_Benchmark/README.md)**
 
-本章已完成 TheGB 真实数据上的统一对照实验，将各方法划分为组内可比的两条轨道：
+本章先按“任务 → 共同条件 → 测量定义 → 指标解释 → 实际结果”建立比较主线，再进入两条组内可比轨道。新增 6 张中文概念图、7 个无 UFF 小实验，共 14 张 MATLAB 课件图；[配图索引](./chapters/07_Benchmark/figures/README.md)与[导出说明](./matlab/07_Benchmark/README.md)提供本地复现入口。
 
 ~~~matlab
 cd matlab/07_Benchmark
+demo_benchmark_building_blocks   % 先理解采样、ROI、CNR/gCNR、统计与计时
 run_chapter7_benchmark
 ~~~
 
@@ -198,7 +203,7 @@ run_chapter7_benchmark
 - **Dense RTB**：RTB-DAS、MVDR、NSI(c=0.2)、NSI(c=0.8)；两条独立 RTB-DAS core 的复数误差 **0**。横向 FWHM 分别为 **0.7063、0.1238、0.1609、0.3725 mm**，均采用 0.025 mm 横向采样。
 - **代价和边界**：MVDR/NSI 的点响应明显变窄，但峰值降低；此前 carotid 结果显示 MVDR 的人体改善有限，NSI 会明显损伤组织 speckle/连续性。本次未提供独立已确认的低回声 target/background ROI，所以没有声称测得真实 gCNR/CNR 或普遍临床收益。
 
-MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。计时为完整 core 单次运行，不是独立算法 kernel 耗时；**原版把 NSI core 的运行时间错误标到 RTB-DAS 行，已修正为未独立计时 (NaN)**。
+MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。计时为完整 core 单次运行，不是独立算法 kernel 耗时；**原版把 NSI core 的运行时间错误标到 RTB-DAS 行，已修正为未独立计时 (NaN)**；2026-11-14 重跑 RTB 后，CSV 中 RTB-DAS 与 NSI(c=0.8) 的 runtime 已确认均为 `NaN`。
 
 **第 0–7 章经典波束合成教学与基准实验已完成**；第 8 章另以同一 RTB 几何集中展示七算法。这些实验不等于已完成全部客观对比度或临床验证。
 
@@ -208,15 +213,16 @@ MATLAB 在本地 `output/benchmark/ch07` 生成 Figures、CSV 和 MAT 配置。�
 
 阅读：**[第 8 章：同一 RTB 几何下的七算法比较](./chapters/08_RTB_Comparison/README.md)**
 
-这一章建立在第 7 章 Benchmark 和独立的 `RTB_Universal` 接口之上，不重复介绍每个算法的推导；固定同一份 TheGB 聚焦发射 RF 原始数据、同一 RTB Tx/Rx 几何与 x/z 网格，一次展示 DAS、CF、GCF(M0=1)、MVDR、fDMAS、SLSC、NSI 七种方法：
+这一章先用共同的“像素—Tx—Rx”变量讲清七种组合规则、跨 Tx 运算次序和输出类型，再固定 TheGB 数据及同一 RTB 几何/网格展示七种方法。新增 6 张中文概念图、7 个无 UFF 机制例子，共 13 张 MATLAB 课件图；详见[配图索引](./chapters/08_RTB_Comparison/figures/README.md)与[导出说明](./matlab/08_RTB_Comparison/README.md)。
 
 ~~~matlab
 addpath(genpath('D:/你的USTB路径'));
 cd matlab/08_RTB_Comparison
+demo_rtb_method_building_blocks  % CF/GCF、MVDR、fDMAS、SLSC、NSI 与 IQ 相位
 out = run_chapter8_rtb_comparison;
 ~~~
 
-用户已确认 own/common 两张 Figure 的全部方法标题显示正常。TheGB 七方法完整运行日志：**41.37 秒**（联合流程，不是逐算法耗时），MVDR fallback **0/61289**、SLSC 无效估计 **0**；复数 RTB-DAS 与第 1 章独立双精度回归误差 **6.533229×10⁻¹⁶**、Tx 权重差异 0。第 8 章解释 CF/GCF 的相干性筛选、MVDR 的自适应输出、fDMAS 纹理变化、SLSC 的线性相干性以及 NSI 的背景损伤风险，并明确说明为什么 **fDMAS/SLSC 不能直接按 DAS 的 dB 幅度比较**。
+本轮 2026-11-14 重跑七方法联合流程 **37.16 秒**（此前记录 41.37/38.66 秒，均非逐算法耗时），MVDR fallback **0/61289**、SLSC 无效估计 **0**；复数 RTB-DAS 与第 1 章独立双精度回归误差 **6.533229×10⁻¹⁶**、Tx 权重差异 0。中文 own/common 图和诊断图进一步区分了归一化参考、fDMAS 二倍频带与 SLSC 线性相干性。
 
 **验收边界**：这证明了 TheGB 数据的输入接口/复数 DAS 基线/七算法集成运行，不证明所有算法已通过论文级数值真值验证，也不证明跨厂商数据已经验收。
 
@@ -240,7 +246,7 @@ rtb_show_methods(out,'own');
 
 支持 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI**。提供原始数据结构验证、物理 Rx channel/element 映射、明确的单位与 Tx 时序约定、相位补偿、共享 Tx/Rx delay 及画图。对其他厂商需先从 SDK/私有文件解出 numeric raw，再通过 `rtb_from_vendor_array(raw,meta)` 显式适配；不对未知仪器发射模型做猜测。
 
-目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块的 deterministic 合成接口测试已在用户 MATLAB 通过；TheGB UFF 的独立复数 RTB-DAS 回归误差为 **6.533229×10⁻¹⁶**，Tx 权重差异为 **0**，均通过。**TheGB 七算法真实 RF 快速预览已全部运行并展示**（41.37 s，MVDR fallback 0/61289，SLSC 无效估计 0）；这是集成运行通过，不等于七种算法独立的数值真值验证。**跨厂商数据与 fDMAS/SLSC RTB 扩展的独立科学验证仍未完成**，详见使用说明。
+目前限定 **2D linear focused FI、正 z spherical virtual Tx**；complex IQ 可用于 DAS/CF/GCF/MVDR/NSI，fDMAS/SLSC 要求真实 RF。新模块的 deterministic 合成接口测试已在用户 MATLAB 通过；TheGB UFF 的独立复数 RTB-DAS 回归误差为 **6.533229×10⁻¹⁶**，Tx 权重差异为 **0**，均通过。**TheGB 七算法真实 RF 快速预览已全部运行并展示**（本轮 37.16 s；此前 41.37/38.66 s；MVDR fallback 0/61289，SLSC 无效估计 0）；这是集成运行通过，不等于七种算法独立的数值真值验证。**跨厂商数据与 fDMAS/SLSC RTB 扩展的独立科学验证仍未完成**，详见使用说明。
 
 ---
 
@@ -289,5 +295,7 @@ $$
 **第 0–7 章的经典算法教学和 Benchmark 已完成，第 8 章的 TheGB 同几何七算法演示及结果分析已完成。**
 
 已完成最关键的基线检查：FI 所有算法的 DAS complex regression 均通过；RTB 两个独立核心的 DAS complex regression 误差为 0；合成 gCNR 的非重叠/完全重叠样例通过。
+
+可运行 `cd matlab; run_all_checks` 复验合成接口、TheGB RTB-DAS 回归和七方法 smoke test；该入口不写实验产物。第 7、8 章的 CSV、PNG 和 MAT 属于本地可复现产物，统一输出到 `output/benchmark/` 且不纳入 Git。
 
 这不意味着所有自适应算法都已与论文逐点数值对应，也不意味着有标注的 lesion detectability、真实人体诊断有效性及计算加速均得到证明。后续若开展正式科学 benchmark，应另行使用已标注 phantom 的目标/背景 ROI，报告 CR/CNR/gCNR、重复采样不确定性与计算设备配置。

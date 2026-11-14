@@ -48,7 +48,8 @@ def cover(record):
     notes=[
         "完整课堂讲义 · 理论、公式、示例与图像解读",
         "配图说明使用中文；方法缩写、数学符号与单位保留。",
-        "正文保留学习主线，补充课件图附于章末。",
+        ("正文保留学习主线，补充课件图附于章末。" if record.get('extra_images',0)
+         else "配图紧随对应知识点，保留课堂讲解提示。"),
     ]
     for i,line in enumerate(notes):
         c.drawString(54,146-i*24,line)
@@ -72,8 +73,8 @@ def main():
     records=json.loads(manifest.read_text(encoding="utf-8"))
     for record in records:
         body=PdfReader(record["body"])
-        writer=PdfWriter(); writer.append(cover(record)); writer.append(body)
-        writer.add_outline_item("封面",0)
+        writer=PdfWriter(); writer.append(cover(record)); writer.add_outline_item("封面",0)
+        writer.append(body)
         total=len(writer.pages)
         for i,page in enumerate(writer.pages):
             width=float(page.mediabox.width); height=float(page.mediabox.height)

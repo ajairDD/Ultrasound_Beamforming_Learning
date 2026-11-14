@@ -1,99 +1,339 @@
-# 第 7 章：统一 Benchmark——从“更好看”转向可验证的性能
+# 第 7 章：统一 Benchmark——先问清任务，再判断算法收益
 
-**状态：第 7 章教学与 TheGB 实际 Benchmark 已完成（2026-11-13）。** 两个 track 的基础 DAS 复数一致性及合成 gCNR 测试通过。**没有可靠的 lesion/background ROI，因此真实数据 CR/CNR/gCNR 尚未测量；不作临床优越性结论。**
+前六章已经学过“怎样形成一幅图”。这一章把问题往前推进一步：**同一份数据经过不同方法后，哪些变化是我们真正想要的，怎样把它测出来？**
 
-本章不增加新的 beamformer，核心问题是：在相同的声学/采样条件下，哪种方法针对哪种成像任务真正有收益，付出什么代价？
+先想两个场景：想分清两个很近的反射点，与想找到一块低回声区域，需要的证据并不一样。前者关心空间响应，后者关心目标与背景是否容易区分；组织纹理和计算成本又是另外两件事。
 
-## 一、为什么不能给所有算法简单排名？
+本章的主线是：
 
-| 算法 | 输出性质 | 可能收益 | 主要代价 |
-|---|---|---|---|
-| DAS | 延时相干求和幅度 | 可靠基线 | 旁瓣和杂波 |
-| CF / GCF | DAS × coherence weight | 强调高相干结构 | speckle 被改变 |
-| MVDR | covariance-driven receive weights | 横向响应收窄 | 目标自抑制 / 失配 |
-| fDMAS | real RF 非线性通道对 + 2f0 频带 | 某些旁瓣/背景抑制 | 频谱/幅度/speckle 改变 |
-| SLSC | **线性 coherence image** | 反映短-lag 一致性 | **不是 RF amplitude B-mode** |
-| NSI | 零均值接收孔径、DC offset 和 envelope subtraction | 极窄有效横向响应 | 可能严重损伤组织信号 |
+> **明确任务 → 固定比较条件 → 选择与任务对应的指标 → 检查采样与统计依据 → 同时报告收益和代价。**
 
-一个错误的“统一比较”是把 conventional FI scanline 上的 DAS FWHM 与密集 RTB-MVDR / RTB-NSI 直接混排。那同时改变了发射的使用方式和横向输出网格，不是单一算法效果。
+第 1–7 节先讲比较原理和测量定义；第 8 节给出无需 UFF 的七个小实验；第 9–11 节解读真实 TheGB 数据；最后集中说明运行入口和实现细节。
 
-另一个错误是把 SLSC 的 coherence brightness 当作 DAS 的 echo amplitude。
+[MATLAB 运行说明](../../matlab/07_Benchmark/README.md) · [配图与课件索引](figures/README.md) · [上一章：NSI](../06_NSI/README.md) · [下一章：七方法共享 RTB](../08_RTB_Comparison/README.md)
 
-因此本章划分两个**组内可比**的实验，组与组之间不排名。
+---
 
-## 二、Track A：Conventional FI 比较
+## 1. 先回答“想解决什么问题”
 
-同一份真实聚焦 FI 数据、同样的 Tx/Rx delay、相同动态 Rx F# 和全部聚焦扫描线：
+![图 1：从成像任务走向对应指标，而不是先给算法排名](figures/benchmark_task_map.png)
 
-~~~text
-DAS
-CF
-GCF(M0=1)
-MVDR
-fDMAS
-SLSC
-~~~
+**图 1 怎么讲：** 先选左侧的任务，再沿箭头走向指标。窄主瓣、暗背景、平滑纹理分别对应不同现象，不能用一个总分代替所有判断。
 
-默认采用 TheGB 点目标附近 z=16~24 mm。除各算法固有必要操作外，输出 x/z 网格一致。fDMAS 必须在约 2f0 做带通，因此默认 z grid 由实际 wavelength 取约 lambda/16，确保 Nyquist 安全；不为追求低运行时间而使用会让 fDMAS 混叠的深度采样。
-
-六个核心的**内部 complex DAS**均要求与 Chapter 1 的同网格 FI-DAS 对齐；max-peak scaled error 阈值为 1e-10。失败则停止 Benchmark。
-
-**SLSC 输出类型特殊**：仅对其 linear coherence 图作描述；不拿它的“亮点宽度”与其他算法 RF-envelope FWHM 做物理横向分辨率排名。
-
-## 三、Track B：密集 RTB 比较
-
-TheGB 的已知点目标，所有算法共享：
-
-~~~text
-x -2.5 ~ +1.5 mm, 161 pixels, dx 0.025 mm
-z 18.5 ~ 22.5 mm, 161 pixels, dz 0.025 mm
-blended RTB Tx delay; Tukey25; Tx F#2; Rx F#1.7
-same Tx coherent compounding, all focused Tx
-~~~
-
-方法：
-
-~~~text
-RTB-DAS
-RTB-MVDR
-RTB-NSI, DC offset = 0.2
-RTB-NSI, DC offset = 0.8
-~~~
-
-首先核对 MVDR core 与 NSI core 内部产生的**复数 RTB-DAS 是否相同**，max-peak scaled error 需小于 1e-10。
-
-NSI 的两个 DC offset 不需要两次 RF beamforming：已知 complex DAS D 与 zero-mean Z，可精确重组：
-
-$$
-E_{\rm NSI}(c)=\frac{|Z+cD|+|-Z+cD|}{2}-|Z|.
-$$
-
-代码共用一份 D、Z，再生成两幅 NSI 图；不能把第二个 c 视为独立的 full-core runtime。
-
-## 四、四类指标
-
-| 维度 | 指标 | 使用限制 |
+| 想回答的问题 | 优先看什么 | 还需补什么证据 |
 |---|---|---|
-| 点目标响应 | axial/lateral -6 dB FWHM、lateral -20 dB width | 同一 Tx/Rx 条件；少于约 3 pixels 的主瓣受采样影响明显；FWHM 不是两点分辨能力 |
-| 低回声目标可检测性 | CR、CNR、gCNR | 必须有已确认 lesion / background ROI，不能自动选“最黑的地方” |
-| 散斑变化 | ROI CV、ROI 与 DAS 的相关系数 | 只描述统计和相似性；未验证 homogeneous ROI 时不叫真实 speckle fidelity |
-| 运行成本 | 全核心 tic/toc 时间 | 包含 UFF 读取、解析 RF、内部 DAS 等；不是纯数学 kernel 或生产 GPU/FPGA latency |
+| 单个点的响应有没有变窄？ | 横向/轴向半幅宽度、低幅度处宽度、峰值位置 | 采样是否充分；两目标是否真能分开 |
+| 低回声目标与背景是否更可区分？ | 固定 ROI 上的分布重叠、CR/CNR/gCNR | 独立标注、样本量、目标大小与空间结构 |
+| 正常组织的外观改变了多少？ | 同一 ROI 的变异程度、与参考的相关性及图像 | ROI 是否同质；真实组织保真度的依据 |
+| 计算代价是什么？ | 明确执行路径的计时 | 重复测量、硬件、缓存与实现方式 |
 
-### 为什么特别强调 gCNR？
+这里的 Benchmark 指**条件明确、流程可重复、结论有边界的对照实验**。本章没有带可靠病灶标注的数据，因此真实 CR/CNR/gCNR 保持“未测量”；学习如何定义它们与实际取得病灶检出证据，是两个阶段。
 
-传统 CNR 在非线性成像和动态范围变化时可能虚高。gCNR 衡量目标与背景概率分布的重叠：
+## 2. 为什么先分成两条比较轨道？
 
-$$
-\boxed{\mathrm{gCNR}=1-\int\min(p_{\rm target},p_{\rm background})\,dv.}
-$$
+### 2.1 控制变量，比“把图片拼在一起”多一步
 
-gCNR=0 表示两组分布完全重合；gCNR=1 表示没有重叠。它能比较任意定义明确的 scalar image（包括 SLSC），但有限 ROI 与 histogram binning 仍有误差。代码使用从两个 ROI 联合数据构建的等数量 rank/quantile bins，而不是未经说明的固定等宽直方图。
+算法输出可以抽象成：
 
-**默认不预设 lesion/background ROI，因此 CR/CNR/gCNR 不会被虚构输出。** 若在有标注的 hypoechoic phantom 上确认两个物理 ROI，可再启用。
+$$ I_k=\mathcal{A}_k(\text{通道数据};\text{传播模型},\text{孔径},\text{输出网格},\text{参数}). $$
 
-参考：Rodriguez-Molares et al., IEEE TUFFC 2020, DOI https://doi.org/10.1109/TUFFC.2019.2956855 ；Hyun et al., 2023, https://pmc.ncbi.nlm.nih.gov/articles/PMC10481948/ 。
+如果比较时同时改变算法、Tx 使用方式和横向网格，就难以把观察到的差异归因于某一个因素。这里先固定每条轨道的共同条件，再更换组合规则。
 
-## 五、一次性实验与输出
+![图 2：conventional FI 与密集 RTB 是两条分别解释的实验轨道](figures/benchmark_two_tracks.png)
+
+**图 2 怎么讲：** 上面沿已有聚焦扫描线成像，下面让多个 focused Tx 为候选像素提供贡献。密集的是重建位置，不是凭空增加了 RF 采集。
+
+| 项目 | 轨道 A：conventional FI | 轨道 B：密集 RTB |
+|---|---|---|
+| 方法 | DAS、CF、GCF、MVDR、fDMAS、SLSC | RTB-DAS、MVDR、NSI δ=0.2/0.8 |
+| 横向位置 | 真实聚焦扫描线，约 0.298 mm 间距 | 候选像素，Δx=0.025 mm |
+| 深度范围 | 16–24 mm | 18.5–22.5 mm |
+| 发射使用方式 | conventional FI 的扫描线对应关系 | 全部 128 个 focused Tx，按 RTB 孔径加权合成 |
+| 本章目的 | 同一 FI 条件下观察六种输出 | 在密集点目标网格上测量窄响应 |
+
+**只在轨道内部解释数值，不把两条轨道的宽度排成同一张排行榜。** 第 8 章则固定另一套共享 RTB 网格，让七种方法一次性输出；它与本章的量化实验也不能混用数字。
+
+### 2.2 在比较结果前，先检查共同 DAS
+
+本项目的自适应核心通常也会生成一条基础 DAS 分支。我们先比较这条**复数输出**，而非比较对数压缩后的灰度：
+
+$$ \epsilon=\frac{\max_P|D_{\mathrm{core}}(P)-D_{\mathrm{reference}}(P)|}{\max_P|D_{\mathrm{reference}}(P)|+\varepsilon}. $$
+
+同组的形状、x/z 坐标及 Rx F# 也必须一致；误差需小于 `1e-10`，否则停止生成比较指标。这个检查能发现时序、插值、孔径和归一化差异，**只验证共同 DAS 基线，不自动验证每个新算法与原论文完全等价**。
+
+## 3. 点目标宽度：先定义“多宽”，再检查采样
+
+### 3.1 半幅宽度测量的是什么？
+
+在已知点目标附近搜索局部峰值，再让横向、轴向切片分别经过该峰值。把切片除以这个局部峰值，找到两边最近的半幅交点：
+
+$$ \widetilde A(x)=\frac{A(x,z_{\mathrm{peak}})}{A_{\mathrm{peak}}},\qquad W_{1/2}=x_R-x_L,\qquad \widetilde A(x_L)=\widetilde A(x_R)=0.5. $$
+
+本章表中的 FWHM 指**包络半幅宽度**。幅度为 0.5 对应：
+
+$$ 20\log_{10}(0.5)=-6.0206\ \mathrm{dB}. $$
+
+−20 dB 宽度则对应幅度 0.1。包络半幅与功率减半的定义不同，讲课时先把这一点说清楚。
+
+![图 3：半幅交点、采样间隔和测量定义](figures/benchmark_width_sampling.png)
+
+**图 3 怎么讲：** 先指出两个交点，再数交点之间有多少实际样点。光滑连线只是显示，不能替代实际采到的数据。
+
+![图 4：对已知高斯标量图运行本项目的真实测量函数](figures/demo_benchmark_building_blocks_01.png)
+
+**图 4 怎么讲：** 这个人为指定的高斯图具有已知的 0.6 mm 横向、0.4 mm 轴向半幅宽度。代码调用 `benchmark_ch7_metrics` 检查测量定义；它不是超声声场仿真。
+
+各方法可能在不同位置取得局部峰值，因此本项目按**各自峰值与各自峰值深度**测量，并记录峰值坐标。这适合描述各自响应形状；若要比较同一固定深度切片，则应另外固定切片，不能把两种定义混在一起。
+
+### 3.2 一个很窄的峰，可能被粗网格“看错”
+
+同时报告：
+
+$$ N_W=\frac{W_{1/2}}{\Delta x}. $$
+
+`N_W` 是宽度跨越的**网格间隔数**，不是整数样点个数。主瓣仅跨约一两个间隔时，峰值是否被命中、交点怎样插值，都会明显影响结果。
+
+![图 5：同一连续窄响应在不同网格上的取样](figures/demo_benchmark_building_blocks_02.png)
+
+**图 5 怎么讲：** 三幅图的底层曲线相同。左、中两图只把粗网格错开半格，采到的峰值就明显变化；右图才增加了输出采样密度。
+
+本项目把“小于约 3 个间隔”作为**提醒读者复核的粗筛标记**，不是严格的采样充分性定理。即使跨越 5 个间隔，也仍可继续用更密网格做收敛检查。
+
+此外，单个目标的非线性响应变窄，并不直接等于两个相邻目标的可分辨距离同比缩小。
+
+## 4. 目标与背景：ROI 要先确定，指标才有含义
+
+### 4.1 ROI 是测量协议的一部分
+
+ROI 是感兴趣区域。低回声目标内部与背景的两个 ROI，应由独立标注或已知体模几何确定，并记录物理坐标、深度、大小和样本数。看完某方法的图再专门选择最黑的区域，会引入选择偏倚。
+
+![图 6：独立标注、固定区域和未测量的含义](figures/benchmark_roi_protocol.png)
+
+**图 6 怎么讲：** 左图两个框的位置先固定；右图则是看到结果以后才挑区域。图中的低回声包涵区只是机制示意，不是 TheGB 的真实标注。
+
+本项目 ROI 顺序为 `[xmin,xmax,zmin,zmax]`，单位 **mm**；图像坐标数组仍以 **m** 输入。各方法在相同物理区域、相同网格上取值。
+
+![图 7：已知合成分区与共同秩分箱](figures/demo_benchmark_building_blocks_03.png)
+
+**图 7 怎么讲：** 左图的标签是代码生成时就知道的；右图统计相同两组像素。这里可以计算指标，因为它的区域含义已明确。它不提供真实病灶检测结果。
+
+### 4.2 本项目 CR、CNR 的具体约定
+
+令两组未压缩标量值的均值为 μₜ、μᵦ，方差为 σₜ²、σᵦ²：
+
+$$ \mathrm{CR}_{\mathrm{dB}}=20\log_{10}\frac{\mu_t}{\mu_b},\qquad \mathrm{CNR}=\frac{|\mu_t-\mu_b|}{\sqrt{\sigma_t^2+\sigma_b^2}+\varepsilon}. $$
+
+- 对正的包络幅度，低回声目标的 CR 通常为负；本代码没有把符号翻成“越大越好”的分数。
+- CNR 描述均值差相对分布展宽的程度，但非线性尺度变化也会改变它。
+- 这里的 CR 使用幅度比和 `20log10`；不能无说明地套到功率、dB 数组或有符号 SLSC 上。
+- `benchmark_ch7_contrast` 使用除以 N 的方差估计。每个 ROI 至少需 25 个图像像素；相邻像素相关时，这不等于 25 个独立样本。
+
+## 5. gCNR：看重叠，不只看均值和方差
+
+### 5.1 两组分布重叠多少？
+
+如果随机抽出一个像素，它的数值多大程度上能帮助区分“来自目标”还是“来自背景”？gCNR 用两组概率密度的重叠来描述这种可区分性：
+
+$$ \mathrm{gCNR}=1-\int\min\!\left(p_t(v),p_b(v)\right)\,\mathrm dv. $$
+
+![图 8：相同、重叠与分离的两组概率分布](figures/benchmark_gcnr_overlap.png)
+
+**图 8 怎么讲：** 只看两条曲线下方较小的公共部分。完全重合时 gCNR=0，完全分离时为 1；中间情况由重叠面积决定。横轴是某一种已说明的标量图像值。
+
+它可以用于不同定义的标量图，包括相干性图；但 gCNR 数字本身不描述目标大小、边界清晰度、空间排列或临床诊断成功率。[Rodriguez-Molares 等的原始论文](https://pmc.ncbi.nlm.nih.gov/articles/PMC8354776/)。
+
+### 5.2 为什么改变显示尺度，CNR 会变而信息未必增加？
+
+对两组像素应用同一个严格单调、可逆的标量变换，像素的排序与可区分信息可以保持。理想连续分布的 gCNR 因而不变；传统 CNR 则通常会变化。**饱和、裁剪和量化会丢失信息，不属于这个可逆条件。**
+
+![图 9：相同像素经过幂变换、对数变换和完全饱和](figures/demo_benchmark_building_blocks_04.png)
+
+**图 9 怎么讲：** 前三列只改数值尺度，本项目的共同秩分箱得到相同 gCNR；最后一列把所有值压成同一个常数，差异就无法保留了。图中的 CNR 变化是合成数据结果，不是算法成像收益。
+
+### 5.3 分布相同，也可以看起来很不一样
+
+![图 10：ROI 内数值完全相同，空间排列却不同](figures/demo_benchmark_building_blocks_05.png)
+
+**图 10 怎么讲：** 让读者比较两图 ROI 内的条带与随机纹理，再看相同的 gCNR。这个实验说明为什么不能用一个边际分布指标代替组织纹理评价。
+
+### 5.4 程序得到的是有限样本估计
+
+代码把目标和背景像素放在一起排序，按共同的近等数量分箱统计每组的概率质量：
+
+$$ \widehat{\mathrm{gCNR}}=1-\sum_j\min(P_j,Q_j). $$
+
+请求箱数是 `min(32,max(4,floor(sqrt(min(Nt,Nb)))))`；重复边界会合并，因此**实际箱数也要报告**。这是本项目选用的估计方式，不是说任意图像都已经得到精确概率密度。[Schlunk 与 Byram，2023：估计稳健性研究](https://pubmed.ncbi.nlm.nih.gov/37363856/)。
+
+![图 11：同一总体分布的独立抽样也可能估出非零 gCNR](figures/demo_benchmark_building_blocks_07.png)
+
+**图 11 怎么讲：** 每一列均来自同一个已知总体的两组独立样本，理论 gCNR 为 0。散点反映有限样本估计的波动，黑线只是 20 次抽样的中位数，不是置信区间。
+
+## 6. 散斑统计：把“变了多少”与“更真实”分开
+
+本项目在一个固定背景窗口里报告：
+
+$$ \mathrm{CV}=\frac{s}{\mu},\qquad S_{\mathrm{ROI}}=\frac{\mu}{s},\qquad \mathrm{CV}\cdot S_{\mathrm{ROI}}=1. $$
+
+这里 `s=std(v,0)` 使用样本标准差。表中的 `speckle_SNR` 实际指 `均值/标准差`，不是把信号与独立噪声分离后得到的 RF SNR。
+
+与 DAS 的相关系数衡量**像素变化是否相似**。它对正比例缩放不敏感，因此相关系数为 1 也不能证明幅度被完整保留。
+
+![图 12：幅度缩放、像素换位与描述性统计](figures/demo_benchmark_building_blocks_06.png)
+
+**图 12 怎么讲：** 幅度乘 0.1 后仍可与参考完全相关；像素换位则能保留均值、标准差和 CV，却改变空间纹理。三种统计各自只回答一部分问题。
+
+真实 TheGB 窗口 `[-12,-8,18,22] mm` 尚无独立同质性标注，因此本章称其为**描述性 ROI**，不把这些统计命名为已验证的组织保真度。
+
+## 7. 运行时间：先画出执行路径，再填秒数
+
+![图 13：整条核心计时与 D、Z 复用](figures/benchmark_runtime_accounting.png)
+
+**图 13 怎么讲：** 上面的括号覆盖重建函数读取输入到形成核心输出；外部绘图、CSV 保存不在同一个计时里。下面两种 NSI 偏置复用一次得到的 D、Z，不能分配为两个独立完整重建时间。
+
+对 NSI，固定已有复数 D、Z 后，只需重新组合：
+
+$$ A_{\mathrm{NSI}}(\delta)=\frac{|Z+\delta D|+|-Z+\delta D|-2|Z|}{2\delta},\qquad \delta>0. $$
+
+δ 是 DC offset，对应前章代码的 `dc_offset`。本章旧 CSV 方法名中的 `c=` 也表示此参数，并非声速。
+
+RTB 轨道执行的是“MVDR + 内部 DAS”和“NSI + 内部 DAS/ZM”两条核心。独立 DAS 没有单独计时；δ=0.8 也只复用了 D、Z，因此这两行的 runtime 记为 **NaN**。一次全核心计时不等于纯数学 kernel、优化后的设备延迟或产品帧率。
+
+## 8. 先运行七个无需 UFF 的小实验
+
+从仓库根目录运行：
+
+~~~matlab
+addpath('matlab/07_Benchmark');
+report = demo_benchmark_building_blocks;
+~~~
+
+| 生成顺序 | 课堂问题 | 结果是什么类型？ |
+|---|---|---|
+| 01 | 已知 0.6/0.4 mm 的高斯宽度能测对吗？ | 测量函数的解析模型对照 |
+| 02 | 同一窄峰错开半个粗网格会怎样？ | 输出采样示例 |
+| 03 | 有已知标签时，ROI 与分箱怎样对应？ | 合成分区统计 |
+| 04 | 改尺度与真正新增信息是一回事吗？ | 标量变换示例 |
+| 05 | 相同 gCNR 能有不同空间纹理吗？ | 相同边际分布的换位示例 |
+| 06 | 高相关或相同 CV 说明了什么？ | 描述性统计示例 |
+| 07 | 理论 gCNR=0，有限样本估计也必须为 0 吗？ | 重复合成抽样示例 |
+
+导出这七张中文 PNG：`export_chapter7_figures('concepts')`。固定随机种子为 `rng(7,'twister')`；这些例子没有模拟真实超声传播或临床病灶。
+
+---
+
+## 9. 真实数据轨道 A：先看到图，再读表
+
+### 9.1 共同设置与全图
+
+数据为 `L7_FI_TheGB.uff` 第 1 帧，全部聚焦扫描线，深度 16–24 mm，Rx F#=1.7。由真实波长按约 λ/16 自动得到 **434 个深度位置**；横向仍是约 **0.298 mm** 的扫描线。
+
+fDMAS 的二倍频滤波对**轴向**采样提出要求；自动加密深度没有改变横向扫描线间隔。
+
+![图 14：同一 conventional FI 条件下的六种方法](figures/benchmark_fi_images.png)
+
+**图 14 怎么讲：** 先看共同坐标范围，再读各子图标题。五种包络图用各自全图峰值参考；SLSC 单独使用线性相干性，不能凭灰度直接比强弱。
+
+![图 15：相同 FI 结果在点目标周围的局部放大](figures/benchmark_diagnostics_01.png)
+
+**图 15 怎么讲：** 这只是裁剪，没有重建更密的横向样点。粗扫描线形成的块状外观正是后面解释宽度时要记住的条件。
+
+### 9.2 形状与峰值测量
+
+本轮 2026-11-14 实际复跑的形状指标与此前记录一致：
+
+| 方法 | 横向半幅宽度 (mm) | 宽度/扫描线间距 | 轴向半幅宽度 (mm) | 横向 −20 dB 宽度 (mm) | 局部峰值相对 DAS (dB) |
+|---|---:|---:|---:|---:|---:|
+| DAS | 0.71147 | 2.388 | 0.44182 | 1.14574 | 0 |
+| CF | 0.41672 | 1.398 | 0.43796 | 0.97791 | −0.186 |
+| GCF，M0=1 | 0.62156 | 2.086 | 0.43953 | 1.13538 | −0.152 |
+| MVDR | 0.30669 | 1.029 | 0.48558 | 0.55205 | −2.392 |
+| fDMAS | 0.71965 | 2.415 | 0.62134 | 1.10209 | 未作同尺度幅度比较 |
+| SLSC | 不适用 | 不适用 | 不适用 | 不适用 | 不适用 |
+
+读表时分三步：
+
+1. **先看采样。** CF/MVDR 的表观响应很窄，但都不足约 3 个扫描线间隔，尤其 MVDR 仅约 1.03 个；不能由这组插值宽度宣称物理分辨率提升若干倍。
+2. **再看信号定义。** fDMAS 横向宽度与 DAS 接近，轴向更宽；其频谱和输出尺度不同。SLSC 不参加包络幅度 FWHM 排名。
+3. **最后看机制。** GCF 比 CF 保留更多背景与响应，这与允许邻近低空间频率能量的加权规则相符；仍不能把这种外观直接当作真值。
+
+![图 16：把两条轨道的宽度分别换算成网格间隔数](figures/benchmark_diagnostics_02.png)
+
+**图 16 怎么讲：** 左右各读各的共同条件。右侧更多的样点间隔有助于观察窄响应，但不是把两组算法合并排名的理由。
+
+## 10. 真实数据轨道 B：用密集 RTB 观察窄响应
+
+### 10.1 这一次具体固定了什么？
+
+| 项目 | 条件 |
+|---|---|
+| 横向 | −2.5 至 1.5 mm，161 点，Δx=0.025 mm |
+| 深度 | 18.5 至 22.5 mm，161 点，Δz=0.025 mm |
+| Tx | 全部 128 个 focused Tx；blended，blending_power=0.5 |
+| 孔径 | Tx Tukey25、Tx F#=2、最小 Tx 孔径 3 mm；Rx F#=1.7 |
+| 合成 | 相同 Tx 权重及归一化，保留复数相位 |
+| MVDR | 子阵比例 0.5，loading 0.01，轴向平均约 1.5λ |
+| NSI | 相同 D、Z 分别重组 δ=0.2 和 0.8 |
+
+![图 17：相同密集 RTB 条件及共同 DAS 参考下的四种输出](figures/benchmark_rtb_images.png)
+
+**图 17 怎么讲：** 同一 DAS 0 dB 参考同时呈现形状变化和幅度损失。NSI δ=0.2 目标周围的暗区不是自动识别出的“杂波区域”。
+
+### 10.2 点目标响应结果
+
+| 方法 | 横向半幅宽度 (mm) | 宽度/Δx | 轴向半幅宽度 (mm) | 横向 −20 dB 宽度 (mm) | 局部峰值相对 DAS (dB) |
+|---|---:|---:|---:|---:|---:|
+| RTB-DAS | 0.70632 | 28.253 | 0.42305 | 1.14822 | 0 |
+| RTB-MVDR | 0.12382 | 4.953 | 0.40714 | 0.46166 | −2.893 |
+| RTB-NSI，δ=0.2 | 0.16089 | 6.436 | 0.38542 | 0.56294 | −2.536 |
+| RTB-NSI，δ=0.8 | 0.37254 | 14.902 | 0.42281 | 0.80151 | −0.686 |
+
+![图 18：真实离散样点上的各自局部峰值剖面](figures/benchmark_diagnostics_03.png)
+
+**图 18 怎么讲：** 圆点是实际计算值，先看点的密度再看连线。各曲线切片经过自己的峰值深度，因此这里描述的是各自峰形，不是固定同一深度的剖面。
+
+可以支持的表述是：**在这份数据、这套密集 RTB 设置和这个局部点目标上，MVDR/NSI 的有效横向响应变窄，并伴随不同程度的峰值降低。** 两目标分辨、真实组织保真度和临床检出能力还需另外的实验。
+
+## 11. 把组织变化和成本放回结论里
+
+### 11.1 描述性 ROI 的统计
+
+共同窗口 `[-12,-8,18,22] mm` 内每法取到 **2808 个像素**：
+
+| 方法 | CV | 均值/标准差 | 与 DAS 的相关系数 |
+|---|---:|---:|---:|
+| DAS | 0.51056 | 1.9586 | 1 |
+| CF | 1.17376 | 0.85196 | 0.89873 |
+| GCF | 0.70722 | 1.41398 | 0.92875 |
+| MVDR | 0.49909 | 2.00364 | 0.82285 |
+| fDMAS | 0.80380 | 1.24408 | 0.79296 |
+| SLSC | 0.19771 | 5.05794 | 0.52009 |
+
+![图 19：同一窗口的 CV、均值/标准差与 DAS 相关性](figures/benchmark_diagnostics_04.png)
+
+**图 19 怎么讲：** SLSC 的 5.06 是其相干性图的均值/标准差，不是 RF SNR 提升到 5.06。结合第 6 节的合成例子，分别指出每个统计没有覆盖的信息。
+
+### 11.2 本轮真实计时
+
+![图 20：仅把实际独立计时的执行路径画成柱状图](figures/benchmark_diagnostics_05.png)
+
+**图 20 怎么讲：** 左边每个 FI 核心执行一次；右边只有两条实际计时路径。不存在独立 DAS 或第二次完整 NSI 的“零耗时柱”。
+
+本轮单次全核心计时为：
+
+- FI：DAS **21.73 s**、CF **21.57 s**、GCF **22.73 s**、MVDR **41.08 s**、fDMAS **22.36 s**、SLSC **24.06 s**。
+- RTB：MVDR + 内部 DAS **134.90 s**；NSI + 内部 D/Z **22.86 s**。独立 DAS、NSI δ=0.8 的完整运行时间仍为 **NaN**。
+
+此前记录的 132.88/22.13 s 与本轮属于不同单次运行；形状指标一致，时间波动不能解释为方法发生改进。也不能把两条核心时间的比值当作纯算法 kernel 性能比。
+
+### 11.3 一段有依据的实验结论应该怎么写？
+
+> 本次共同 DAS 基线通过复数一致性检查。在密集 RTB 点目标上，MVDR 与 NSI 得到更窄的局部横向响应，并伴随峰值降低。FI 轨道的窄响应受到扫描线采样限制。背景统计与前章全视野结果提示部分方法会改变组织纹理。当前没有已确认的真实目标/背景 ROI，因此未取得本轮 CR/CNR/gCNR 或临床检出性能结论。
+
+这比“某算法最清晰”多说明了数据、条件、观察和证据边界。
+
+## 12. 理解原理后，再对应运行和实现
+
+### 12.1 运行真实 Benchmark 与导出课件图
 
 ~~~matlab
 addpath(genpath('D:/你的USTB路径'));
@@ -101,138 +341,71 @@ cd matlab/07_Benchmark
 run_chapter7_benchmark
 ~~~
 
-默认运行两组。如果希望快速先跑 FI：
+`benchmark_mode='fi'` 或 `'rtb'` 可以分别运行；默认 `'both'`。完整中文课件图从仓库根目录导出：
 
 ~~~matlab
-benchmark_mode='fi';
-run_chapter7_benchmark
+addpath(genpath('D:/你的USTB路径'));
+addpath('matlab/07_Benchmark');
+export_chapter7_figures('all');     % 重跑两条轨道与小实验，共 14 张 MATLAB 图
+export_chapter7_figures('cached');  % 已有结果后复用缓存，不重复 RF 重建
 ~~~
 
-只跑密集 RTB：
+独立图片继续仅保存在本地，被 Git 忽略。文生图提示词与复核记录见[配图目录](figures/README.md)。
 
-~~~matlab
-benchmark_mode='rtb';
-run_chapter7_benchmark
-~~~
-
-结果写入本地：
+### 12.2 数据流与代码入口
 
 ~~~text
-output/benchmark/ch07/
-  FI_metrics.csv
-  FI_images.png
-  FI_configuration.mat
-  RTB_metrics.csv
-  RTB_images.png
-  RTB_configuration.mat
-  FI_contrast.csv      (仅提供已确认 ROI 时产生)
+run_chapter7_benchmark
+  ├─ run_fi_track  → 第 1–5 章 FI 核心 → 图像、指标、内部 DAS 回归
+  └─ run_rtb_track → 第 3/6 章 RTB 核心 → D/Z 重组 → 图像与指标
+
+benchmark_ch7_metrics   → 点目标峰值/宽度、描述性 ROI 统计
+benchmark_ch7_contrast  → 显式两个 ROI 的 CR/CNR/gCNR
+inspect_benchmark_outputs → 读取未压缩结果，生成教学诊断图
 ~~~
 
-每个表中的 NaN 代表没有合理的物理定义/没有完成测量，不是“算法表现为零”。
+| 对象 | 形状 / 单位 | 用在哪里？ |
+|---|---|---|
+| `imgs{k}` | 实数 `[z,x]`，未取对数；SLSC 按该路径的显示约定处理 | 测量与缓存 |
+| `x,z` | 一维，m | 图像轴、指标函数输入 |
+| `point_mm` | `[x,z]`，mm | 已知点目标附近搜索局部峰值 |
+| ROI | `[xmin,xmax,zmin,zmax]`，mm | 物理区域取样 |
+| `D,Z` | 复数 `[z,x]` | NSI 不同偏置重组；不能提前取模 |
+| `reference_errors` | 峰值归一化复数误差 | 检查基础 DAS |
 
-要使用已确认的 hypoechoic phantom ROI，可更换 FI UFF 和深度，并显式设置两行 lesion/background ROI，单位 mm。不要凭本章示意或图像观感猜测 ROI。
+默认结果在 `output/benchmark/ch07/`，包含两轨的 CSV、配置 MAT、图像，以及新增的 `FI_results.mat` / `RTB_results.mat` 未压缩结果缓存；不保存原始 RF。只有提供确认的 ROI 才生成 `FI_contrast.csv`。
 
-## 六、前六章已有的结论与本章验收标准
+**NaN 要按列解释：** SLSC 的包络宽度不适用，fDMAS 的同尺度峰值未标定，部分 RTB 路径未独立计时。它们都不是“表现为零”。
 
-此前实验支持以下**定性观察**，但不是本章新 benchmark 的已跑数据：
+### 12.3 本轮实际验证
 
-- CF/GCF：相干性加权会削弱背景 speckle，M0 变大时恢复更多散射响应；
-- MVDR：密集 RTB 点目标显著收窄；真实 carotid 整体改善有限；
-- fDMAS：局部点响应抑制，但 speckle 更碎；
-- SLSC：短 lag 相关高，图像与 DAS 的含义不同；
-- NSI：点目标变窄，但 c=0.2 在体模与两组 carotid 大范围压低组织；c=0.8 恢复部分组织但仍有纹理损伤。
+2026-11-14、MATLAB R2021b，本机重跑：
 
-**最重要的研究原则**：
+- 合成 gCNR 完全重合/完全分离边界检查通过；七个新增教学例子的解析、顺序和统计检查通过。
+- FI 的五条自适应核心内部 DAS 相对第 1 章误差均为 **6.147026×10⁻¹⁸**。
+- RTB-MVDR 与 NSI 的基础复数 DAS 差异为 **0**。
+- 14 张 MATLAB 图均由实际代码生成；未提供真实病灶 ROI，未生成真实 contrast 指标。
 
-> 真正的成像改进应在同一任务、同一数据和明确 ROI 下表现为相关指标的改善，并且说明分辨率、contrast、speckle 与计算复杂度的取舍。仅仅“更黑”或“主瓣更尖”，不能作为结论。
+[真实 Benchmark 日志](figures/matlab_benchmark_results.txt) · [教学与缓存检查日志](figures/matlab_lecture_results.txt)。本机 MATLAB 在导出完成后的退出阶段仍有既有 `Settings` 提示；该环境问题与数值验收分开记录。
 
-本章已经收到用户本地 MATLAB 真实运行的 Figure、完整控制台与两组统计表；下述实测结果已写入教程。项目级教学对照完成，但缺少带标注的低回声 phantom ROI，因此不能声称已经完成客观病灶检出性能的全面评测。
+## 13. 课件讲解顺序与自检
 
+建议按三个阶段组织讲解：
 
----
+1. **建立比较协议：** 图 1–5，先让读者指出任务、共同条件和实际样点。
+2. **学会读指标：** 图 6–13，用合成例子解释 ROI、尺度、重叠、纹理和计时。
+3. **回到真实数据：** 图 14–20，先读条件和图，再读数值，最后写一段带范围的结论。
 
-## 七、TheGB 实测统一 Benchmark（2026-11-13）
+读完后应能回答：
 
-本节数据由用户在本地 MATLAB 运行 `run_chapter7_benchmark` 提供的 **Figure 1/2 和完整 Console** 得到。图像保存路径为本地 `output/benchmark/ch07`；仓库只记录日志中的确切数值与分析，不伪造 CSV 或数据文件。
+- 为什么不能把 FI-MVDR 的 0.307 mm 与另一条轨道的 RTB-DAS 直接做收益倍数计算？
+- −6.02 dB 包络宽度与功率减半有什么区别？`width/dx` 的单位是什么？
+- 图变黑、CNR 变大、gCNR 相同分别说明什么，还缺什么？
+- 为什么 SLSC 的均值/标准差不能当作 RF SNR？
+- 为什么有些 runtime 必须是 NaN？没有真实病灶 ROI 时应输出什么？
 
-### 1. 共同基线与自检
+### 文献与后续
 
-- gCNR 小型合成用例：**PASS**（完全相同两组分布 0，完全分离两组分布 1）。
-- FI 的 CF、GCF、MVDR、fDMAS、SLSC 内部 complex DAS 相对第 1 章的 max-peak scaled error 均为 **6.147×10⁻¹⁸**。
-- RTB-MVDR 和 RTB-NSI 两个独立 core 内部的 complex RTB-DAS 误差为 **0**。
-- 以上证明**各轨道内部的基础 DAS 实现及输出网格一致**，不证明每个自适应算法的独立论文数值等价性。
-
-### 2. Track A：Conventional FI
-
-统一深度 `z=16–24 mm`，`n_z=434`；真实横向扫描线间距由表格推得约 **0.298 mm**。
-
-| 方法 | 横向 FWHM (mm) | FWHM / 扫描线 | 轴向 FWHM (mm) | 横向 -20 dB (mm) | 点目标局部峰值 vs DAS (dB) | core 耗时 (s) |
-|---|---:|---:|---:|---:|---:|---:|
-| DAS | 0.71147 | 2.3876 | 0.44182 | 1.14570 | 0 | 23.455 |
-| CF | 0.41672 | 1.3985 | 0.43796 | 0.97791 | -0.18643 | 24.287 |
-| GCF (M0=1) | 0.62156 | 2.0859 | 0.43953 | 1.13540 | -0.15247 | 23.345 |
-| MVDR | 0.30669 | 1.0292 | 0.48558 | 0.55205 | -2.3924 | 41.070 |
-| fDMAS | 0.71965 | 2.4151 | 0.62134 | 1.10210 | 不可同幅度比较 | 21.985 |
-| SLSC | 不适用 | 不适用 | 不适用 | 不适用 | 不适用 | 24.439 |
-
-**解释**：
-
-- CF / MVDR 在 FI 数据上有很窄的表观横向响应，但这组 FWHM 都不足 3 条 scanline，尤其 MVDR 只有约 1 条：**受采样限制，不能据此宣称物理分辨率提高数倍**。
-- GCF (M0=1) 相比 CF 保留更多散斑与横向响应，符合其放宽接受的 aperture spatial-frequency band 的机制。
-- fDMAS 在这组数据的横向 FWHM 与 DAS 很接近（0.720 vs 0.711 mm），轴向响应甚至更宽（0.621 vs 0.442 mm）。fDMAS 的二倍频 bandpass 使输出谱定义不同，不宜据此单独推断算法优劣。
-- SLSC 输出 **linear coherence**，与 RF envelope 振幅定义不同，不参加幅度 FWHM 排名。
-
-一个事先未验证为 homogeneous 的 speckle ROI `[-12,-8,18,22] mm`，样本数 **2808**，得到：
-
-| 方法 | CV | SNR = mean/std | envelope 与 DAS 相关 |
-|---|---:|---:|---:|
-| DAS | 0.51056 | 1.9586 | 1 |
-| CF | 1.1738 | 0.85196 | 0.89873 |
-| GCF | 0.70722 | 1.4140 | 0.92875 |
-| MVDR | 0.49909 | 2.0036 | 0.82285 |
-| fDMAS | 0.8038 | 1.2441 | 0.79296 |
-| SLSC | 0.19771 | 5.0579 | 0.52009 |
-
-**尤其注意**：SLSC 的 `SNR=5.06` 只是其归一化 coherence image 的 mean/std，**不是 RF 回波 SNR 提升到 5.06**，更不能把它判为 speckle 成像质量冠军。该 ROI 没有独立同质性标注，DAS 相关也只说明相似性。
-
-### 3. Track B：dense RTB 同几何点目标
-
-二维网格为 `x=-2.5~1.5 mm` 和 `z=18.5~22.5 mm`，`161×161`，`dx=dz=0.025 mm`。
-
-| 方法 | 横向 FWHM (mm) | FWHM / pixel | 轴向 FWHM (mm) | 横向 -20 dB (mm) | 点峰值 vs DAS (dB) |
-|---|---:|---:|---:|---:|---:|
-| RTB-DAS | 0.70632 | 28.253 | 0.42305 | 1.14820 | 0 |
-| RTB-MVDR | 0.12382 | 4.953 | 0.40714 | 0.46166 | -2.8928 |
-| RTB-NSI (c=0.2) | 0.16089 | 6.4358 | 0.38542 | 0.56294 | -2.5358 |
-| RTB-NSI (c=0.8) | 0.37254 | 14.902 | 0.42281 | 0.80151 | -0.68566 |
-
-相对 0.70632 mm RTB-DAS 主瓣：MVDR 横向 FWHM 缩小约 **82.5%**，NSI c=0.2 约 **77.2%**，NSI c=0.8 约 **47.3%**。本次 lateral sample spacing 足够密，三种自适应响应的 FWHM 均跨越 4 个以上 pixels，明显减少 conventional FI 欠采样问题。
-
-但是，**这些只是单一 TheGB 点目标的空间响应测量，不是两目标 resolvability、临床对比度或 speckle fidelity 证明**。结合第 3、6 章的 carotid 验证，MVDR 的人体 B-mode 增益有限；NSI c=0.2 导致严重组织抑制，c=0.8 仍引起显著纹理变化。
-
-**实际整条 core 计时（单次运行，非 kernel-only）：**
-
-- RTB-MVDR core（内部含 DAS）：**135.93 s**；
-- RTB-NSI core（内部含 DAS/ZM）：**23.40 s**；
-- **独立 RTB-DAS 没有在本次 Track B 单独计时**。原版报告将 RTB-NSI 的 23.404 s 同时写在 RTB-DAS 行，会误导为独立 DAS 运行时间；代码现已修正该行耗时为 `NaN`。
-- c=0.8 使用已有 `D,Z` 复数结果代数重组，没有第二次 RF beamforming，独立整条 core runtime 记为 `NaN`。
-
-**不要将 135.93/23.40 的比值解读为同硬件上的纯 MVDR/NSI kernel 性能比**：两者的全 core 数据路径、缓存/读取等开销并不完全独立，且只有一次计时。
-
-### 4. 尚未测量的部分
-
-**本次没有已确认的低回声 lesion/background ROI，因此 CR、CNR、gCNR 不参与任何对比，`FI_contrast.csv` 不会生成。**
-
-这不是运行失败，而是遵守了数据有效性边界。如果将来为了评估临床/目标可检测性而继续研究，应优先使用带独立标注的 hypoechoic phantom，固定两个 ROI 后再比较。**但这不是结束当前“经典波束合成学习”项目的阻碍。**
-
-### 5. 最终可支持的结论
-
-1. **方法正确性层面**：两组共同 DAS 复数基线一致，实验具有可比的声学/网格条件。
-2. **分辨率层面**：MVDR、NSI 在密集 RTB 点目标上能显著缩窄 lateral response，伴随峰值损失；CF 的 conventional FI 窄主瓣受 scanline sampling 影响更大。
-3. **组织层面**：CF/NSI 在已有结果中会明显改变正常组织散斑；MVDR 在人体的整体 B-mode 获益不像点目标结果那样明显。
-4. **应用层面**：没有跨方法普适冠军；必须根据真实任务分辨 resolution gain、contrast detectability、speckle distortion 和计算成本。
-5. **实验边界**：上述结论是 TheGB 教学 benchmark + 前几章真实 carotid 的综合判断，不包含带 ROI 的客观 lesion detection/临床优越性验证。
-
-**第 7 章的教学和现有数据 Benchmark 已完成。**
-
-后续同一 RTB 几何下 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI 七方法一次性成像及定性比较**，另见 [第 8 章](../08_RTB_Comparison/README.md)。两章网格和实验目的不同，不将各自的点目标量化数据直接混用。
+- Rodriguez-Molares 等，*The generalized contrast-to-noise ratio: a formal definition for lesion detectability*，IEEE TUFFC，2020，DOI [10.1109/TUFFC.2019.2956855](https://doi.org/10.1109/TUFFC.2019.2956855)：gCNR 定义与显示尺度问题。
+- Schlunk、Byram，*Methods for Enhancing the Robustness of the Generalized Contrast-to-Noise Ratio*，2023，DOI [10.1109/TUFFC.2023.3289157](https://doi.org/10.1109/TUFFC.2023.3289157)：有限样本与估计方式。
+- [第 8 章](../08_RTB_Comparison/README.md)：在另一套固定 RTB 条件下，让七种组合规则沿同一条数据流输出；不借用本章的宽度数字。

@@ -2,6 +2,9 @@ work/pdfs/
 tools/pdf/node_modules/
 tools/pdf/__pycache__/
 
+# Benchmark figures/CSV/MAT are local, reproducible MATLAB outputs.
+output/benchmark/
+
 # Keep standalone lesson figures local, regardless of label language.
 *.png
 *.jpg

@@ -1,0 +1,56 @@
+MATLAB R2021b; actual fresh run on 2026-11-14. UFF progress and console HTML removed.
+
+gCNR synthetic sanity tests: PASS
+
+============ TRACK A: conventional focused FI ============
+FI grid: z 16.00–24.00 mm, n_z=434, dz~lambda/16
+DAS      : 21.73 s
+  CF     vs Chapter-1 FI DAS error = 6.147e-18
+CF       : 21.57 s
+  GCF    vs Chapter-1 FI DAS error = 6.147e-18
+GCF M0=1 : 22.73 s
+  MVDR   vs Chapter-1 FI DAS error = 6.147e-18
+MVDR     : 41.08 s
+  fDMAS  vs Chapter-1 FI DAS error = 6.147e-18
+fDMAS    : 22.36 s
+  SLSC   vs Chapter-1 FI DAS error = 6.147e-18
+SLSC     : 24.06 s
+       method       runtime_s    lat_FWHM_mm    lat_FWHM_in_scanlines    axial_FWHM_mm    lat_20dB_mm    local_peak_vs_DAS_dB    speckle_CV    speckle_SNR    speckle_corr_DAS    speckle_n
+    ____________    _________    ___________    _____________________    _____________    ___________    ____________________    __________    ___________    ________________    _________
+
+    "DAS"            21.728        0.71147             2.3876               0.44182          1.1457                   0           0.51056         1.9586                1           2808
+    "CF"             21.571        0.41672             1.3985               0.43796         0.97791            -0.18643            1.1738        0.85196          0.89873           2808
+    "GCF (M0=1)"     22.731        0.62156             2.0859               0.43953          1.1354            -0.15247           0.70722          1.414          0.92875           2808
+    "MVDR"           41.078        0.30669             1.0292               0.48558         0.55205             -2.3924           0.49909         2.0036          0.82285           2808
+    "fDMAS"          22.364        0.71965             2.4151               0.62134          1.1021                 NaN            0.8038         1.2441          0.79296           2808
+    "SLSC"           24.059            NaN                NaN                   NaN             NaN                 NaN           0.19771         5.0579          0.52009           2808
+
+FI NOTE: <3 scanlines across FWHM is sampling-limited; fDMAS spectral band differs; SLSC is a coherence image.
+Speckle ROI is not independently certified homogeneous: [-12  -8  18  22] mm.
+Speckle correlation is similarity to DAS, not validated preservation of true tissue reflectivity.
+No verified lesion/background ROIs provided -> CR, CNR and gCNR NOT measured (by design).
+FI results saved: ..\..\output\benchmark\ch07
+
+============== TRACK B: dense RTB point target =============
+RTB-DAS + RTB-MVDR core: 134.90 s
+RTB-DAS + RTB-NSI core : 22.86 s
+Independent RTB DAS branch difference: 0.000e+00
+         method          full_core_runtime_s    peak_x_mm    peak_z_mm    lat_FWHM_mm    lat_FWHM_in_pixels    axial_FWHM_mm    lat_20dB_mm    point_peak_vs_DAS_dB
+    _________________    ___________________    _________    _________    ___________    __________________    _____________    ___________    ____________________
+
+    "RTB-DAS"                     NaN            -0.675        20.05        0.70632            28.253             0.42305          1.1482                   0
+    "RTB-MVDR"                  134.9            -0.725        20.05        0.12382             4.953             0.40714         0.46166             -2.8928
+    "RTB-NSI (c=0.2)"          22.864            -0.725       20.075        0.16089            6.4358             0.38542         0.56294             -2.5358
+    "RTB-NSI (c=0.8)"             NaN            -0.725        20.05        0.37254            14.902             0.42281         0.80151            -0.68566
+
+RTB TIMING NOTE: DAS and NSI c=0.8 are not independently timed; NaN is intentional. NSI c=0.2 runtime includes DAS and ZM.
+RTB results saved: ..\..\output\benchmark\ch07
+RTB NOTE: point-target FWHM is a descriptive beam response, NOT proven two-target resolving power.
+NSI c=0.8 is derived using the same D and Z beams; its runtime is not a separate full reconstruction.
+
+============================================================
+ Chapter-7 benchmark runner completed.
+ Images and metrics must be interpreted WITH dataset/ROI caveats.
+ No method is declared universally best.
+============================================================
+CHAPTER7_FRESH_BENCHMARK_COMPLETE

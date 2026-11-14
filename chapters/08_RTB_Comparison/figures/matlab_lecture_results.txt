@@ -1,0 +1,17 @@
+MATLAB 9.11.0.1769968 (R2021b); mode=cached; rng=8.
+Chapter 8 concepts PASS: 7 figures, rng(8,twister), no UFF.
+CF per-Tx / after-Tx weighting outputs: [2 1].
+CF vs GCF M0=0 max error: 2.081668e-17.
+MVDR desired / interference gains: [1 1] / [0.184035679 0.000316932127].
+fDMAS pair identity error: 0.000000e+00.
+Lag1 correlations low/high/random: [1 1 -0.061968455].
+NSI [DAS delta0.2 delta0.8] rows: [4 4 4;3.2 0 2.2;0 0 0].
+IQ sums before/after phase restoration: [1.08171309e-14 2]; restore error 8.881784e-16.
+
+Chapter 8 saved-output checks PASS: 7 finite [z,x] images; NSI bounds; display exceptions.
+Grid [z x]=[245 64]; dx/dz mm=[0.111111111 0.018442623]; selected Tx=32/128.
+Fixed DAS peak slice x/z mm: [-0.777777778 20.0471311].
+MVDR fallback/attempts: [0 61289]; SLSC missing pixel-Tx=0.
+Joint seven-method runtime: 37.160414700 s; not independently timed methods.
+fDMAS image fs 41751111.1 Hz; edges Hz: [7812500.25 9114583.62 13020833.8 14322917.1].
+No Chapter-7 FWHM numbers or real-data lesion metrics are assigned to this grid.

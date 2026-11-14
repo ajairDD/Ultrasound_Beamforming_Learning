@@ -26,6 +26,32 @@ matlab/
 
 ---
 
+## 一键验证 RTB 主链路
+
+在仓库根目录或 `matlab/` 下运行：
+
+~~~matlab
+cd matlab
+run_all_checks
+~~~
+
+如果 USTB 不在 `D:\USTB`，显式传入路径：
+
+~~~matlab
+run_all_checks('D:/你的USTB路径')
+~~~
+
+该入口依次执行：
+
+1. 不依赖 UFF/USTB 的合成标准接口测试；
+2. TheGB 复数 RTB-DAS 与第 1 章独立实现的回归；
+3. TheGB 上七种 RTB 方法的紧凑 smoke test。
+
+它只做验证，不写 benchmark 图或 MAT。第 7、8 章的本地实验产物位于
+`output/benchmark/`，该目录不纳入 Git。
+
+---
+
 ## 第 0 章：零依赖教学实验
 
 进入：
