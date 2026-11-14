@@ -2,6 +2,8 @@
 
 第 0–8 章各输出一份完整讲义，文件位于 [`output/pdf/`](../../output/pdf/README.md)。PDF 包括中文封面、可点击目录、正文、公式、示例代码与参考资料。第 0–4 章另收录正文未展开的补充图片；第 5–8 章所有图均沿知识主线展开，并保留逐图讲解提示。代码标识、方法名称与专业术语保留。
 
+**发布标识：** 每份 PDF 的封面和每一页页脚都写入项目 GitHub 地址、版权与许可摘要；地址可点击，PDF 元数据写入项目来源、章节 ID 和发布版本。发布前结构检查会验证每页地址、链接、中文字体和 A4 页面。
+
 第 5–8 章使用中文友好印刷版式：全章统一为 A4 纵向，宽图随正文流动并按页宽缩放，多列表格可跨页并重复表头，目录列出二级标题；少数密集竖向多子图也统一为 A4 纵向页。图片与讲解放在一起；中文使用 Microsoft YaHei / DengXian，字体嵌入，可搜索、复制。图内文字仍保留原始 PNG 分辨率，适合数字阅读或放大查看。
 
 独立图片及 MATLAB `.fig` 文件仅在本地保存，中英文版本均由 `.gitignore` 排除。PDF 讲义、源代码、标签映射和提示词继续纳入 Git。全新克隆后，先按下文导出 MATLAB 图，并按提示词生成概念图，才能在本地完整预览章节 Markdown 或重建 PDF；直接阅读已提交的 PDF 不需要这些独立图片。
@@ -84,6 +86,14 @@ $courseRuntime = 'C:\Users\Utrasound_2\.cache\codex-runtimes\codex-primary-runti
 
 构建时检查图片完整加载、配图总数、KaTeX 解析、Markdown 强调标记和元素横向溢出。后处理验证 PDF 可读、正文非空，再把每页渲染为 PNG，检查页面边界并生成逐页核对图。结构检查验证内部跳转目标、中文字体嵌入和文件校验值，输出 `output/pdf/manifest.json`。
 
+发布结构检查还会验证：
+
+- 每一页都包含项目 GitHub 地址和版权/许可页脚；
+- 每一页都有指向项目主页的 URI 链接；
+- PDF 元数据包含 `/Source`、`/License`、`/Copyright`、`/ReleaseVersion` 和章节 ID；
+- 全部页面为 A4 纵向；
+- `manifest.json` 中的 SHA-256、页数、链接数量和来源 Markdown 校验值与实际文件一致。
+
 Windows 上可补充 OCR 检查（需安装简体中文 OCR）：
 
 ```powershell
@@ -92,3 +102,12 @@ Windows 上可补充 OCR 检查（需安装简体中文 OCR）：
 ```
 
 OCR 仅帮助发现漏译；数学符号、下标和缩写可能误识别。以可编辑文字清单、逐图检查和最终 PDF 的逐页核对为准。
+
+## 发布许可与引用
+
+- 源代码采用 [AGPL-3.0-only](../../LICENSE)。
+- 课程正文、PDF、原创示意图和原创配图采用 [CC BY-NC-SA 4.0](../../LICENSE-CONTENT.md)。
+- USTB、USTB datasets、TheGB、PICMUS 和构建依赖的声明见 [NOTICE.md](../../NOTICE.md)。
+- 标准引用入口见 [CITATION.cff](../../CITATION.cff)，发布检查表见 [RELEASE.md](../../RELEASE.md)。
+
+重新构建 PDF 时不要移除封面或页脚中的来源、版权和许可信息；这些信息是发布文件的一部分，不是可选的装饰。

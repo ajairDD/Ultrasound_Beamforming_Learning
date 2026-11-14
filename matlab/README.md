@@ -21,6 +21,12 @@ addpath(genpath('D:/你的USTB路径')); % 改成本机 USTB 路径
 
 原始 UFF 不纳入 Git；请按 [data/README.md](../data/README.md) 的下载说明放入 `data/`。不要仅按文件名假定 RF/IQ 类型或采集参数。
 
+## 依赖、许可与引用
+
+USTB 是外部 MATLAB toolbox，不随本仓库分发；其代码采用 MIT 许可。真实数据实验使用 USTB 读取 UFF 或作为匹配条件下的参考验证，但本项目的教学算法核心以显式 MATLAB 代码实现。使用 USTB 时请同时引用 IUS 2017 toolbox 论文和 Generalized Beamformer 论文，具体条目见 [NOTICE.md](../NOTICE.md)。
+
+USTB datasets 采用 CC BY 4.0；PICMUS 数据允许免费使用但要求正确引用。原始 UFF 不随仓库分发，下载、MD5 和引用要求见 [data/README.md](../data/README.md)。本仓库代码采用 [AGPL-3.0-only](../LICENSE)，课程正文和 PDF 采用 [CC BY-NC-SA 4.0](../LICENSE-CONTENT.md)。
+
 ## 各章最短运行入口
 
 下列命令默认在**仓库根目录**启动 MATLAB；依赖和完整运行顺序见每章的运行说明。

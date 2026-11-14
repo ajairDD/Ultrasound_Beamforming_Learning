@@ -9,6 +9,10 @@ const katex = require('katex');
 const ROOT = path.resolve(__dirname,'../..');
 const WORK = path.join(ROOT,'work/pdfs');
 const OUTPUT = path.join(ROOT,'output/pdf');
+const GITHUB_URL = 'https://github.com/ajairDD/Ultrasound_Beamforming_Learning';
+const RELEASE_VERSION = '1.0.0';
+const CONTENT_LICENSE = 'CC BY-NC-SA 4.0';
+const CODE_LICENSE = 'AGPL-3.0';
 const runtime = path.resolve(path.dirname(process.execPath),'../..');
 const {chromium} = require(path.join(runtime,'node/node_modules/playwright'));
 const chapters = [
@@ -130,7 +134,7 @@ function markdown(chapterDir) {
     const target=tokens[i].attrGet('href');
     if(target && !/^(https?:|#|mailto:)/.test(target)) {
       const relative=path.relative(ROOT,path.resolve(chapterDir,target.split('#')[0])).split(path.sep).join('/');
-      tokens[i].attrSet('href','https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/'+relative+(target.includes('#')?'#'+target.split('#')[1]:''));
+      tokens[i].attrSet('href',GITHUB_URL+'/blob/main/'+relative+(target.includes('#')?'#'+target.split('#')[1]:''));
     }
     return defaultLink(tokens,i,options,env,self);
   };
@@ -208,6 +212,7 @@ async function main() {
    if(selected!==null && !selected.has(number)) continue;
    const [id,title,route]=chapters[number], chapterDir=path.join(ROOT,'chapters',id);
    const rawSource=fs.readFileSync(path.join(chapterDir,'README.md'),'utf8');
+   const sourceText=rawSource.replace(/\r\n?/g,'\n');
    const source=rawSource.replace(/\u2014+/g,'：').replace(/[\u2010-\u2013\u2015]/g,'-');
    const body=markdown(chapterDir).render(source);
    const used=new Set([...source.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map(m=>path.basename(m[1])));
@@ -304,7 +309,7 @@ async function main() {
    if(printOverflow.length)throw new Error(JSON.stringify({chapter:id,printOverflow}));
    const bodyPath=path.join(WORK,id+'_body.pdf');
    await page.pdf({path:bodyPath,preferCSSPageSize:true,printBackground:true,tagged:true,outline:true});
-   const record={id,number,title,route,file:fileNames[number],body:bodyPath,output:path.join(OUTPUT,fileNames[number]),source:path.join(chapterDir,'README.md'),source_sha256:createHash('sha256').update(rawSource).digest('hex'),extra_images:extras.length,...audit};
+   const record={id,number,title,route,file:fileNames[number],body:bodyPath,output:path.join(OUTPUT,fileNames[number]),source:path.join(chapterDir,'README.md'),source_sha256:createHash('sha256').update(sourceText).digest('hex'),extra_images:extras.length,github_url:GITHUB_URL,source_url:GITHUB_URL+'/blob/main/chapters/'+id+'/README.md',content_license:CONTENT_LICENSE,code_license:CODE_LICENSE,copyright:'© 2026 Ultrasound Beamforming Learning contributors',release_version:RELEASE_VERSION,...audit};
    records.push(record); console.log(JSON.stringify({chapter:id,images:audit.images,math:audit.math,pdf:bodyPath}));
    await page.close();
   }

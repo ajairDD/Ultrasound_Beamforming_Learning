@@ -4,6 +4,8 @@
 > 数据整理日期：2026-09-26。  
 > 当前清单对应本项目已下载的 12 个 UFF 数据文件。
 
+> **许可与引用：** 本仓库不重新分发原始 UFF。USTB datasets 采用 CC BY 4.0（DOI `10.5281/zenodo.20261898`）；PICMUS 数据允许免费使用，但要求正确提及 PICMUS 并引用 IUS 2016 proceeding。USTB 软件采用 MIT 许可。完整第三方声明、必引文献和再分发边界见 [NOTICE.md](../NOTICE.md)。
+
 ## 1. 使用原则
 
 本目录只维护数据说明、来源、下载地址和使用建议。原始 `.uff` 数据体积较大，不直接提交到 GitHub；建议下载后放在本目录或其子目录中，`data/.gitignore` 会忽略这些大文件。
@@ -421,3 +423,32 @@ harmonic_filter     = ...
 
 5. **USTB Generalized Beamformer / TheGB**  
    <https://unioslo.github.io/USTB/generalized_beamformer.html>
+
+---
+
+## 11. 许可、引用与再分发
+
+### 11.1 USTB 软件
+
+USTB 采用 MIT 许可，版权归 UltraSound ToolBox contributors。本项目只把 USTB 作为 UFF 读取器和匹配条件下的参考实现，不随仓库分发 USTB。使用 USTB 时至少引用：
+
+1. Rodriguez-Molares, A., Rindal, O. M. H., Bernard, O., Nair, A., Bell, M. A. L., Liebgott, H., Austeng, A., Løvstakken, L. (2017). *The UltraSound ToolBox*. IEEE International Ultrasonics Symposium (IUS), 1-4. DOI: [10.1109/ULTSYM.2017.8092389](https://doi.org/10.1109/ULTSYM.2017.8092389).
+2. Rindal, O. M. H., Vrålstad, A. E., Avdal, J., Fiorentini, S., Austeng, A., Rodriguez-Molares, A. (2026). *The Generalized Beamformer in the UltraSound ToolBox*. Ultrasonics, 170, 108289. DOI: [10.1016/j.ultras.2026.108289](https://doi.org/10.1016/j.ultras.2026.108289).
+
+### 11.2 USTB datasets
+
+USTB datasets 的 Zenodo 记录为 *USTB datasets*，DOI [10.5281/zenodo.20261898](https://doi.org/10.5281/zenodo.20261898)，创建者为 Ole Marius Hoel Rindal，许可为 CC BY 4.0。使用本清单中的任一文件时，请引用该数据集记录，并读取 UFF 内部 `reference` 字段给出的原始 citation。
+
+### 11.3 PICMUS
+
+PICMUS 官方说明数据和代码可免费使用，但要求正确提及 PICMUS 并引用：
+
+> Liebgott, H., Rodriguez-Molares, A., Jensen, J. A., Bernard, O. *Plane-Wave Imaging Challenge in Medical Ultrasound*. IEEE International Ultrasonics Symposium, Tours, France, 2016. DOI: [10.1109/ULTSYM.2016.7728908](https://doi.org/10.1109/ULTSYM.2016.7728908).
+
+官方版权说明：<https://www.creatis.insa-lyon.fr/Challenge/IEEE_IUS_2016/node/48>。
+
+### 11.4 原始数据与衍生结果
+
+- 原始 `.uff` 文件体积较大，不纳入 Git，也不随 PDF 分发；请从 USTB/Zenodo 或 PICMUS 官方入口下载。
+- 本仓库中的 MATLAB 图、统计结果和 PDF 配图是基于这些数据生成的衍生结果。数据本身的版权和许可仍属于原数据作者；本项目不声称拥有原始数据。
+- 再分发衍生结果时，请保留数据来源、引用、本项目 GitHub 地址和许可标识。不要把第三方数据重新许可为本项目的 AGPL-3.0 或 CC BY-NC-SA 4.0。

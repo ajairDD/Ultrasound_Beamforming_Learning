@@ -4,78 +4,123 @@
     "file": "第00章_波束合成共同基础.pdf",
     "pages": 46,
     "images": 20,
-    "bytes": 5014185,
-    "sha256": "d78c6d81307eb26b88e98cce1ed2604123d14cf4292de50157a4a7ac95264885",
-    "internal_links": 35,
-    "external_links": 7,
+    "bytes": 5164167,
+    "sha256": "fbb183b4c609f91c528bcf6861b5660c19df3a47664783bb601eba9f315afe54",
+    "internal_links": 36,
+    "external_links": 60,
+    "github_links": 47,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
       "/AAAAAA+MicrosoftYaHei-Bold",
       "/BAAAAA+MicrosoftYaHei"
     ],
-    "unparsed_emphasis": 0
+    "unparsed_emphasis": 0,
+    "page_formats": {
+      "A4纵向": 46
+    },
+    "source_sha256": "fece2467f73a75e7bba28e147b1b882d49e0843f2f34f944dfdba69f3de2ce6f",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/00_Fundamentals/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "01_DAS_Real_UFF",
     "file": "第01章_FI-DAS与RTB.pdf",
     "pages": 44,
     "images": 32,
-    "bytes": 18776647,
-    "sha256": "5d5ede806ff7eb023c0b9f51e6ee4a6276e87d79535c700e35e6d839d4bbd797",
-    "internal_links": 26,
-    "external_links": 15,
+    "bytes": 18857880,
+    "sha256": "45451d5859f48526cd3fb866134be707b9fbe8a0ed1188418c14c682f9784224",
+    "internal_links": 27,
+    "external_links": 66,
+    "github_links": 45,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
       "/AAAAAA+MicrosoftYaHei-Bold",
       "/BAAAAA+MicrosoftYaHei"
     ],
-    "unparsed_emphasis": 0
+    "unparsed_emphasis": 0,
+    "page_formats": {
+      "A4纵向": 44
+    },
+    "source_sha256": "c6d3347872bdc44021103a19c86501d2c03d8aa1acbe22577bd8bf2fa16f7cf6",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/01_DAS_Real_UFF/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "02_CF_GCF",
     "file": "第02章_CF与GCF.pdf",
-    "pages": 41,
+    "pages": 40,
     "images": 32,
-    "bytes": 15971014,
-    "sha256": "6e272c4b2144822372e1853eb9632639d963c33141b63f6ea0943138bc00e566",
-    "internal_links": 26,
-    "external_links": 15,
+    "bytes": 16026752,
+    "sha256": "6bcf7fa20f0e88f20382b14f341b28350c3e0e953bae89d0e522630c37d03c8d",
+    "internal_links": 27,
+    "external_links": 63,
+    "github_links": 41,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
       "/AAAAAA+MicrosoftYaHei-Bold",
       "/BAAAAA+MicrosoftYaHei"
     ],
-    "unparsed_emphasis": 0
+    "unparsed_emphasis": 0,
+    "page_formats": {
+      "A4纵向": 40
+    },
+    "source_sha256": "cf40b7e640dadee6e31746d1435c41b159adbcb06124bdb152919daae1c86719",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/02_CF_GCF/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "03_MVDR",
     "file": "第03章_MVDR.pdf",
     "pages": 28,
     "images": 25,
-    "bytes": 15206776,
-    "sha256": "404a379906ae77e345a023dfa6537afe20fee4c780748a93ef3df44f2bee244e",
+    "bytes": 15281704,
+    "sha256": "690b9666c98cd5a96a378567ea47fa74577156974d25560ac3c4e9050d3c74a3",
     "internal_links": 28,
-    "external_links": 15,
+    "external_links": 51,
+    "github_links": 29,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
       "/AAAAAA+MicrosoftYaHei-Bold",
       "/BAAAAA+MicrosoftYaHei"
     ],
-    "unparsed_emphasis": 0
+    "unparsed_emphasis": 0,
+    "page_formats": {
+      "A4纵向": 28
+    },
+    "source_sha256": "d2b41d4c2b448194ad7a8dd4e6bf6c6e8adbee12bec5522a0f71ec397a39339c",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/03_MVDR/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "04_DMAS",
     "file": "第04章_DMAS与fDMAS.pdf",
     "pages": 26,
     "images": 18,
-    "bytes": 14168243,
-    "sha256": "47d10f632ff350cc9137127f7758142854b12a594497fe8186ddc4e45957f6b5",
-    "internal_links": 13,
-    "external_links": 21,
+    "bytes": 14236619,
+    "sha256": "461304b6ee48b004c331f59840a2a6b8bfad9cfda282ec23b814b24776ce98a3",
+    "internal_links": 14,
+    "external_links": 53,
+    "github_links": 27,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -83,17 +128,28 @@
       "/CAAAAA+MicrosoftYaHei",
       "/NAAAAA+MicrosoftYaHei"
     ],
-    "unparsed_emphasis": 0
+    "unparsed_emphasis": 0,
+    "page_formats": {
+      "A4纵向": 26
+    },
+    "source_sha256": "02b3ac46eb754306f85e94db87df22728b865f26058cf26732a68467828eccbb",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/04_DMAS/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "05_SLSC",
     "file": "第05章_SLSC.pdf",
-    "pages": 20,
+    "pages": 21,
     "images": 20,
-    "bytes": 13715555,
-    "sha256": "58691acf56da47e6b193d1c6915f76e08b2708e049fe3c163b8be40ed87da39f",
-    "internal_links": 40,
-    "external_links": 17,
+    "bytes": 13805774,
+    "sha256": "96b6445363832cf43bd425f1cda0086f66bfe37368dc5014bbe7c1a64799f0a7",
+    "internal_links": 41,
+    "external_links": 46,
+    "github_links": 22,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -103,19 +159,26 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 20
+      "A4纵向": 21
     },
-    "source_sha256": "507ea70d64aadd50ce11e771d211438cf8478c24bf34ff5b10e56dfcf61c825d"
+    "source_sha256": "c239ad266d7e30e5ed07334bcae9c3788404a842b45ec4ab382d80a3d7e56217",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/05_SLSC/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "06_NSI",
     "file": "第06章_NSI.pdf",
     "pages": 21,
     "images": 24,
-    "bytes": 19538992,
-    "sha256": "f5c510ea4ef5ae8245c291e89d79bdba3508c992b757da5d4652a3237076bbba",
-    "internal_links": 42,
-    "external_links": 18,
+    "bytes": 19585227,
+    "sha256": "85b66542c2e7c2f9b1eebae1a3c9f08e8e516c901d552a6fee780dc62b149742",
+    "internal_links": 43,
+    "external_links": 47,
+    "github_links": 22,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -127,17 +190,24 @@
     "page_formats": {
       "A4纵向": 21
     },
-    "source_sha256": "c73e248ce45c80f325565e76945122b44fe37e94e68683f2b55d22056a1d6409"
+    "source_sha256": "c042f32d0d209ee85d2274e5dae81290d895d15096852d334098b8324ec63952",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/06_NSI/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "07_Benchmark",
     "file": "第07章_统一Benchmark.pdf",
-    "pages": 16,
+    "pages": 17,
     "images": 20,
-    "bytes": 15098273,
-    "sha256": "f20a79bf5a457fef8a5caf2dffb5c9ff32c59bf10422120c2d13a49656fc29a1",
-    "internal_links": 34,
-    "external_links": 12,
+    "bytes": 15170939,
+    "sha256": "11382aaeadea39e10f63efa44d8d8064963882752caad0fc99bb77a3e47a1eb9",
+    "internal_links": 35,
+    "external_links": 37,
+    "github_links": 18,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -147,19 +217,26 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 16
+      "A4纵向": 17
     },
-    "source_sha256": "15fa156bb83e3eb4733c391fc0932ade51521324342824768eb68eb068a16f60"
+    "source_sha256": "f9912eeb7b4d554121901f692d206a0710721ce6de66d758db5ed276c8da8bbb",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/07_Benchmark/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   },
   {
     "id": "08_RTB_Comparison",
     "file": "第08章_七方法RTB对照.pdf",
     "pages": 17,
     "images": 19,
-    "bytes": 15443844,
-    "sha256": "69599d2f127895269532a8cebb3375aa290ba157196776579a46b68f9244018e",
-    "internal_links": 31,
-    "external_links": 10,
+    "bytes": 15496681,
+    "sha256": "17cda317888658ebdca1053f9c3c267d1e80c97148b2a30c2711a7b5781f075c",
+    "internal_links": 32,
+    "external_links": 34,
+    "github_links": 18,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -170,6 +247,12 @@
     "page_formats": {
       "A4纵向": 17
     },
-    "source_sha256": "da779d1319d3bf57ee6a18ca847607288c36f6ffe626b5dc4758e8220b73959a"
+    "source_sha256": "438c6751ac316dd6dd1257807c207cff3f3ce482022a56068259de6c60acf87b",
+    "github_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning",
+    "source_url": "https://github.com/ajairDD/Ultrasound_Beamforming_Learning/blob/main/chapters/08_RTB_Comparison/README.md",
+    "content_license": "CC BY-NC-SA 4.0",
+    "code_license": "AGPL-3.0",
+    "copyright": "© 2026 Ultrasound Beamforming Learning contributors",
+    "release_version": "1.0.0"
   }
 ]

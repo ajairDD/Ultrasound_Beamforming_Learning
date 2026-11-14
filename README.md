@@ -6,6 +6,12 @@
 
 建议学习顺序是**先理解原理，再运行小例子，最后使用真实 UFF 数据验证**。本仓库的第 0–8 章均已完成教学正文与配套实验；算法可运行不代表所有方法均通过论文级独立数值验证。
 
+> **项目主页：** <https://github.com/ajairDD/Ultrasound_Beamforming_Learning>
+>
+> **许可：** 源代码采用 AGPL-3.0-only；课程正文、PDF 和原创配图采用 CC BY-NC-SA 4.0。第三方数据与工具不纳入本项目再许可。
+>
+> **引用与发布信息：** [CITATION.cff](CITATION.cff) · [NOTICE.md](NOTICE.md) · [RELEASE.md](RELEASE.md)
+
 ## 从这里开始
 
 **第一次接触波束合成：** 从[第 0 章](chapters/00_Fundamentals/README.md)开始，它的 MATLAB 示例不需要 USTB 或外部数据。
@@ -52,6 +58,15 @@ das_fi_scanline_manual
 - **查看课件图片来源、参数和日志：** 每章 `figures/README.md`。它们是配套资料，不是初次学习的必读入口。
 
 第 5–8 章 PDF 已同步采用 A4 纵向紧凑排版：宽图随正文流动并按页宽缩放，多列表格可跨页并重复表头，目录列出二级标题；正文、公式、图注和配图内容未改。
+
+## 许可、引用与防冒用
+
+- **代码：** 采用 [AGPL-3.0-only](LICENSE)。修改或分发衍生软件时，须遵守 AGPL 的源代码提供义务并保留版权声明。
+- **课程内容：** 课程正文、PDF、原创示意图、表格和原创配图采用 [CC BY-NC-SA 4.0](LICENSE-CONTENT.md)。转载或改编须署名、非商业使用、相同方式共享，并保留项目地址和许可标识。
+- **第三方资源：** USTB 使用 MIT 许可；USTB datasets 使用 CC BY 4.0；PICMUS 允许免费使用但要求正确引用。原始 UFF 不随仓库分发，具体来源、引用和边界见 [NOTICE.md](NOTICE.md) 与 [data/README.md](data/README.md)。
+- **PDF 来源标识：** 第 0–8 章每份 PDF 的封面和每一页页脚都包含 GitHub 地址、版权与许可摘要；地址可点击，元数据也写入项目来源和发布版本。
+- **引用：** 学术使用请使用 [CITATION.cff](CITATION.cff)，并同时引用所使用的 USTB、数据集和算法原始文献。
+- **发现未署名转载：** 请通过 [GitHub Issues](https://github.com/ajairDD/Ultrasound_Beamforming_Learning/issues) 提供链接和截图。许可证不能从技术上阻止复制，但能为署名、来源核验和后续维权提供明确依据。
 
 ## 科学实现与验证边界
 
