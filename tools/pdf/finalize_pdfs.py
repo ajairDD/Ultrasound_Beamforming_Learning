@@ -2,6 +2,7 @@
 import io
 import json
 import sys
+import time
 from hashlib import sha256
 from pathlib import Path
 from reportlab.pdfbase import pdfmetrics
@@ -68,6 +69,26 @@ def overlay(width,height,title,page,total,first):
     c.showPage(); c.save(); buffer.seek(0)
     return PdfReader(buffer).pages[0]
 
+def write_pdf_atomic(writer, output):
+    output=Path(output)
+    temporary=output.with_name(output.stem+".new.pdf")
+    backup=output.with_name(output.stem+".old.pdf")
+    writer.write(temporary)
+    if backup.exists():
+        backup.unlink()
+    for attempt in range(20):
+        try:
+            if output.exists():
+                output.rename(backup)
+            temporary.replace(output)
+            break
+        except PermissionError:
+            if attempt==19:
+                raise
+            time.sleep(0.5)
+    if backup.exists():
+        backup.unlink()
+
 def main():
     manifest=Path(sys.argv[1])
     records=json.loads(manifest.read_text(encoding="utf-8"))
@@ -81,7 +102,7 @@ def main():
             page.merge_page(overlay(width,height,f"第 {record['number']} 章  {record['title']}",i+1,total,i==0))
         writer.add_metadata({"/Title":f"第 {record['number']} 章：{record['title']}","/Author":"Ultrasound Beamforming Learning","/Subject":"中文课堂讲义","/Creator":"Markdown + KaTeX + ReportLab"})
         output=Path(record["output"]); output.parent.mkdir(parents=True,exist_ok=True)
-        writer.write(output)
+        write_pdf_atomic(writer,output)
         checked=PdfReader(output)
         text="\n".join(page.extract_text() or "" for page in checked.pages)
         if len(checked.pages)<5 or "本章目录" not in text or "超声波束合成" not in text:

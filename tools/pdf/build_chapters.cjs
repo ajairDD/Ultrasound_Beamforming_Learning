@@ -140,7 +140,7 @@ function markdown(chapterDir) {
 let katexCss=fs.readFileSync(require.resolve('katex/dist/katex.min.css'),'utf8');
 katexCss=katexCss.replace(/url\(([^)]+)\)/g,(_,v)=>`url("${url(path.resolve(path.dirname(require.resolve('katex/dist/katex.min.css')),v.replace(/["']/g,'')))}")`);
 const css = `
-@page {size:A4;margin:19mm 17mm 19mm;}
+@page {size:A4;margin:16mm 15mm 16mm;}
 *{box-sizing:border-box;} html{background:white;} body{font-family:"Microsoft YaHei",DengXian,sans-serif;color:#203249;font-size:10.3pt;line-height:1.78;margin:0;word-break:normal;overflow-wrap:anywhere;}
 h1,h2,h3,h4{color:#123c61;line-height:1.45;break-after:avoid;page-break-after:avoid;font-weight:700;}
 h1{font-size:23pt;} h2{font-size:15pt;margin:22pt 0 9pt;border-bottom:1px solid #ccdfe9;padding-bottom:6pt;} h3{font-size:12.3pt;margin:17pt 0 7pt;} h4{font-size:10.8pt;margin:13pt 0 6pt;}
@@ -150,27 +150,38 @@ table{border-collapse:collapse;width:100%;font-size:8.5pt;line-height:1.6;margin
 code,pre{font-family:Consolas,"Microsoft YaHei",monospace;font-size:8.8pt;} :not(pre)>code{background:#eef3f6;padding:1px 3px;color:#234e69;} pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;padding:10pt;background:#f4f7fa;border:1px solid #d6e2ea;border-radius:5px;break-inside:avoid;}
 figure{margin:15pt 0 13pt;break-inside:avoid;page-break-inside:avoid;text-align:center;} figure img{display:block;max-width:100%;max-height:185mm;width:auto;height:auto;margin:0 auto;} figcaption{font-size:9pt;line-height:1.6;color:#46637b;padding-top:6pt;}
 .flowchart svg{max-width:100%;max-height:194mm;width:auto;height:auto;} .math-display{margin:13pt 0;break-inside:avoid;text-align:center;} .katex{font-size:1.1em;} .katex-display{margin:0;overflow:visible;} .katex-display>.katex{white-space:nowrap;}
-.toc{break-after:page;margin-top:8pt;} .toc h2{border:none;font-size:21pt;} .toc ol{columns:2;column-gap:22pt;list-style:none;padding:0;counter-reset:none;} .toc li{break-inside:avoid;font-size:9pt;line-height:1.6;margin:0 0 7pt;} .toc a{color:#234c68;}
-.toc li.toc-group{font-weight:700;margin-top:9pt;} .toc li.toc-subsection{padding-left:10pt;font-size:8.8pt;}
+.toc{break-after:page;margin-top:8pt;} .toc h2{border:none;font-size:21pt;} .toc ol{display:grid;grid-auto-flow:column;grid-template-columns:1fr 1fr;column-gap:24pt;row-gap:0;list-style:none;padding:0;counter-reset:none;height:225mm;align-content:space-between;} .toc li{break-inside:avoid;font-size:9.2pt;line-height:1.6;margin:0;} .toc a{color:#234c68;}
+.toc li.toc-group{font-weight:700;} .toc li.toc-subsection{padding-left:10pt;font-size:8.8pt;}
 .supplement{break-before:page;} .supplement figure{break-inside:avoid;} details{display:block;} summary{font-weight:700;color:#123c61;margin:10pt 0;} .math-error{color:red;}
-/* New lecture chapters: readable Chinese and dedicated large figure pages. */
-@page lecture-wide {size:A4 landscape;margin:17mm;}
-@page lecture-tall {size:A3 portrait;margin:19mm 17mm;}
-.lecture-book{line-break:strict;}
-.lecture-book table{font-size:9.2pt;}
-.lecture-book figcaption.teaching-caption{text-align:left;font-size:9.7pt;line-height:1.7;}
+/* New lecture chapters: readable Chinese with figures flowing in the text. */
+.lecture-book{line-break:strict;line-height:1.62;}
+.lecture-book p{margin:3.5pt 0;orphans:2;widows:2;}
+.lecture-book main>:last-child{margin-bottom:0;}
+.lecture-book ul,.lecture-book ol{margin:3pt 0;}
+.lecture-book li{margin:2pt 0;}
+.lecture-book summary{margin:6pt 0;}
+.lecture-book h2{margin:14pt 0 5pt;}
+.lecture-book h3{margin:10pt 0 4pt;}
+.lecture-book h4{margin:8pt 0 3pt;}
+.lecture-book figure{margin:6pt 0 5pt;}
+.lecture-book figure img{max-height:130mm;}
+.lecture-book table{font-size:9.2pt;line-height:1.55;margin:8pt 0;}
+.lecture-book table th,.lecture-book table td{padding:3.5pt 4.5pt;}
+.lecture-book figcaption.teaching-caption{text-align:left;font-size:9pt;line-height:1.5;padding-top:3pt;}
 .lecture-book figure>p.figure-intro,.lecture-book figure>p.figure-followup{text-align:left;font-size:10.5pt;line-height:1.7;margin:0 0 5pt;}
 .lecture-book figure>p.figure-followup{margin:5pt 0 0;}
 .lecture-book figure>h2,.lecture-book figure>h3,.lecture-book figure>h4{margin:0 0 5pt;padding:0 0 4pt;}
 @media print{
- .lecture-book figure.wide-figure{page:lecture-wide;width:263mm;max-width:none;}
- .lecture-book figure.wide-figure img{max-width:263mm;max-height:132mm;}
- .lecture-book figure.tall-figure{page:lecture-tall;width:263mm;max-width:none;}
- .lecture-book figure.tall-figure img{max-width:263mm;max-height:325mm;}
- .lecture-book .wide-table-block{page:lecture-wide;width:263mm;max-width:none;break-inside:avoid;}
+ .lecture-book figure.wide-figure{width:112mm;max-width:112mm;}
+ .lecture-book figure.wide-figure img{max-width:112mm;max-height:130mm;}
+ .lecture-book figure.compact-figure{width:100mm;max-width:100mm;}
+ .lecture-book figure.compact-figure img{max-width:100mm;max-height:120mm;}
+ .lecture-book figure.tall-figure{width:112mm;max-width:112mm;}
+ .lecture-book figure.tall-figure img{max-width:112mm;max-height:185mm;}
+ .lecture-book .wide-table-block{width:180mm;max-width:180mm;break-inside:auto;page-break-inside:auto;}
  .lecture-book .wide-table-block>h2,.lecture-book .wide-table-block>h3,.lecture-book .wide-table-block>h4{margin:0 0 5pt;padding:0 0 4pt;}
  .lecture-book .wide-table-block>p{font-size:10.5pt;line-height:1.7;margin:0 0 5pt;}
- .lecture-book table.wide-table{width:263mm;max-width:none;font-size:9.8pt;}
+ .lecture-book table.wide-table{width:180mm;max-width:180mm;font-size:8.6pt;break-inside:auto;page-break-inside:auto;}
 }
 `;
 
@@ -208,7 +219,7 @@ async function main() {
      caption=caption.replace(/`/g,'').replace(/point-like object/g,'点状目标').replace(/point target/g,'点目标').replace(/point-target/g,'点目标').replace(/full Rx/g,'完整接收孔径').replace(/scanline/g,'扫描线').replace(/conventional/g,'常规 FI').replace(/reference/g,'参考').replace(/self-normalized/g,'各自峰值归一化').replace(/peak/g,'峰值').replace(/Manual/g,'手工实现');
      return `<figure><img src="${url(path.join(chapterDir,'figures',name))}" alt="补充图 ${i+1}"/><figcaption>补充图 ${i+1}｜${escape(caption)}</figcaption></figure>`;
    }).join('\n');
-   const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>第 ${number} 章 ${escape(title)}</title><style>${katexCss}\n${css}</style></head><body class="${number>=5?'lecture-book':''}"><main>${body}${extras.length?'<section class="supplement"><h2>补充课件图</h2><p>以下图片与本章实验配套，便于课堂选用。保留各图原有的坐标、参数与归一化约定。</p>'+extraHtml+'</section>':''}</main></body></html>`;
+   const html=`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><title>第 ${number} 章 ${escape(title)}</title><style>${katexCss}\n${css}</style></head><body class="${number>=5?'lecture-book ':''}chapter-${number}"><main>${body}${extras.length?'<section class="supplement"><h2>补充课件图</h2><p>以下图片与本章实验配套，便于课堂选用。保留各图原有的坐标、参数与归一化约定。</p>'+extraHtml+'</section>':''}</main></body></html>`;
    const htmlPath=path.join(WORK,'html',id+'.html'); fs.writeFileSync(htmlPath,html);
    const page=await browser.newPage({viewport:{width:665,height:1000},deviceScaleFactor:1});
    await page.goto(url(htmlPath),{waitUntil:'networkidle'});
@@ -218,7 +229,7 @@ async function main() {
      document.querySelectorAll('details').forEach(d=>d.open=true);
      const groups=[...document.querySelectorAll('main h2')];
      const hasParts=groups.some(h=>/^第[一二三]部分/.test(h.textContent));
-     const headings=hasParts?[...document.querySelectorAll('main h2,main h3')]:groups;
+     const headings=widePages?[...document.querySelectorAll('main h2,main h3')]:(hasParts?[...document.querySelectorAll('main h2,main h3')]:groups);
      headings.forEach((h,i)=>{if(!h.id)h.id='section-'+i;});
      const toc=document.createElement('section'); toc.className='toc';
      toc.innerHTML='<h2>本章目录</h2><ol></ol>';
@@ -228,6 +239,7 @@ async function main() {
        link.href='#'+heading.id;link.textContent=heading.textContent;
        item.appendChild(link);toc.querySelector('ol').appendChild(item);
      }
+     toc.querySelector('ol').style.gridTemplateRows=`repeat(${Math.ceil(headings.length/2)},auto)`;
      document.querySelector('main').prepend(toc);
      document.querySelectorAll('p').forEach(p=>{
        if(p.children.length===1&&p.firstElementChild.tagName==='IMG') {
@@ -248,43 +260,13 @@ async function main() {
          const ratio=image.naturalWidth/image.naturalHeight;
          if(ratio>=1.45)figure.classList.add('wide-figure');
          else if(ratio<1.15&&image.naturalHeight>1400)figure.classList.add('tall-figure');
-         if(figure.matches('.wide-figure,.tall-figure')){
-           let introductionLength=0;
-           while(figure.previousElementSibling?.tagName==='P'){
-             const introduction=figure.previousElementSibling,length=introduction.textContent.trim().length;
-             if(length>180||introductionLength+length>300)break;
-             introductionLength+=length;
-             introduction.classList.add('figure-intro');figure.prepend(introduction);
-           }
-           while(figure.previousElementSibling&&/^H[234]$/.test(figure.previousElementSibling.tagName)){
-             figure.prepend(figure.previousElementSibling);
-           }
-         }
-       });
-       document.querySelectorAll('figure.wide-figure,figure.tall-figure').forEach(figure=>{
-         let followupLength=0;
-         while(figure.nextElementSibling?.tagName==='P'){
-           const followup=figure.nextElementSibling,length=followup.textContent.trim().length;
-           if(length>240||followupLength+length>360)break;
-           // Leave an introduction with the code, equation, table or list it introduces.
-           if(/[:：]$/.test(followup.textContent.trim())&&followup.nextElementSibling?.matches('pre,.math-display,table,ul,ol'))break;
-           followupLength+=length;followup.classList.add('figure-followup');figure.append(followup);
-         }
+         if(image.src.endsWith('/nsi_offset_tradeoff.png'))figure.classList.add('compact-figure');
        });
        document.querySelectorAll('table').forEach(table=>{
          if(table.querySelectorAll('thead tr:first-child th').length<6)return;
          table.classList.add('wide-table');
          const block=document.createElement('div');block.className='wide-table-block';
          table.replaceWith(block);block.append(table);
-         let introductionLength=0;
-         while(block.previousElementSibling?.tagName==='P'){
-           const introduction=block.previousElementSibling,length=introduction.textContent.trim().length;
-           if(length>180||introductionLength+length>300)break;
-           introductionLength+=length;block.prepend(introduction);
-         }
-         while(block.previousElementSibling&&/^H[234]$/.test(block.previousElementSibling.tagName)){
-           block.prepend(block.previousElementSibling);
-         }
        });
      }
      document.querySelectorAll('.math-display').forEach(block=>{
@@ -304,20 +286,22 @@ async function main() {
    },{widePages:number>=5});
    const expectedImages=fs.readdirSync(path.join(chapterDir,'figures')).filter(f=>f.endsWith('.png')).length;
    if(audit.failed.length || audit.overflow.length || audit.unparsed.length || audit.images!==expectedImages) throw new Error(JSON.stringify({chapter:id,expectedImages,...audit}));
-   // Keep the full figure block within its named page, including its introduction.
+   // Keep each figure block within the printable page height.
    await page.emulateMedia({media:'print'});
-   await page.evaluate(()=>{
+   const printOverflow=await page.evaluate(()=>{
      const pixelsPerMm=96/25.4;
      document.querySelectorAll('figure.wide-figure,figure.tall-figure').forEach(figure=>{
        const image=figure.querySelector('img'),style=getComputedStyle(figure);
-       const pageHeight=(figure.classList.contains('wide-figure')?176:382)*pixelsPerMm;
+       const pageHeight=259*pixelsPerMm;
        const otherHeight=figure.getBoundingClientRect().height-image.getBoundingClientRect().height;
        const margins=parseFloat(style.marginTop)+parseFloat(style.marginBottom);
-       const allowedHeight=pageHeight-otherHeight-margins-2*pixelsPerMm;
+       const allowedHeight=pageHeight-otherHeight-margins-pixelsPerMm-pixelsPerMm;
        if(allowedHeight<=0)throw new Error('Figure text exceeds its page height.');
        image.style.maxHeight=Math.min(parseFloat(getComputedStyle(image).maxHeight),allowedHeight)+'px';
      });
+     return [...document.querySelectorAll('table,pre,.math-display,figure')].filter(e=>e.scrollWidth>e.clientWidth+5).map(e=>({tag:e.tagName,text:e.textContent.slice(0,90),width:e.scrollWidth,container:e.clientWidth}));
    });
+   if(printOverflow.length)throw new Error(JSON.stringify({chapter:id,printOverflow}));
    const bodyPath=path.join(WORK,id+'_body.pdf');
    await page.pdf({path:bodyPath,preferCSSPageSize:true,printBackground:true,tagged:true,outline:true});
    const record={id,number,title,route,file:fileNames[number],body:bodyPath,output:path.join(OUTPUT,fileNames[number]),source:path.join(chapterDir,'README.md'),source_sha256:createHash('sha256').update(rawSource).digest('hex'),extra_images:extras.length,...audit};

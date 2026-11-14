@@ -88,12 +88,12 @@
   {
     "id": "05_SLSC",
     "file": "第05章_SLSC.pdf",
-    "pages": 40,
+    "pages": 20,
     "images": 20,
-    "bytes": 14157694,
-    "sha256": "b975888dc5203cf8c9cc70b71c26cf6b6232c27a47ec9ad24d9145f318160bdc",
-    "internal_links": 13,
-    "external_links": 18,
+    "bytes": 13715555,
+    "sha256": "58691acf56da47e6b193d1c6915f76e08b2708e049fe3c163b8be40ed87da39f",
+    "internal_links": 40,
+    "external_links": 17,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -103,20 +103,19 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 20,
-      "A4横向": 20
+      "A4纵向": 20
     },
     "source_sha256": "507ea70d64aadd50ce11e771d211438cf8478c24bf34ff5b10e56dfcf61c825d"
   },
   {
     "id": "06_NSI",
     "file": "第06章_NSI.pdf",
-    "pages": 48,
+    "pages": 21,
     "images": 24,
-    "bytes": 20194469,
-    "sha256": "523ed2c50a79e9c80b971f6bc65f9883725a7df0d0fed96709110ca5fe873949",
-    "internal_links": 14,
-    "external_links": 16,
+    "bytes": 19538992,
+    "sha256": "f5c510ea4ef5ae8245c291e89d79bdba3508c992b757da5d4652a3237076bbba",
+    "internal_links": 42,
+    "external_links": 18,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -126,21 +125,19 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 23,
-      "A4横向": 23,
-      "A3纵向": 2
+      "A4纵向": 21
     },
     "source_sha256": "c73e248ce45c80f325565e76945122b44fe37e94e68683f2b55d22056a1d6409"
   },
   {
     "id": "07_Benchmark",
     "file": "第07章_统一Benchmark.pdf",
-    "pages": 38,
+    "pages": 16,
     "images": 20,
-    "bytes": 15611683,
-    "sha256": "81113e4829376f6fb92cb1c0434d239b48edd9b4ac06311effcd1296cd9c2d3b",
-    "internal_links": 13,
-    "external_links": 13,
+    "bytes": 15098273,
+    "sha256": "f20a79bf5a457fef8a5caf2dffb5c9ff32c59bf10422120c2d13a49656fc29a1",
+    "internal_links": 34,
+    "external_links": 12,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
       "/AAAAAA+DengXian",
@@ -150,19 +147,18 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 17,
-      "A4横向": 21
+      "A4纵向": 16
     },
     "source_sha256": "15fa156bb83e3eb4733c391fc0932ade51521324342824768eb68eb068a16f60"
   },
   {
     "id": "08_RTB_Comparison",
     "file": "第08章_七方法RTB对照.pdf",
-    "pages": 39,
+    "pages": 17,
     "images": 19,
-    "bytes": 15952476,
-    "sha256": "284c10e618813c42781952f2ca82447d69fc85956034a9e6c864307e2c994f83",
-    "internal_links": 12,
+    "bytes": 15443844,
+    "sha256": "69599d2f127895269532a8cebb3375aa290ba157196776579a46b68f9244018e",
+    "internal_links": 31,
     "external_links": 10,
     "embedded_chinese_fonts": [
       "/AAAAAA+DengXian-Bold",
@@ -172,8 +168,7 @@
     ],
     "unparsed_emphasis": 0,
     "page_formats": {
-      "A4纵向": 20,
-      "A4横向": 19
+      "A4纵向": 17
     },
     "source_sha256": "da779d1319d3bf57ee6a18ca847607288c36f6ffe626b5dc4758e8220b73959a"
   }
