@@ -43,17 +43,17 @@ function figures = rtb_show_methods(out,display_mode)
                 set(gca,'Color',[0.85 0.85 0.85]);
             end
             caxis([0 1]);
-            title('SLSC (linear coherence; grey=unavailable)');
+            panel_title='SLSC (linear coherence; grey=unavailable)';
         else
             if strcmp(method,'FDMAS')
                 img=out.display.FDMAS;
-                title('fDMAS (own-peak dB, non-calibrated)');
+                panel_title='fDMAS (own-peak dB, non-calibrated)';
             elseif strcmp(display_mode,'common')
                 img=out.display_common_db.(method);
-                title([method ' (common DAS dB)']);
+                panel_title=[method ' (common DAS dB)'];
             else
                 img=out.display.(method);
-                title([method ' (own-peak dB)']);
+                panel_title=[method ' (own-peak dB)'];
             end
             imagesc(x,z,img);
             caxis([-out.options.dynamic_range_db,0]);
@@ -64,6 +64,9 @@ function figures = rtb_show_methods(out,display_mode)
         colorbar;
         xlabel('x (mm)');
         ylabel('z (mm)');
+        % imagesc resets axes in replace mode. Set title only AFTER
+        % plotting so every method keeps its panel label.
+        title(panel_title,'Interpreter','none');
     end
 
     sgtitle({ ...
