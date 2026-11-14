@@ -234,3 +234,5 @@ output/benchmark/ch07/
 5. **实验边界**：上述结论是 TheGB 教学 benchmark + 前几章真实 carotid 的综合判断，不包含带 ROI 的客观 lesion detection/临床优越性验证。
 
 **第 7 章的教学和现有数据 Benchmark 已完成。**
+
+后续同一 RTB 几何下 **DAS、CF、GCF、MVDR、fDMAS、SLSC、NSI 七方法一次性成像及定性比较**，另见 [第 8 章](../08_RTB_Comparison/README.md)。两章网格和实验目的不同，不将各自的点目标量化数据直接混用。
